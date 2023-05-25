@@ -1,0 +1,34 @@
+#pragma version 8
+
+// Verify amount is 0
+txn AssetAmount
+int 0
+==
+assert
+
+// Verify sender == receiver
+txn AssetReceiver
+txn Sender
+==
+assert
+
+// Verify fee is 0 (covered by sender)
+txn Fee
+int 0
+==
+
+// Verify called atomically with whitelist app
+txn GroupIndex
+int 1
+-
+gtxns ApplicationID
+int TMPL_WHITELIST_APP
+==
+assert
+
+// Verify the correct method is being called
+txn GroupIndex
+int 1
+-
+gtxnsa ApplicationArgs 0
+method "verifySender(uint16,uint16,uint64)void"
