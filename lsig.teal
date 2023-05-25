@@ -39,3 +39,5 @@ int 1
 -
 gtxnsa ApplicationArgs 0
 method "verifySender(uint16,uint16,uint64)void"
+==
+assert
