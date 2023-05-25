@@ -16,6 +16,13 @@ assert
 txn Fee
 int 0
 ==
+assert
+
+// Verify assetCloseTo is not set
+txn AssetCloseTo
+global ZeroAddress
+==
+assert
 
 // Verify called atomically with whitelist app
 txn GroupIndex
