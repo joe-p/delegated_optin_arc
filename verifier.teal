@@ -1,0 +1,18 @@
+#pragma version 8
+
+// data
+byte TMPL_LSIG_PROGRAM
+
+// signature
+txn GroupIndex
+int 1
++
+gtxnsa ApplicationArgs 3
+
+// public key
+txn GroupIndex
+int 1
+-
+gtxns Sender
+
+ed25519verify

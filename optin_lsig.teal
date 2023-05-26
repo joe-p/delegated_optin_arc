@@ -26,8 +26,8 @@ assert
 
 // Verify called atomically with whitelist app
 txn GroupIndex
-int 1
--
+int 2
++
 gtxns ApplicationID
 int TMPL_WHITELIST_APP
 ==
@@ -35,8 +35,8 @@ assert
 
 // Verify the correct method is being called
 txn GroupIndex
-int 1
--
+int 2
++
 gtxnsa ApplicationArgs 0
 method "verifySender(uint16,uint16,uint64)void"
 ==
