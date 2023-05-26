@@ -1,4 +1,0 @@
-[submodule "arc75"]
-	path = arc75
-	url = https://github.com/joe-p/arc75
-	branch = addr
