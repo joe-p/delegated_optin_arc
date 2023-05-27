@@ -1,4 +1,5 @@
 #pragma version 8
+// Note: There is no fee or rekey validation because the funds of this account are irrelevant
 
 // data
 byte TMPL_LSIG_PROGRAM

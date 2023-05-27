@@ -8,6 +8,8 @@ class OptInARC extends Contract {
 
   sigs = new BoxMap<Address, byte<64>>();
 
+  enabled = new BoxMap<Address, boolean>();
+
   verifier = new GlobalReference<Address>();
 
   private verifyMBRPayment(payment: PayTxn, preMBR: uint64): void {
@@ -24,6 +26,12 @@ class OptInARC extends Contract {
     });
   }
 
+  /**
+   * Set the address of the verifier lsig. This will only be called once after creation.
+   *
+   * @param setVerifierAddress - The address of the verifier lsig
+   *
+   */
   setVerifierAddress(lsig: Address): void {
     assert(this.txn.sender === this.app.creator);
     assert(!this.verifier.exists());
@@ -124,11 +132,24 @@ class OptInARC extends Contract {
     verifyLsig: Txn,
   ): void {
     assert(verifyLsig.sender === this.verifier.get());
-    if (!this.sigs.exists(this.txn.sender)) this.sigs.put(this.txn.sender, sig);
+    if (!this.sigs.exists(optIn.assetReceiver)) this.sigs.put(optIn.assetReceiver, sig);
 
-    const whitelist: Whitelist = { account: this.txn.sender, boxID: boxID };
+    // If the whitelist is not enabled, then no need to check the whitelist
+    if (!this.enabled.exists(optIn.assetReceiver) || !this.enabled.get(optIn.assetReceiver)) return;
+
+    const whitelist: Whitelist = { account: optIn.assetReceiver, boxID: boxID };
 
     const whitelistAddr = this.whitelist.get(whitelist)[index];
     assert(whitelistAddr === this.txn.sender);
+  }
+
+  /**
+   * Enable or disable the whitelist functionality for the caller
+   *
+   * @param status - True to enable whitelist, false to disable (allow any account to opt in)
+   *
+   */
+  setWhitelistStatus(status: boolean) {
+    this.enabled.put(this.txn.sender, status);
   }
 }
