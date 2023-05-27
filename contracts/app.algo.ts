@@ -163,6 +163,10 @@ class OptInARC extends Contract {
 
     assert(authAddr === trueAuthAddr);
     assert(verifier.sender === this.verifier.get());
+
+    // Only allow this method to be called if the sig is new (acct has been rekeyed)
+    if (this.sigs.exists(acct)) assert(this.sigs.get(acct) !== sig);
+
     this.sigs.put(acct, sig);
   }
 }
