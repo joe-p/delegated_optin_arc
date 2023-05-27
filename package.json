@@ -1,5 +1,21 @@
 {
+  "license": "MIT",
   "dependencies": {
-    "@algorandfoundation/tealscript": "^0.12.1"
+    "@algorandfoundation/algokit-utils": "^1.1.1",
+    "@algorandfoundation/tealscript": "^0.12.1",
+    "algosdk": "^2.3.0"
+  },
+  "scripts": {
+    "build": "tealscript app.algo.ts ./artifacts",
+    "deploy": "yarn build && tsx deploy.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.5",
+    "@typescript-eslint/eslint-plugin": "^5.59.7",
+    "@typescript-eslint/parser": "^5.59.7",
+    "eslint": "^7.32.0 || ^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "tsx": "^3.12.7"
   }
 }

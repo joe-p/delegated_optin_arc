@@ -1,0 +1,141 @@
+{
+  "name": "OptInARC",
+  "desc": "",
+  "methods": [
+    {
+      "name": "setVerifierAddress",
+      "args": [
+        {
+          "name": "lsig",
+          "type": "address",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "addToWhitelist",
+      "args": [
+        {
+          "name": "boxID",
+          "type": "uint16",
+          "desc": ""
+        },
+        {
+          "name": "addr",
+          "type": "address",
+          "desc": ""
+        },
+        {
+          "name": "payment",
+          "type": "pay",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "setWhitelist",
+      "args": [
+        {
+          "name": "boxID",
+          "type": "uint16",
+          "desc": ""
+        },
+        {
+          "name": "addrs",
+          "type": "address[]",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "deleteWhitelist",
+      "args": [
+        {
+          "name": "boxID",
+          "type": "uint16",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "deleteFromWhitelist",
+      "args": [
+        {
+          "name": "boxID",
+          "type": "uint16",
+          "desc": ""
+        },
+        {
+          "name": "addr",
+          "type": "address",
+          "desc": ""
+        },
+        {
+          "name": "index",
+          "type": "uint64",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "verifySender",
+      "args": [
+        {
+          "name": "boxID",
+          "type": "uint16",
+          "desc": ""
+        },
+        {
+          "name": "index",
+          "type": "uint64",
+          "desc": ""
+        },
+        {
+          "name": "sig",
+          "type": "byte[64]",
+          "desc": ""
+        },
+        {
+          "name": "optIn",
+          "type": "axfer",
+          "desc": ""
+        },
+        {
+          "name": "verifyLsig",
+          "type": "txn",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    }
+  ]
+}

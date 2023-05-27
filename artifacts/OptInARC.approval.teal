@@ -1,0 +1,608 @@
+#pragma version 8
+	b main
+
+process_static_tuple_element:
+	proto 4 3
+	frame_dig -4 // tuple head
+	frame_dig -1 // element
+	concat
+	frame_dig -3 // tuple tail
+	frame_dig -2 // head offset
+	retsub
+
+verifyMBRPayment:
+	proto 2 0
+
+	// app.algo.ts:14
+	// assert(payment.amount === this.app.address.minBalance - preMBR)
+	frame_dig -1 // payment: pay
+	gtxns Amount
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	frame_dig -2 // preMBR: uint64
+	-
+	==
+	assert
+
+	// app.algo.ts:15
+	// assert(payment.receiver === this.app.address)
+	frame_dig -1 // payment: pay
+	gtxns Receiver
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	==
+	assert
+	retsub
+
+sendMBRPayment:
+	proto 1 0
+
+	// app.algo.ts:19
+	// sendPayment({
+	itxn_begin
+	int pay
+	itxn_field TypeEnum
+
+	// app.algo.ts:20
+	// sender: this.app.address
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	itxn_field Sender
+
+	// app.algo.ts:21
+	// receiver: this.txn.sender
+	txn Sender
+	itxn_field Receiver
+
+	// app.algo.ts:22
+	// amount: preMBR - this.app.address.minBalance
+	frame_dig -1 // preMBR: uint64
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	-
+	itxn_field Amount
+
+	// app.algo.ts:23
+	// fee: 0
+	int 0
+	itxn_field Fee
+	itxn_submit
+	retsub
+
+abi_route_setVerifierAddress:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	txna ApplicationArgs 1
+	callsub setVerifierAddress
+	int 1
+	return
+
+setVerifierAddress:
+	proto 1 0
+
+	// app.algo.ts:28
+	// assert(this.txn.sender === this.app.creator)
+	txn Sender
+	txna Applications 0
+	app_params_get AppCreator
+	assert
+	==
+	assert
+
+	// app.algo.ts:29
+	// assert(!this.verifier.exists())
+	txna Applications 0
+	byte "verifier"
+	app_global_get_ex
+	swap
+	pop
+	!
+	assert
+
+	// app.algo.ts:30
+	// this.verifier.put(lsig)
+	byte "verifier"
+	frame_dig -1 // lsig: address
+	app_global_put
+	retsub
+
+abi_route_addToWhitelist:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	dupn 2
+	txn GroupIndex
+	int 1
+	-
+	txna ApplicationArgs 2
+	txna ApplicationArgs 1
+	callsub addToWhitelist
+	int 1
+	return
+
+addToWhitelist:
+	proto 6 0
+
+	// app.algo.ts:42
+	// preMBR = this.app.address.minBalance
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	frame_bury -4 // preMBR: uint64
+
+	// app.algo.ts:43
+	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	byte 0x // initial head
+	byte 0x // initial tail
+	byte 0x0022 // initial head offset
+	txn Sender
+	callsub process_static_tuple_element
+	frame_dig -1 // boxID: uint16
+	callsub process_static_tuple_element
+	pop // pop head offset
+	concat // concat head and tail
+	frame_bury -5 // whitelist: Whitelist
+
+	// if0_condition
+	// app.algo.ts:45
+	// this.whitelist.exists(whitelist)
+	frame_dig -5 // whitelist: Whitelist
+	box_get
+	swap
+	pop
+	bz if0_else
+
+	// if0_consequent
+	// app.algo.ts:46
+	// this.whitelist.get(whitelist).push(addr)
+	frame_dig -5 // whitelist: Whitelist
+	box_get
+	assert
+	dup
+	int 0
+	extract_uint16
+	int 1
+	+
+	itob
+	extract 6 2
+	swap
+	extract 2 0
+	concat
+	frame_dig -2 // addr: address
+	concat
+	frame_dig -5 // whitelist: Whitelist
+	dup
+	box_del
+	pop
+	swap
+	box_put
+	b if0_end
+
+if0_else:
+	// app.algo.ts:48
+	// newWhitelist: Address[] = [addr]
+	frame_dig -2 // addr: address
+	byte 0x0001
+	swap
+	concat
+	frame_bury -6 // newWhitelist: address[]
+
+	// app.algo.ts:49
+	// this.whitelist.put(whitelist, newWhitelist)
+	frame_dig -5 // whitelist: Whitelist
+	dup
+	box_del
+	pop
+	frame_dig -6 // newWhitelist: address[]
+	box_put
+
+if0_end:
+	// app.algo.ts:52
+	// this.verifyMBRPayment(payment, preMBR)
+	frame_dig -4 // preMBR: uint64
+	frame_dig -3 // payment: pay
+	callsub verifyMBRPayment
+	retsub
+
+abi_route_setWhitelist:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	dup
+	txna ApplicationArgs 2
+	txna ApplicationArgs 1
+	callsub setWhitelist
+	int 1
+	return
+
+setWhitelist:
+	proto 4 0
+
+	// app.algo.ts:64
+	// preMBR = this.app.address.minBalance
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	frame_bury -3 // preMBR: uint64
+
+	// app.algo.ts:65
+	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID}
+	byte 0x // initial head
+	byte 0x // initial tail
+	byte 0x0022 // initial head offset
+	txn Sender
+	callsub process_static_tuple_element
+	frame_dig -1 // boxID: uint16
+	callsub process_static_tuple_element
+	pop // pop head offset
+	concat // concat head and tail
+	frame_bury -4 // whitelist: Whitelist
+
+	// app.algo.ts:67
+	// this.whitelist.delete(whitelist)
+	frame_dig -4 // whitelist: Whitelist
+	box_del
+
+	// app.algo.ts:69
+	// this.whitelist.put(whitelist, addrs)
+	frame_dig -4 // whitelist: Whitelist
+	dup
+	box_del
+	pop
+	frame_dig -2 // addrs: address[]
+	box_put
+
+	// if1_condition
+	// app.algo.ts:71
+	// preMBR > this.app.address.minBalance
+	frame_dig -3 // preMBR: uint64
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	>
+	bz if1_else
+
+	// if1_consequent
+	// app.algo.ts:72
+	// this.sendMBRPayment(preMBR)
+	frame_dig -3 // preMBR: uint64
+	callsub sendMBRPayment
+	b if1_end
+
+if1_else:
+	// app.algo.ts:74
+	// this.verifyMBRPayment(this.txnGroup[this.txn.groupIndex - 1], preMBR)
+	frame_dig -3 // preMBR: uint64
+	txn GroupIndex
+	int 1
+	-
+	callsub verifyMBRPayment
+
+if1_end:
+	retsub
+
+abi_route_deleteWhitelist:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	dup
+	txna ApplicationArgs 1
+	callsub deleteWhitelist
+	int 1
+	return
+
+deleteWhitelist:
+	proto 3 0
+
+	// app.algo.ts:85
+	// preMBR = this.app.address.minBalance
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	frame_bury -2 // preMBR: uint64
+
+	// app.algo.ts:86
+	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	byte 0x // initial head
+	byte 0x // initial tail
+	byte 0x0022 // initial head offset
+	txn Sender
+	callsub process_static_tuple_element
+	frame_dig -1 // boxID: uint16
+	callsub process_static_tuple_element
+	pop // pop head offset
+	concat // concat head and tail
+	frame_bury -3 // whitelist: Whitelist
+
+	// app.algo.ts:88
+	// this.whitelist.delete(whitelist)
+	frame_dig -3 // whitelist: Whitelist
+	box_del
+
+	// app.algo.ts:90
+	// this.sendMBRPayment(preMBR)
+	frame_dig -2 // preMBR: uint64
+	callsub sendMBRPayment
+	retsub
+
+abi_route_deleteFromWhitelist:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	dupn 2
+	txna ApplicationArgs 3
+	btoi
+	txna ApplicationArgs 2
+	txna ApplicationArgs 1
+	callsub deleteFromWhitelist
+	int 1
+	return
+
+deleteFromWhitelist:
+	proto 6 0
+
+	// app.algo.ts:102
+	// preMBR = this.app.address.minBalance
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	frame_bury -4 // preMBR: uint64
+
+	// app.algo.ts:103
+	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	byte 0x // initial head
+	byte 0x // initial tail
+	byte 0x0022 // initial head offset
+	txn Sender
+	callsub process_static_tuple_element
+	frame_dig -1 // boxID: uint16
+	callsub process_static_tuple_element
+	pop // pop head offset
+	concat // concat head and tail
+	frame_bury -5 // whitelist: Whitelist
+
+	// app.algo.ts:105
+	// spliced = this.whitelist.get(whitelist).splice(index, 1)
+	frame_dig -5 // whitelist: Whitelist
+	box_get
+	assert
+	int 0
+	extract_uint16
+	int 1
+	-
+	itob
+	extract 6 2
+	frame_dig -3 // index: uint64
+	int 32
+	*
+	int 2
+	+
+	store 12 // splice start
+	int 1
+	int 32
+	*
+	int 32
+	+
+	store 13 // splice byte length
+	frame_dig -5 // whitelist: Whitelist
+	box_get
+	assert
+	int 2
+	load 12 // splice start
+	substring3
+	frame_dig -5 // whitelist: Whitelist
+	box_get
+	assert
+	dup
+	len
+	load 12 // splice start
+	load 13 // splice byte length
+	+
+	int 32
+	-
+	swap
+	substring3
+	concat
+	concat
+	int 1
+	itob
+	extract 6 2
+	frame_dig -5 // whitelist: Whitelist
+	box_get
+	assert
+	load 12 // splice start
+	load 13 // splice byte length
+	int 32
+	-
+	extract3
+	concat
+	swap
+	frame_dig -5 // whitelist: Whitelist
+	dup
+	box_del
+	pop
+	swap
+	box_put
+	frame_bury -6 // spliced: address[]
+
+	// app.algo.ts:107
+	// assert(spliced[0] === addr)
+	frame_dig -6 // spliced: address[]
+	int 0
+	int 32 // element length
+	* // element offset
+	int 2
+	+ // add two for length
+	int 32
+	extract3
+	frame_dig -2 // addr: address
+	==
+	assert
+
+	// app.algo.ts:109
+	// this.sendMBRPayment(preMBR)
+	frame_dig -4 // preMBR: uint64
+	callsub sendMBRPayment
+	retsub
+
+abi_route_verifySender:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	dup
+	txn GroupIndex
+	int 1
+	-
+	txn GroupIndex
+	int 2
+	-
+	txna ApplicationArgs 3
+	txna ApplicationArgs 2
+	btoi
+	txna ApplicationArgs 1
+	callsub verifySender
+	int 1
+	return
+
+verifySender:
+	proto 7 0
+
+	// app.algo.ts:120
+	// assert(verifyLsig.sender === this.verifier.get())
+	frame_dig -5 // verifyLsig: txn
+	gtxns Sender
+	byte "verifier"
+	app_global_get
+	==
+	assert
+
+	// if2_condition
+	// app.algo.ts:121
+	// !this.sigs.exists(this.txn.sender)
+	txn Sender
+	box_get
+	swap
+	pop
+	!
+	bz if2_end
+
+	// if2_consequent
+	// app.algo.ts:121
+	// this.sigs.put(this.txn.sender, sig)
+	txn Sender
+	frame_dig -3 // sig: byte[64]
+	box_put
+
+if2_end:
+	// app.algo.ts:123
+	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	byte 0x // initial head
+	byte 0x // initial tail
+	byte 0x0022 // initial head offset
+	txn Sender
+	callsub process_static_tuple_element
+	frame_dig -1 // boxID: uint16
+	callsub process_static_tuple_element
+	pop // pop head offset
+	concat // concat head and tail
+	frame_bury -6 // whitelist: Whitelist
+
+	// app.algo.ts:125
+	// whitelistAddr = this.whitelist.get(whitelist)[index]
+	frame_dig -6 // whitelist: Whitelist
+	box_get
+	assert
+	frame_dig -2 // index: uint64
+	int 32 // element length
+	* // element offset
+	int 2
+	+ // add two for length
+	int 32
+	extract3
+	frame_bury -7 // whitelistAddr: address
+
+	// app.algo.ts:126
+	// assert(whitelistAddr === this.txn.sender)
+	frame_dig -7 // whitelistAddr: address
+	txn Sender
+	==
+	assert
+	retsub
+
+main:
+	txn NumAppArgs
+	bnz route_abi
+
+	// default createApplication
+	txn ApplicationID
+	int 0
+	==
+	txn OnCompletion
+	int NoOp
+	==
+	&&
+	return
+
+route_abi:
+	method "setVerifierAddress(address)void"
+	method "addToWhitelist(uint16,address,pay)void"
+	method "setWhitelist(uint16,address[])void"
+	method "deleteWhitelist(uint16)void"
+	method "deleteFromWhitelist(uint16,address,uint64)void"
+	method "verifySender(uint16,uint64,byte[64],axfer,txn)void"
+	txna ApplicationArgs 0
+	match abi_route_setVerifierAddress abi_route_addToWhitelist abi_route_setWhitelist abi_route_deleteWhitelist abi_route_deleteFromWhitelist abi_route_verifySender

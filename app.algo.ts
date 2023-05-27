@@ -1,13 +1,14 @@
 import { Contract } from '@algorandfoundation/tealscript';
 
 type Whitelist = {account: Address, boxID: uint16};
-const TMPL_VERIFIER_LSIG_ADDR = Address.zeroAddress;
 
 // eslint-disable-next-line no-unused-vars
 class OptInARC extends Contract {
   whitelist = new BoxMap<Whitelist, Address[]>();
 
   sigs = new BoxMap<Address, byte<64>>();
+
+  verifier = new GlobalReference<Address>();
 
   private verifyMBRPayment(payment: PayTxn, preMBR: uint64): void {
     assert(payment.amount === this.app.address.minBalance - preMBR);
@@ -21,6 +22,12 @@ class OptInARC extends Contract {
       amount: preMBR - this.app.address.minBalance,
       fee: 0,
     });
+  }
+
+  setVerifierAddress(lsig: Address): void {
+    assert(this.txn.sender === this.app.creator);
+    assert(!this.verifier.exists());
+    this.verifier.put(lsig);
   }
 
   /**
@@ -55,7 +62,7 @@ class OptInARC extends Contract {
    */
   setWhitelist(boxID: uint16, addrs: Address[]): void {
     const preMBR = this.app.address.minBalance;
-    const whitelist: Whitelist = { account: this.txn.sender, boxID: boxID};
+    const whitelist: Whitelist = { account: this.txn.sender, boxID: boxID };
 
     this.whitelist.delete(whitelist);
 
@@ -109,13 +116,19 @@ class OptInARC extends Contract {
    * @param index - The index of the address in the whitelist
    *
    */
-    verifySender(boxID: uint16, index: uint64, sig: byte<64>, optIn: AssetTransferTxn, verifyLsig: Txn): void {
-      assert(verifyLsig.sender === TMPL_VERIFIER_LSIG_ADDR)
-      if (!this.sigs.exists(this.txn.sender)) this.sigs.put(this.txn.sender, sig);
-      
-      const whitelist: Whitelist = { account: this.txn.sender, boxID: boxID };
+  verifySender(
+    boxID: uint16,
+    index: uint64,
+    sig: byte<64>,
+    optIn: AssetTransferTxn,
+    verifyLsig: Txn,
+  ): void {
+    assert(verifyLsig.sender === this.verifier.get());
+    if (!this.sigs.exists(this.txn.sender)) this.sigs.put(this.txn.sender, sig);
 
-      const whitelistAddr = this.whitelist.get(whitelist)[index];
-      assert(whitelistAddr === this.txn.sender);
-    }
+    const whitelist: Whitelist = { account: this.txn.sender, boxID: boxID };
+
+    const whitelistAddr = this.whitelist.get(whitelist)[index];
+    assert(whitelistAddr === this.txn.sender);
+  }
 }
