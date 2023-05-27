@@ -33,7 +33,7 @@ class OptInARC extends Contract {
   /**
    * Add address to whitelist box
    *
-   * @param boxID - The index of the whitelist box to add the address to
+   * @param boxID - The ID of the whitelist box to add the address to
    * @param addr - The address to add to the whitelist
    * @param payment - The payment transaction to cover the MBR change
    *
@@ -56,7 +56,7 @@ class OptInARC extends Contract {
    * Sets a address whitelist for the sender. Should only be used when adding/removing
    * more than one address
    *
-   * @param boxID - The index of the whitelist box to put the addresses in
+   * @param boxID - The ID of the whitelist box to put the addresses in
    * @param addrs - Array of addresses that signify the whitelisted addresses
    *
    */
@@ -78,7 +78,7 @@ class OptInARC extends Contract {
   /**
    * Deletes a address whitelist for the sender
    *
-   * @param boxID - The index of the whitelist box to delete
+   * @param boxID - The ID of the whitelist box to delete
    *
    */
   deleteWhitelist(boxID: uint16): void {
@@ -93,7 +93,7 @@ class OptInARC extends Contract {
   /**
    * Deletes a address from a whitelist for the sender
    *
-   * @param boxID - The index of the whitelist box to delete from
+   * @param boxID - The ID of the whitelist box to delete from
    * @param addr - The address to delete from the whitelist
    * @param index - The index of the address in the whitelist
    *
@@ -112,7 +112,7 @@ class OptInARC extends Contract {
   /**
    * Verifies that the sender is in the whitelist
    *
-   * @param boxID - The index of the whitelist box to delete from
+   * @param boxID - The ID of the whitelist box to delete from
    * @param index - The index of the address in the whitelist
    *
    */
