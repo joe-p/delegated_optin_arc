@@ -13,7 +13,7 @@ process_static_tuple_element:
 verifyMBRPayment:
 	proto 2 0
 
-	// ./contracts/app.algo.ts:16
+	// ./contracts/app.algo.ts:17
 	// assert(payment.amount === this.app.address.minBalance - preMBR)
 	frame_dig -1 // payment: pay
 	gtxns Amount
@@ -27,7 +27,7 @@ verifyMBRPayment:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:17
+	// ./contracts/app.algo.ts:18
 	// assert(payment.receiver === this.app.address)
 	frame_dig -1 // payment: pay
 	gtxns Receiver
@@ -41,25 +41,25 @@ verifyMBRPayment:
 sendMBRPayment:
 	proto 1 0
 
-	// ./contracts/app.algo.ts:21
+	// ./contracts/app.algo.ts:22
 	// sendPayment({
 	itxn_begin
 	int pay
 	itxn_field TypeEnum
 
-	// ./contracts/app.algo.ts:22
+	// ./contracts/app.algo.ts:23
 	// sender: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field Sender
 
-	// ./contracts/app.algo.ts:23
+	// ./contracts/app.algo.ts:24
 	// receiver: this.txn.sender
 	txn Sender
 	itxn_field Receiver
 
-	// ./contracts/app.algo.ts:24
+	// ./contracts/app.algo.ts:25
 	// amount: preMBR - this.app.address.minBalance
 	frame_dig -1 // preMBR: uint64
 	txna Applications 0
@@ -70,7 +70,7 @@ sendMBRPayment:
 	-
 	itxn_field Amount
 
-	// ./contracts/app.algo.ts:25
+	// ./contracts/app.algo.ts:26
 	// fee: 0
 	int 0
 	itxn_field Fee
@@ -94,7 +94,7 @@ abi_route_setVerifierAddress:
 setVerifierAddress:
 	proto 1 0
 
-	// ./contracts/app.algo.ts:36
+	// ./contracts/app.algo.ts:37
 	// assert(this.txn.sender === this.app.creator)
 	txn Sender
 	txna Applications 0
@@ -103,7 +103,7 @@ setVerifierAddress:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:37
+	// ./contracts/app.algo.ts:38
 	// assert(!this.verifier.exists())
 	txna Applications 0
 	byte "verifier"
@@ -113,7 +113,7 @@ setVerifierAddress:
 	!
 	assert
 
-	// ./contracts/app.algo.ts:38
+	// ./contracts/app.algo.ts:39
 	// this.verifier.put(lsig)
 	byte "verifier"
 	frame_dig -1 // lsig: address
@@ -143,7 +143,7 @@ abi_route_addToWhitelist:
 addToWhitelist:
 	proto 6 0
 
-	// ./contracts/app.algo.ts:50
+	// ./contracts/app.algo.ts:51
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -152,7 +152,7 @@ addToWhitelist:
 	assert
 	frame_bury -4 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:51
+	// ./contracts/app.algo.ts:52
 	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -166,7 +166,7 @@ addToWhitelist:
 	frame_bury -5 // whitelist: Whitelist
 
 	// if0_condition
-	// ./contracts/app.algo.ts:53
+	// ./contracts/app.algo.ts:54
 	// this.whitelist.exists(whitelist)
 	frame_dig -5 // whitelist: Whitelist
 	box_get
@@ -175,7 +175,7 @@ addToWhitelist:
 	bz if0_else
 
 	// if0_consequent
-	// ./contracts/app.algo.ts:54
+	// ./contracts/app.algo.ts:55
 	// this.whitelist.get(whitelist).push(addr)
 	frame_dig -5 // whitelist: Whitelist
 	box_get
@@ -201,7 +201,7 @@ addToWhitelist:
 	b if0_end
 
 if0_else:
-	// ./contracts/app.algo.ts:56
+	// ./contracts/app.algo.ts:57
 	// newWhitelist: Address[] = [addr]
 	frame_dig -2 // addr: address
 	byte 0x0001
@@ -209,7 +209,7 @@ if0_else:
 	concat
 	frame_bury -6 // newWhitelist: address[]
 
-	// ./contracts/app.algo.ts:57
+	// ./contracts/app.algo.ts:58
 	// this.whitelist.put(whitelist, newWhitelist)
 	frame_dig -5 // whitelist: Whitelist
 	dup
@@ -219,7 +219,7 @@ if0_else:
 	box_put
 
 if0_end:
-	// ./contracts/app.algo.ts:60
+	// ./contracts/app.algo.ts:61
 	// this.verifyMBRPayment(payment, preMBR)
 	frame_dig -4 // preMBR: uint64
 	frame_dig -3 // payment: pay
@@ -246,7 +246,7 @@ abi_route_setWhitelist:
 setWhitelist:
 	proto 4 0
 
-	// ./contracts/app.algo.ts:72
+	// ./contracts/app.algo.ts:73
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -255,7 +255,7 @@ setWhitelist:
 	assert
 	frame_bury -3 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:73
+	// ./contracts/app.algo.ts:74
 	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -268,12 +268,12 @@ setWhitelist:
 	concat // concat head and tail
 	frame_bury -4 // whitelist: Whitelist
 
-	// ./contracts/app.algo.ts:75
+	// ./contracts/app.algo.ts:76
 	// this.whitelist.delete(whitelist)
 	frame_dig -4 // whitelist: Whitelist
 	box_del
 
-	// ./contracts/app.algo.ts:77
+	// ./contracts/app.algo.ts:78
 	// this.whitelist.put(whitelist, addrs)
 	frame_dig -4 // whitelist: Whitelist
 	dup
@@ -283,7 +283,7 @@ setWhitelist:
 	box_put
 
 	// if1_condition
-	// ./contracts/app.algo.ts:79
+	// ./contracts/app.algo.ts:80
 	// preMBR > this.app.address.minBalance
 	frame_dig -3 // preMBR: uint64
 	txna Applications 0
@@ -295,14 +295,14 @@ setWhitelist:
 	bz if1_else
 
 	// if1_consequent
-	// ./contracts/app.algo.ts:80
+	// ./contracts/app.algo.ts:81
 	// this.sendMBRPayment(preMBR)
 	frame_dig -3 // preMBR: uint64
 	callsub sendMBRPayment
 	b if1_end
 
 if1_else:
-	// ./contracts/app.algo.ts:82
+	// ./contracts/app.algo.ts:83
 	// this.verifyMBRPayment(this.txnGroup[this.txn.groupIndex - 1], preMBR)
 	frame_dig -3 // preMBR: uint64
 	txn GroupIndex
@@ -332,7 +332,7 @@ abi_route_deleteWhitelist:
 deleteWhitelist:
 	proto 3 0
 
-	// ./contracts/app.algo.ts:93
+	// ./contracts/app.algo.ts:94
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -341,7 +341,7 @@ deleteWhitelist:
 	assert
 	frame_bury -2 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:94
+	// ./contracts/app.algo.ts:95
 	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -354,12 +354,12 @@ deleteWhitelist:
 	concat // concat head and tail
 	frame_bury -3 // whitelist: Whitelist
 
-	// ./contracts/app.algo.ts:96
+	// ./contracts/app.algo.ts:97
 	// this.whitelist.delete(whitelist)
 	frame_dig -3 // whitelist: Whitelist
 	box_del
 
-	// ./contracts/app.algo.ts:98
+	// ./contracts/app.algo.ts:99
 	// this.sendMBRPayment(preMBR)
 	frame_dig -2 // preMBR: uint64
 	callsub sendMBRPayment
@@ -387,7 +387,7 @@ abi_route_deleteFromWhitelist:
 deleteFromWhitelist:
 	proto 6 0
 
-	// ./contracts/app.algo.ts:110
+	// ./contracts/app.algo.ts:111
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -396,7 +396,7 @@ deleteFromWhitelist:
 	assert
 	frame_bury -4 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:111
+	// ./contracts/app.algo.ts:112
 	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -409,7 +409,7 @@ deleteFromWhitelist:
 	concat // concat head and tail
 	frame_bury -5 // whitelist: Whitelist
 
-	// ./contracts/app.algo.ts:113
+	// ./contracts/app.algo.ts:114
 	// spliced = this.whitelist.get(whitelist).splice(index, 1)
 	frame_dig -5 // whitelist: Whitelist
 	box_get
@@ -473,7 +473,7 @@ deleteFromWhitelist:
 	box_put
 	frame_bury -6 // spliced: address[]
 
-	// ./contracts/app.algo.ts:115
+	// ./contracts/app.algo.ts:116
 	// assert(spliced[0] === addr)
 	frame_dig -6 // spliced: address[]
 	int 0
@@ -487,7 +487,7 @@ deleteFromWhitelist:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:117
+	// ./contracts/app.algo.ts:118
 	// this.sendMBRPayment(preMBR)
 	frame_dig -4 // preMBR: uint64
 	callsub sendMBRPayment
@@ -507,10 +507,6 @@ abi_route_verifySender:
 	txn GroupIndex
 	int 1
 	-
-	txn GroupIndex
-	int 2
-	-
-	txna ApplicationArgs 3
 	txna ApplicationArgs 2
 	btoi
 	txna ApplicationArgs 1
@@ -519,41 +515,12 @@ abi_route_verifySender:
 	return
 
 verifySender:
-	proto 7 0
-
-	// ./contracts/app.algo.ts:134
-	// assert(verifyLsig.sender === this.verifier.get())
-	frame_dig -5 // verifyLsig: txn
-	gtxns Sender
-	byte "verifier"
-	app_global_get
-	==
-	assert
+	proto 5 0
 
 	// if2_condition
-	// ./contracts/app.algo.ts:135
-	// !this.sigs.exists(optIn.assetReceiver)
-	frame_dig -4 // optIn: axfer
-	gtxns AssetReceiver
-	box_get
-	swap
-	pop
-	!
-	bz if2_end
-
-	// if2_consequent
-	// ./contracts/app.algo.ts:135
-	// this.sigs.put(optIn.assetReceiver, sig)
-	frame_dig -4 // optIn: axfer
-	gtxns AssetReceiver
-	frame_dig -3 // sig: byte[64]
-	box_put
-
-if2_end:
-	// if3_condition
-	// ./contracts/app.algo.ts:138
+	// ./contracts/app.algo.ts:134
 	// !this.enabled.exists(optIn.assetReceiver) || !this.enabled.get(optIn.assetReceiver)
-	frame_dig -4 // optIn: axfer
+	frame_dig -3 // optIn: axfer
 	gtxns AssetReceiver
 	box_get
 	swap
@@ -561,7 +528,7 @@ if2_end:
 	!
 	dup
 	bnz skip_or0
-	frame_dig -4 // optIn: axfer
+	frame_dig -3 // optIn: axfer
 	gtxns AssetReceiver
 	box_get
 	assert
@@ -570,31 +537,31 @@ if2_end:
 	||
 
 skip_or0:
-	bz if3_end
+	bz if2_end
 
-	// if3_consequent
-	// ./contracts/app.algo.ts:138
+	// if2_consequent
+	// ./contracts/app.algo.ts:134
 	// return;
 	retsub
 
-if3_end:
-	// ./contracts/app.algo.ts:140
+if2_end:
+	// ./contracts/app.algo.ts:136
 	// whitelist: Whitelist = { account: optIn.assetReceiver, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
 	byte 0x0022 // initial head offset
-	frame_dig -4 // optIn: axfer
+	frame_dig -3 // optIn: axfer
 	gtxns AssetReceiver
 	callsub process_static_tuple_element
 	frame_dig -1 // boxID: uint16
 	callsub process_static_tuple_element
 	pop // pop head offset
 	concat // concat head and tail
-	frame_bury -6 // whitelist: Whitelist
+	frame_bury -4 // whitelist: Whitelist
 
-	// ./contracts/app.algo.ts:142
+	// ./contracts/app.algo.ts:138
 	// whitelistAddr = this.whitelist.get(whitelist)[index]
-	frame_dig -6 // whitelist: Whitelist
+	frame_dig -4 // whitelist: Whitelist
 	box_get
 	assert
 	frame_dig -2 // index: uint64
@@ -604,11 +571,11 @@ if3_end:
 	+ // add two for length
 	int 32
 	extract3
-	frame_bury -7 // whitelistAddr: address
+	frame_bury -5 // whitelistAddr: address
 
-	// ./contracts/app.algo.ts:143
+	// ./contracts/app.algo.ts:139
 	// assert(whitelistAddr === this.txn.sender)
-	frame_dig -7 // whitelistAddr: address
+	frame_dig -5 // whitelistAddr: address
 	txn Sender
 	==
 	assert
@@ -632,11 +599,78 @@ abi_route_setWhitelistStatus:
 setWhitelistStatus:
 	proto 1 0
 
-	// ./contracts/app.algo.ts:153
+	// ./contracts/app.algo.ts:149
 	// this.enabled.put(this.txn.sender, status)
 	txn Sender
 	frame_dig -1 // status: uint64
 	itob
+	box_put
+	retsub
+
+abi_route_setSignature:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	txn GroupIndex
+	int 1
+	-
+	txna ApplicationArgs 3
+	btoi
+	txnas Accounts
+	txna ApplicationArgs 2
+	txna ApplicationArgs 1
+	callsub setSignature
+	int 1
+	return
+
+setSignature:
+	proto 5 0
+
+	// ./contracts/app.algo.ts:162
+	// trueAuthAddr = (acct.authAddr === globals.zeroAddress) ? acct : acct.authAddr
+	frame_dig -3 // acct: account
+	acct_params_get AcctAuthAddr
+	assert
+	global ZeroAddress
+	==
+	bz ternary0_false
+	frame_dig -3 // acct: account
+	b ternary0_end
+
+ternary0_false:
+	frame_dig -3 // acct: account
+	acct_params_get AcctAuthAddr
+	assert
+
+ternary0_end:
+	frame_bury -5 // trueAuthAddr: address
+
+	// ./contracts/app.algo.ts:164
+	// assert(authAddr === trueAuthAddr)
+	frame_dig -2 // authAddr: address
+	frame_dig -5 // trueAuthAddr: address
+	==
+	assert
+
+	// ./contracts/app.algo.ts:165
+	// assert(verifier.sender === this.verifier.get())
+	frame_dig -4 // verifier: txn
+	gtxns Sender
+	byte "verifier"
+	app_global_get
+	==
+	assert
+
+	// ./contracts/app.algo.ts:166
+	// this.sigs.put(acct, sig)
+	frame_dig -3 // acct: account
+	frame_dig -1 // sig: byte[64]
 	box_put
 	retsub
 
@@ -660,7 +694,8 @@ route_abi:
 	method "setWhitelist(uint16,address[])void"
 	method "deleteWhitelist(uint16)void"
 	method "deleteFromWhitelist(uint16,address,uint64)void"
-	method "verifySender(uint16,uint64,byte[64],axfer,txn)void"
+	method "verifySender(uint16,uint64,axfer)void"
 	method "setWhitelistStatus(uint64)void"
+	method "setSignature(byte[64],address,account,txn)void"
 	txna ApplicationArgs 0
-	match abi_route_setVerifierAddress abi_route_addToWhitelist abi_route_setWhitelist abi_route_deleteWhitelist abi_route_deleteFromWhitelist abi_route_verifySender abi_route_setWhitelistStatus
+	match abi_route_setVerifierAddress abi_route_addToWhitelist abi_route_setWhitelist abi_route_deleteWhitelist abi_route_deleteFromWhitelist abi_route_verifySender abi_route_setWhitelistStatus abi_route_setSignature

@@ -6,6 +6,7 @@ type Whitelist = {account: Address, boxID: uint16};
 class OptInARC extends Contract {
   whitelist = new BoxMap<Whitelist, Address[]>();
 
+  // TODO: Add prefixes to TEALScript to differenciate sigs and enabled boxes
   sigs = new BoxMap<Address, byte<64>>();
 
   enabled = new BoxMap<Address, boolean>();
@@ -127,13 +128,8 @@ class OptInARC extends Contract {
   verifySender(
     boxID: uint16,
     index: uint64,
-    sig: byte<64>,
     optIn: AssetTransferTxn,
-    verifyLsig: Txn,
   ): void {
-    assert(verifyLsig.sender === this.verifier.get());
-    if (!this.sigs.exists(optIn.assetReceiver)) this.sigs.put(optIn.assetReceiver, sig);
-
     // If the whitelist is not enabled, then no need to check the whitelist
     if (!this.enabled.exists(optIn.assetReceiver) || !this.enabled.get(optIn.assetReceiver)) return;
 
@@ -151,5 +147,22 @@ class OptInARC extends Contract {
    */
   setWhitelistStatus(status: boolean): void {
     this.enabled.put(this.txn.sender, status);
+  }
+
+  /**
+   * Set the signature of the lsig for the given account
+   *
+   * @param sig - The signature of the lsig
+   * @param authAddr - The auth address of the account
+   * @param acct - The account to set the signature for
+   * @param verifier - A txn from the verifier lsig to verify the signature
+   *
+   */
+  setSignature(sig: byte<64>, authAddr: Address, acct: Account, verifier: Txn): void {
+    const trueAuthAddr = (acct.authAddr === globals.zeroAddress) ? acct : acct.authAddr;
+
+    assert(authAddr === trueAuthAddr);
+    assert(verifier.sender === this.verifier.get());
+    this.sigs.put(acct, sig);
   }
 }

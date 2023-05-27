@@ -1,5 +1,9 @@
 #pragma version 8
-// Note: There is no fee or rekey validation because the funds of this account are irrelevant
+// Verify not rekeyed
+txn RekeyTo
+global ZeroAddress
+==
+assert
 
 // data
 byte TMPL_LSIG_PROGRAM
@@ -8,12 +12,12 @@ byte TMPL_LSIG_PROGRAM
 txn GroupIndex
 int 1
 +
-gtxnsa ApplicationArgs 3
+gtxnsa ApplicationArgs 1
 
 // public key
 txn GroupIndex
 int 1
--
-gtxns Sender
++
+gtxnsa ApplicationArgs 2
 
 ed25519verify

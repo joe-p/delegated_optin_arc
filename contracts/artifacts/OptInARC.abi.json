@@ -116,18 +116,8 @@
           "desc": ""
         },
         {
-          "name": "sig",
-          "type": "byte[64]",
-          "desc": ""
-        },
-        {
           "name": "optIn",
           "type": "axfer",
-          "desc": ""
-        },
-        {
-          "name": "verifyLsig",
-          "type": "txn",
           "desc": ""
         }
       ],
@@ -143,6 +133,36 @@
         {
           "name": "status",
           "type": "uint64",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "setSignature",
+      "args": [
+        {
+          "name": "sig",
+          "type": "byte[64]",
+          "desc": ""
+        },
+        {
+          "name": "authAddr",
+          "type": "address",
+          "desc": ""
+        },
+        {
+          "name": "acct",
+          "type": "account",
+          "desc": ""
+        },
+        {
+          "name": "verifier",
+          "type": "txn",
           "desc": ""
         }
       ],
