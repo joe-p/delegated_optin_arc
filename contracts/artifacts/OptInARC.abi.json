@@ -136,6 +136,21 @@
         "type": "void",
         "desc": ""
       }
+    },
+    {
+      "name": "setWhitelistStatus",
+      "args": [
+        {
+          "name": "status",
+          "type": "uint64",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
     }
   ]
 }

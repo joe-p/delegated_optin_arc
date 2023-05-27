@@ -149,7 +149,7 @@ class OptInARC extends Contract {
    * @param status - True to enable whitelist, false to disable (allow any account to opt in)
    *
    */
-  setWhitelistStatus(status: boolean) {
+  setWhitelistStatus(status: boolean): void {
     this.enabled.put(this.txn.sender, status);
   }
 }
