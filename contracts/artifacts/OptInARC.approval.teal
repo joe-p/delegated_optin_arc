@@ -520,8 +520,10 @@ verifySender:
 	// if2_condition
 	// ./contracts/app.algo.ts:136
 	// !this.status.exists(optIn.assetReceiver)
+	byte "status"
 	frame_dig -3 // optIn: axfer
 	gtxns AssetReceiver
+	concat
 	box_get
 	swap
 	pop
@@ -536,8 +538,10 @@ verifySender:
 if2_end:
 	// ./contracts/app.algo.ts:138
 	// status = this.status.get(optIn.assetReceiver)
+	byte "status"
 	frame_dig -3 // optIn: axfer
 	gtxns AssetReceiver
+	concat
 	box_get
 	assert
 	frame_bury -4 // status: uint8
@@ -631,7 +635,9 @@ setWhitelistStatus:
 
 	// ./contracts/app.algo.ts:157
 	// this.status.put(this.txn.sender, status)
+	byte "status"
 	txn Sender
+	concat
 	frame_dig -1 // status: uint8
 	box_put
 	retsub
@@ -699,7 +705,9 @@ ternary0_end:
 	// if4_condition
 	// ./contracts/app.algo.ts:176
 	// this.sigs.exists(acct)
+	byte "sig"
 	frame_dig -3 // acct: account
+	concat
 	box_get
 	swap
 	pop
@@ -708,7 +716,9 @@ ternary0_end:
 	// if4_consequent
 	// ./contracts/app.algo.ts:176
 	// assert(this.sigs.get(acct) !== sig)
+	byte "sig"
 	frame_dig -3 // acct: account
+	concat
 	box_get
 	assert
 	frame_dig -1 // sig: byte[64]
@@ -718,7 +728,9 @@ ternary0_end:
 if4_end:
 	// ./contracts/app.algo.ts:178
 	// this.sigs.put(acct, sig)
+	byte "sig"
 	frame_dig -3 // acct: account
+	concat
 	frame_dig -1 // sig: byte[64]
 	box_put
 	retsub

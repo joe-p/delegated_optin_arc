@@ -9,10 +9,9 @@ const ALLOW_NONE = 2 as uint8;
 class OptInARC extends Contract {
   whitelist = new BoxMap<Whitelist, Address[]>();
 
-  // TODO: Add prefixes to TEALScript to differenciate sigs and status boxes
-  sigs = new BoxMap<Address, byte<64>>();
+  sigs = new BoxMap<Address, byte<64>>({ prefix: 'sig' });
 
-  status = new BoxMap<Address, uint8>();
+  status = new BoxMap<Address, uint8>({ prefix: 'status' });
 
   verifier = new GlobalReference<Address>();
 
