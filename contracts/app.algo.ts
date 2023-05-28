@@ -2,6 +2,9 @@ import { Contract } from '@algorandfoundation/tealscript';
 
 type Whitelist = {account: Address, boxID: uint16};
 
+const ALLOW_ALL = 0 as uint8;
+const ALLOW_NONE = 2 as uint8;
+
 // eslint-disable-next-line no-unused-vars
 class OptInARC extends Contract {
   whitelist = new BoxMap<Whitelist, Address[]>();
@@ -133,8 +136,8 @@ class OptInARC extends Contract {
     if (!this.status.exists(optIn.assetReceiver)) return;
 
     const status = this.status.get(optIn.assetReceiver);
-    assert(status !== 2);
-    if (status === 0) return;
+    assert(status !== ALLOW_NONE);
+    if (status === ALLOW_ALL) return;
 
     const whitelist: Whitelist = { account: optIn.assetReceiver, boxID: boxID };
 
@@ -150,7 +153,7 @@ class OptInARC extends Contract {
    *
    */
   setWhitelistStatus(status: uint8): void {
-    assert(status < 3);
+    assert(status <= ALLOW_NONE);
     this.status.put(this.txn.sender, status);
   }
 

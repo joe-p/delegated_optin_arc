@@ -132,7 +132,7 @@
       "args": [
         {
           "name": "status",
-          "type": "uint64",
+          "type": "uint8",
           "desc": ""
         }
       ],
