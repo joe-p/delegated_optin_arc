@@ -6,10 +6,10 @@ type Whitelist = {account: Address, boxID: uint16};
 class OptInARC extends Contract {
   whitelist = new BoxMap<Whitelist, Address[]>();
 
-  // TODO: Add prefixes to TEALScript to differenciate sigs and enabled boxes
+  // TODO: Add prefixes to TEALScript to differenciate sigs and status boxes
   sigs = new BoxMap<Address, byte<64>>();
 
-  enabled = new BoxMap<Address, boolean>();
+  status = new BoxMap<Address, uint8>();
 
   verifier = new GlobalReference<Address>();
 
@@ -130,8 +130,11 @@ class OptInARC extends Contract {
     index: uint64,
     optIn: AssetTransferTxn,
   ): void {
-    // If the whitelist is not enabled, then no need to check the whitelist
-    if (!this.enabled.exists(optIn.assetReceiver) || !this.enabled.get(optIn.assetReceiver)) return;
+    if (!this.status.exists(optIn.assetReceiver)) return;
+
+    const status = this.status.get(optIn.assetReceiver);
+    assert(status !== 2);
+    if (status === 0) return;
 
     const whitelist: Whitelist = { account: optIn.assetReceiver, boxID: boxID };
 
@@ -140,13 +143,15 @@ class OptInARC extends Contract {
   }
 
   /**
-   * Enable or disable the whitelist functionality for the caller
+   * Set the status of the opt-in whitelist
    *
-   * @param status - True to enable whitelist, false to disable (allow any account to opt in)
+   * @param status - 0 for allowing all opt ins, 1 for allowing only whitelisted opt ins,
+   * 2 for allowing no opt ins. If status doesn't exist, it is assumed to be 0
    *
    */
-  setWhitelistStatus(status: boolean): void {
-    this.enabled.put(this.txn.sender, status);
+  setWhitelistStatus(status: uint8): void {
+    assert(status < 3);
+    this.status.put(this.txn.sender, status);
   }
 
   /**
