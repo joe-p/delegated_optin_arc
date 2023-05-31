@@ -51,7 +51,7 @@ abi_route_setSigVerificationAddress:
 setSigVerificationAddress:
 	proto 1 0
 
-	// ./contracts/app.algo.ts:20
+	// ./contracts/master.algo.ts:20
 	// assert(this.txn.sender === this.app.creator)
 	txn Sender
 	txna Applications 0
@@ -60,7 +60,7 @@ setSigVerificationAddress:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:21
+	// ./contracts/master.algo.ts:21
 	// assert(!this.sigVerificationAddress.exists())
 	txna Applications 0
 	byte "sigVerificationAddress"
@@ -70,7 +70,7 @@ setSigVerificationAddress:
 	!
 	assert
 
-	// ./contracts/app.algo.ts:22
+	// ./contracts/master.algo.ts:22
 	// this.sigVerificationAddress.put(lsig)
 	byte "sigVerificationAddress"
 	frame_dig -1 // lsig: address
@@ -102,7 +102,7 @@ abi_route_setSignature:
 setSignature:
 	proto 5 0
 
-	// ./contracts/app.algo.ts:35
+	// ./contracts/master.algo.ts:35
 	// trueAuthAddr = (acct.authAddr === globals.zeroAddress) ? acct : acct.authAddr
 	frame_dig -3 // acct: account
 	acct_params_get AcctAuthAddr
@@ -121,14 +121,14 @@ ternary0_false:
 ternary0_end:
 	frame_bury -5 // trueAuthAddr: address
 
-	// ./contracts/app.algo.ts:37
+	// ./contracts/master.algo.ts:37
 	// assert(authAddr === trueAuthAddr)
 	frame_dig -2 // authAddr: address
 	frame_dig -5 // trueAuthAddr: address
 	==
 	assert
 
-	// ./contracts/app.algo.ts:38
+	// ./contracts/master.algo.ts:38
 	// assert(verifier.sender === this.sigVerificationAddress.get())
 	frame_dig -4 // verifier: txn
 	gtxns Sender
@@ -138,7 +138,7 @@ ternary0_end:
 	assert
 
 	// if0_condition
-	// ./contracts/app.algo.ts:41
+	// ./contracts/master.algo.ts:41
 	// this.sigs.exists(acct)
 	byte "sig"
 	frame_dig -3 // acct: account
@@ -149,7 +149,7 @@ ternary0_end:
 	bz if0_end
 
 	// if0_consequent
-	// ./contracts/app.algo.ts:41
+	// ./contracts/master.algo.ts:41
 	// assert(this.sigs.get(acct) !== sig)
 	byte "sig"
 	frame_dig -3 // acct: account
@@ -161,7 +161,7 @@ ternary0_end:
 	assert
 
 if0_end:
-	// ./contracts/app.algo.ts:43
+	// ./contracts/master.algo.ts:43
 	// this.sigs.put(acct, sig)
 	byte "sig"
 	frame_dig -3 // acct: account
@@ -191,7 +191,7 @@ abi_route_setVerificationMehod:
 setVerificationMehod:
 	proto 3 0
 
-	// ./contracts/app.algo.ts:54
+	// ./contracts/master.algo.ts:54
 	// assert(this.txn.sender === this.app.creator)
 	txn Sender
 	txna Applications 0
@@ -200,13 +200,13 @@ setVerificationMehod:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:56
+	// ./contracts/master.algo.ts:56
 	// method: Method = { app: Application.fromIndex(appID), selector: selector }
 	byte 0x // initial head
 	byte 0x // initial tail
 	byte 0x000a // initial head offset
 
-	// ./contracts/app.algo.ts:1
+	// ./contracts/master.algo.ts:1
 	// Application.fromIndex(appID)
 	frame_dig -1 // appID: uint64
 	itob
@@ -223,7 +223,7 @@ setVerificationMehod:
 	concat // concat head and tail
 	frame_bury -3 // method: Method
 
-	// ./contracts/app.algo.ts:58
+	// ./contracts/master.algo.ts:58
 	// this.verificationMethod.put(this.txn.sender, method)
 	txn Sender
 	dup
@@ -257,7 +257,7 @@ verify:
 	proto 3 0
 
 	// if1_condition
-	// ./contracts/app.algo.ts:72
+	// ./contracts/master.algo.ts:72
 	// !this.verificationMethod.exists(optIn.assetReceiver)
 	frame_dig -1 // optIn: axfer
 	gtxns AssetReceiver
@@ -268,12 +268,12 @@ verify:
 	bz if1_end
 
 	// if1_consequent
-	// ./contracts/app.algo.ts:72
+	// ./contracts/master.algo.ts:72
 	// return;
 	retsub
 
 if1_end:
-	// ./contracts/app.algo.ts:74
+	// ./contracts/master.algo.ts:74
 	// method = this.verificationMethod.get(optIn.assetReceiver)
 	frame_dig -1 // optIn: axfer
 	gtxns AssetReceiver
@@ -281,7 +281,7 @@ if1_end:
 	assert
 	frame_bury -3 // method: {app: application, selector: string}
 
-	// ./contracts/app.algo.ts:76
+	// ./contracts/master.algo.ts:76
 	// assert(verificationTxn.applicationArgs[0] === method.selector)
 	frame_dig -2 // verificationTxn: appl
 	gtxns ApplicationArgs 0
@@ -309,7 +309,7 @@ if1_end:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:77
+	// ./contracts/master.algo.ts:77
 	// assert(verificationTxn.applicationID === method.app)
 	frame_dig -2 // verificationTxn: appl
 	gtxns ApplicationID

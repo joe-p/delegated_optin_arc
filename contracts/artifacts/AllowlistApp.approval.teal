@@ -13,7 +13,7 @@ process_static_tuple_element:
 verifyMBRPayment:
 	proto 2 0
 
-	// ./contracts/app.algo.ts:93
+	// ./contracts/allowlist.algo.ts:15
 	// assert(payment.amount === this.app.address.minBalance - preMBR)
 	frame_dig -1 // payment: pay
 	gtxns Amount
@@ -27,7 +27,7 @@ verifyMBRPayment:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:94
+	// ./contracts/allowlist.algo.ts:16
 	// assert(payment.receiver === this.app.address)
 	frame_dig -1 // payment: pay
 	gtxns Receiver
@@ -41,25 +41,25 @@ verifyMBRPayment:
 sendMBRPayment:
 	proto 1 0
 
-	// ./contracts/app.algo.ts:98
+	// ./contracts/allowlist.algo.ts:20
 	// sendPayment({
 	itxn_begin
 	int pay
 	itxn_field TypeEnum
 
-	// ./contracts/app.algo.ts:99
+	// ./contracts/allowlist.algo.ts:21
 	// sender: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field Sender
 
-	// ./contracts/app.algo.ts:100
+	// ./contracts/allowlist.algo.ts:22
 	// receiver: this.txn.sender
 	txn Sender
 	itxn_field Receiver
 
-	// ./contracts/app.algo.ts:101
+	// ./contracts/allowlist.algo.ts:23
 	// amount: preMBR - this.app.address.minBalance
 	frame_dig -1 // preMBR: uint64
 	txna Applications 0
@@ -70,7 +70,7 @@ sendMBRPayment:
 	-
 	itxn_field Amount
 
-	// ./contracts/app.algo.ts:102
+	// ./contracts/allowlist.algo.ts:24
 	// fee: 0
 	int 0
 	itxn_field Fee
@@ -100,7 +100,7 @@ abi_route_addToAllowlist:
 addToAllowlist:
 	proto 6 0
 
-	// ./contracts/app.algo.ts:115
+	// ./contracts/allowlist.algo.ts:37
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -109,7 +109,7 @@ addToAllowlist:
 	assert
 	frame_bury -4 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:116
+	// ./contracts/allowlist.algo.ts:38
 	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -123,7 +123,7 @@ addToAllowlist:
 	frame_bury -5 // allowlist: Allowlist
 
 	// if0_condition
-	// ./contracts/app.algo.ts:118
+	// ./contracts/allowlist.algo.ts:40
 	// this.allowlist.exists(allowlist)
 	frame_dig -5 // allowlist: Allowlist
 	box_get
@@ -132,7 +132,7 @@ addToAllowlist:
 	bz if0_else
 
 	// if0_consequent
-	// ./contracts/app.algo.ts:119
+	// ./contracts/allowlist.algo.ts:41
 	// this.allowlist.get(allowlist).push(addr)
 	frame_dig -5 // allowlist: Allowlist
 	box_get
@@ -158,7 +158,7 @@ addToAllowlist:
 	b if0_end
 
 if0_else:
-	// ./contracts/app.algo.ts:121
+	// ./contracts/allowlist.algo.ts:43
 	// newAllowlist: Address[] = [addr]
 	frame_dig -2 // addr: address
 	byte 0x0001
@@ -166,7 +166,7 @@ if0_else:
 	concat
 	frame_bury -6 // newAllowlist: address[]
 
-	// ./contracts/app.algo.ts:122
+	// ./contracts/allowlist.algo.ts:44
 	// this.allowlist.put(allowlist, newAllowlist)
 	frame_dig -5 // allowlist: Allowlist
 	dup
@@ -176,7 +176,7 @@ if0_else:
 	box_put
 
 if0_end:
-	// ./contracts/app.algo.ts:125
+	// ./contracts/allowlist.algo.ts:47
 	// this.verifyMBRPayment(payment, preMBR)
 	frame_dig -4 // preMBR: uint64
 	frame_dig -3 // payment: pay
@@ -203,7 +203,7 @@ abi_route_setAllowlist:
 setAllowlist:
 	proto 4 0
 
-	// ./contracts/app.algo.ts:137
+	// ./contracts/allowlist.algo.ts:59
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -212,7 +212,7 @@ setAllowlist:
 	assert
 	frame_bury -3 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:138
+	// ./contracts/allowlist.algo.ts:60
 	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -225,12 +225,12 @@ setAllowlist:
 	concat // concat head and tail
 	frame_bury -4 // allowlist: Allowlist
 
-	// ./contracts/app.algo.ts:140
+	// ./contracts/allowlist.algo.ts:62
 	// this.allowlist.delete(allowlist)
 	frame_dig -4 // allowlist: Allowlist
 	box_del
 
-	// ./contracts/app.algo.ts:142
+	// ./contracts/allowlist.algo.ts:64
 	// this.allowlist.put(allowlist, addrs)
 	frame_dig -4 // allowlist: Allowlist
 	dup
@@ -240,7 +240,7 @@ setAllowlist:
 	box_put
 
 	// if1_condition
-	// ./contracts/app.algo.ts:144
+	// ./contracts/allowlist.algo.ts:66
 	// preMBR > this.app.address.minBalance
 	frame_dig -3 // preMBR: uint64
 	txna Applications 0
@@ -252,14 +252,14 @@ setAllowlist:
 	bz if1_else
 
 	// if1_consequent
-	// ./contracts/app.algo.ts:145
+	// ./contracts/allowlist.algo.ts:67
 	// this.sendMBRPayment(preMBR)
 	frame_dig -3 // preMBR: uint64
 	callsub sendMBRPayment
 	b if1_end
 
 if1_else:
-	// ./contracts/app.algo.ts:147
+	// ./contracts/allowlist.algo.ts:69
 	// this.verifyMBRPayment(this.txnGroup[this.txn.groupIndex - 1], preMBR)
 	frame_dig -3 // preMBR: uint64
 	txn GroupIndex
@@ -289,7 +289,7 @@ abi_route_deleteAllowlist:
 deleteAllowlist:
 	proto 3 0
 
-	// ./contracts/app.algo.ts:158
+	// ./contracts/allowlist.algo.ts:80
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -298,7 +298,7 @@ deleteAllowlist:
 	assert
 	frame_bury -2 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:159
+	// ./contracts/allowlist.algo.ts:81
 	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -311,12 +311,12 @@ deleteAllowlist:
 	concat // concat head and tail
 	frame_bury -3 // allowlist: Allowlist
 
-	// ./contracts/app.algo.ts:161
+	// ./contracts/allowlist.algo.ts:83
 	// this.allowlist.delete(allowlist)
 	frame_dig -3 // allowlist: Allowlist
 	box_del
 
-	// ./contracts/app.algo.ts:163
+	// ./contracts/allowlist.algo.ts:85
 	// this.sendMBRPayment(preMBR)
 	frame_dig -2 // preMBR: uint64
 	callsub sendMBRPayment
@@ -344,7 +344,7 @@ abi_route_deleteFromAllowlist:
 deleteFromAllowlist:
 	proto 6 0
 
-	// ./contracts/app.algo.ts:175
+	// ./contracts/allowlist.algo.ts:97
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -353,7 +353,7 @@ deleteFromAllowlist:
 	assert
 	frame_bury -4 // preMBR: uint64
 
-	// ./contracts/app.algo.ts:176
+	// ./contracts/allowlist.algo.ts:98
 	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -366,7 +366,7 @@ deleteFromAllowlist:
 	concat // concat head and tail
 	frame_bury -5 // allowlist: Allowlist
 
-	// ./contracts/app.algo.ts:178
+	// ./contracts/allowlist.algo.ts:100
 	// spliced = this.allowlist.get(allowlist).splice(index, 1)
 	frame_dig -5 // allowlist: Allowlist
 	box_get
@@ -430,7 +430,7 @@ deleteFromAllowlist:
 	box_put
 	frame_bury -6 // spliced: address[]
 
-	// ./contracts/app.algo.ts:180
+	// ./contracts/allowlist.algo.ts:102
 	// assert(spliced[0] === addr)
 	frame_dig -6 // spliced: address[]
 	int 0
@@ -444,7 +444,7 @@ deleteFromAllowlist:
 	==
 	assert
 
-	// ./contracts/app.algo.ts:182
+	// ./contracts/allowlist.algo.ts:104
 	// this.sendMBRPayment(preMBR)
 	frame_dig -4 // preMBR: uint64
 	callsub sendMBRPayment
@@ -471,7 +471,7 @@ abi_route_verifySender:
 verifySender:
 	proto 6 0
 
-	// ./contracts/app.algo.ts:196
+	// ./contracts/allowlist.algo.ts:118
 	// optIn = this.txnGroup[this.txn.groupIndex - 1]
 	txn GroupIndex
 	int 1
@@ -479,7 +479,7 @@ verifySender:
 	frame_bury -3 // optIn: txn
 
 	// if2_condition
-	// ./contracts/app.algo.ts:197
+	// ./contracts/allowlist.algo.ts:119
 	// !this.status.exists(optIn.assetReceiver)
 	byte "status"
 	frame_dig -3 // optIn: txn
@@ -492,12 +492,12 @@ verifySender:
 	bz if2_end
 
 	// if2_consequent
-	// ./contracts/app.algo.ts:197
+	// ./contracts/allowlist.algo.ts:119
 	// return;
 	retsub
 
 if2_end:
-	// ./contracts/app.algo.ts:199
+	// ./contracts/allowlist.algo.ts:121
 	// status = this.status.get(optIn.assetReceiver)
 	byte "status"
 	frame_dig -3 // optIn: txn
@@ -507,7 +507,7 @@ if2_end:
 	assert
 	frame_bury -4 // status: uint8
 
-	// ./contracts/app.algo.ts:200
+	// ./contracts/allowlist.algo.ts:122
 	// assert(status !== ALLOW_NONE)
 	frame_dig -4 // status: uint8
 	int 2
@@ -517,7 +517,7 @@ if2_end:
 	assert
 
 	// if3_condition
-	// ./contracts/app.algo.ts:201
+	// ./contracts/allowlist.algo.ts:123
 	// status === ALLOW_ALL
 	frame_dig -4 // status: uint8
 	int 0
@@ -527,12 +527,12 @@ if2_end:
 	bz if3_end
 
 	// if3_consequent
-	// ./contracts/app.algo.ts:201
+	// ./contracts/allowlist.algo.ts:123
 	// return;
 	retsub
 
 if3_end:
-	// ./contracts/app.algo.ts:203
+	// ./contracts/allowlist.algo.ts:125
 	// allowlist: Allowlist = { account: optIn.assetReceiver, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
@@ -546,7 +546,7 @@ if3_end:
 	concat // concat head and tail
 	frame_bury -5 // allowlist: Allowlist
 
-	// ./contracts/app.algo.ts:205
+	// ./contracts/allowlist.algo.ts:127
 	// allowlistAddr = this.allowlist.get(allowlist)[index]
 	frame_dig -5 // allowlist: Allowlist
 	box_get
@@ -560,7 +560,7 @@ if3_end:
 	extract3
 	frame_bury -6 // allowlistAddr: address
 
-	// ./contracts/app.algo.ts:206
+	// ./contracts/allowlist.algo.ts:128
 	// assert(allowlistAddr === this.txn.sender)
 	frame_dig -6 // allowlistAddr: address
 	txn Sender
@@ -585,7 +585,7 @@ abi_route_setAllowlistStatus:
 setAllowlistStatus:
 	proto 1 0
 
-	// ./contracts/app.algo.ts:217
+	// ./contracts/allowlist.algo.ts:139
 	// assert(status <= ALLOW_NONE)
 	frame_dig -1 // status: uint8
 	int 2
@@ -594,7 +594,7 @@ setAllowlistStatus:
 	b<=
 	assert
 
-	// ./contracts/app.algo.ts:218
+	// ./contracts/allowlist.algo.ts:140
 	// this.status.put(this.txn.sender, status)
 	byte "status"
 	txn Sender
