@@ -62,15 +62,16 @@ class Master extends Contract {
    * Verifies that the opt in is allowed
    *
    * @param optIn - The opt in transaction, presumably from the delegated lsig
-   * @param verificationTxn - The app call to the verification app
+   * @param verificationTxnIndex - The index of the app call to the verification app
    *
    */
   verify(
     optIn: AssetTransferTxn,
-    verificationTxn: AppCallTxn,
+    verificationTxnIndex: uint64,
   ): void {
     if (!this.verificationMethod.exists(optIn.assetReceiver)) return;
 
+    const verificationTxn = this.txnGroup[verificationTxnIndex] as AppCallTxn;
     const method = this.verificationMethod.get(optIn.assetReceiver);
 
     assert(verificationTxn.applicationArgs[0] === method.selector);
