@@ -1,7 +1,7 @@
 import * as algokit from '@algorandfoundation/algokit-utils';
 import algosdk from 'algosdk';
 import { readFileSync } from 'fs';
-import appSpec from './contracts/artifacts/OptInARC.json';
+import masterAppSpec from './contracts/artifacts/Master.json';
 
 const algodClient = new algosdk.Algodv2('a'.repeat(64), 'http://localhost', 4001);
 const indexerClient = new algosdk.Indexer('a'.repeat(64), 'http://localhost', 8980);
@@ -9,9 +9,9 @@ const kmdClient = new algosdk.Kmd('a'.repeat(64), 'http://localhost', 4002);
 
 async function deploy() {
   const sender = await algokit.getDispenserAccount(algodClient, kmdClient);
-  const app = algokit.getAppClient(
+  const master = algokit.getAppClient(
     {
-      app: JSON.stringify(appSpec),
+      app: JSON.stringify(masterAppSpec),
       sender,
       creatorAddress: sender.addr,
       indexer: indexerClient,
@@ -19,7 +19,7 @@ async function deploy() {
     algodClient,
   );
 
-  const { appId } = await app.create();
+  const { appId } = await master.create();
 
   const optInLsigTeal = readFileSync('./contracts/optin_lsig.teal')
     .toString()
@@ -35,8 +35,8 @@ async function deploy() {
 
   const compiledVerifierTeal = await algodClient.compile(verifierLsigTeal).do();
 
-  await app.call({
-    method: 'setVerifierAddress',
+  await master.call({
+    method: 'setSigVerificationAddress',
     methodArgs: [compiledVerifierTeal.hash],
   });
 }

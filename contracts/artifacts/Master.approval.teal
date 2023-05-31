@@ -1,0 +1,347 @@
+#pragma version 8
+	b main
+
+process_dynamic_tuple_element:
+	proto 4 3
+	frame_dig -4 // tuple head
+	frame_dig -2 // head offset
+	concat
+	frame_bury -4 // tuple head
+	frame_dig -1 // element
+	dup
+	len
+	frame_dig -2 // head offset
+	btoi
+	+
+	itob
+	extract 6 2
+	frame_bury -2 // head offset
+	frame_dig -3 // tuple tail
+	swap
+	concat
+	frame_bury -3 // tuple tail
+	frame_dig -4 // tuple head
+	frame_dig -3 // tuple tail
+	frame_dig -2 // head offset
+	retsub
+
+process_static_tuple_element:
+	proto 4 3
+	frame_dig -4 // tuple head
+	frame_dig -1 // element
+	concat
+	frame_dig -3 // tuple tail
+	frame_dig -2 // head offset
+	retsub
+
+abi_route_setSigVerificationAddress:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	txna ApplicationArgs 1
+	callsub setSigVerificationAddress
+	int 1
+	return
+
+setSigVerificationAddress:
+	proto 1 0
+
+	// ./contracts/app.algo.ts:20
+	// assert(this.txn.sender === this.app.creator)
+	txn Sender
+	txna Applications 0
+	app_params_get AppCreator
+	assert
+	==
+	assert
+
+	// ./contracts/app.algo.ts:21
+	// assert(!this.sigVerificationAddress.exists())
+	txna Applications 0
+	byte "sigVerificationAddress"
+	app_global_get_ex
+	swap
+	pop
+	!
+	assert
+
+	// ./contracts/app.algo.ts:22
+	// this.sigVerificationAddress.put(lsig)
+	byte "sigVerificationAddress"
+	frame_dig -1 // lsig: address
+	app_global_put
+	retsub
+
+abi_route_setSignature:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	txn GroupIndex
+	int 1
+	-
+	txna ApplicationArgs 3
+	btoi
+	txnas Accounts
+	txna ApplicationArgs 2
+	txna ApplicationArgs 1
+	callsub setSignature
+	int 1
+	return
+
+setSignature:
+	proto 5 0
+
+	// ./contracts/app.algo.ts:35
+	// trueAuthAddr = (acct.authAddr === globals.zeroAddress) ? acct : acct.authAddr
+	frame_dig -3 // acct: account
+	acct_params_get AcctAuthAddr
+	assert
+	global ZeroAddress
+	==
+	bz ternary0_false
+	frame_dig -3 // acct: account
+	b ternary0_end
+
+ternary0_false:
+	frame_dig -3 // acct: account
+	acct_params_get AcctAuthAddr
+	assert
+
+ternary0_end:
+	frame_bury -5 // trueAuthAddr: address
+
+	// ./contracts/app.algo.ts:37
+	// assert(authAddr === trueAuthAddr)
+	frame_dig -2 // authAddr: address
+	frame_dig -5 // trueAuthAddr: address
+	==
+	assert
+
+	// ./contracts/app.algo.ts:38
+	// assert(verifier.sender === this.sigVerificationAddress.get())
+	frame_dig -4 // verifier: txn
+	gtxns Sender
+	byte "sigVerificationAddress"
+	app_global_get
+	==
+	assert
+
+	// if0_condition
+	// ./contracts/app.algo.ts:41
+	// this.sigs.exists(acct)
+	byte "sig"
+	frame_dig -3 // acct: account
+	concat
+	box_get
+	swap
+	pop
+	bz if0_end
+
+	// if0_consequent
+	// ./contracts/app.algo.ts:41
+	// assert(this.sigs.get(acct) !== sig)
+	byte "sig"
+	frame_dig -3 // acct: account
+	concat
+	box_get
+	assert
+	frame_dig -1 // sig: byte[64]
+	!=
+	assert
+
+if0_end:
+	// ./contracts/app.algo.ts:43
+	// this.sigs.put(acct, sig)
+	byte "sig"
+	frame_dig -3 // acct: account
+	concat
+	frame_dig -1 // sig: byte[64]
+	box_put
+	retsub
+
+abi_route_setVerificationMehod:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	txna ApplicationArgs 2
+	extract 2 0
+	txna ApplicationArgs 1
+	btoi
+	callsub setVerificationMehod
+	int 1
+	return
+
+setVerificationMehod:
+	proto 3 0
+
+	// ./contracts/app.algo.ts:54
+	// assert(this.txn.sender === this.app.creator)
+	txn Sender
+	txna Applications 0
+	app_params_get AppCreator
+	assert
+	==
+	assert
+
+	// ./contracts/app.algo.ts:56
+	// method: Method = { app: Application.fromIndex(appID), selector: selector }
+	byte 0x // initial head
+	byte 0x // initial tail
+	byte 0x000a // initial head offset
+
+	// ./contracts/app.algo.ts:1
+	// Application.fromIndex(appID)
+	frame_dig -1 // appID: uint64
+	itob
+	callsub process_static_tuple_element
+	frame_dig -2 // selector: bytes
+	dup
+	len
+	itob
+	extract 6 2
+	swap
+	concat
+	callsub process_dynamic_tuple_element
+	pop // pop head offset
+	concat // concat head and tail
+	frame_bury -3 // method: Method
+
+	// ./contracts/app.algo.ts:58
+	// this.verificationMethod.put(this.txn.sender, method)
+	txn Sender
+	dup
+	box_del
+	pop
+	frame_dig -3 // method: Method
+	box_put
+	retsub
+
+abi_route_verify:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
+	int 0
+	!=
+	&&
+	assert
+	byte 0x
+	txn GroupIndex
+	int 1
+	-
+	txn GroupIndex
+	int 2
+	-
+	callsub verify
+	int 1
+	return
+
+verify:
+	proto 3 0
+
+	// if1_condition
+	// ./contracts/app.algo.ts:72
+	// !this.verificationMethod.exists(optIn.assetReceiver)
+	frame_dig -1 // optIn: axfer
+	gtxns AssetReceiver
+	box_get
+	swap
+	pop
+	!
+	bz if1_end
+
+	// if1_consequent
+	// ./contracts/app.algo.ts:72
+	// return;
+	retsub
+
+if1_end:
+	// ./contracts/app.algo.ts:74
+	// method = this.verificationMethod.get(optIn.assetReceiver)
+	frame_dig -1 // optIn: axfer
+	gtxns AssetReceiver
+	box_get
+	assert
+	frame_bury -3 // method: {app: application, selector: string}
+
+	// ./contracts/app.algo.ts:76
+	// assert(verificationTxn.applicationArgs[0] === method.selector)
+	frame_dig -2 // verificationTxn: appl
+	gtxns ApplicationArgs 0
+	frame_dig -3 // method: {app: application, selector: string}
+	dup
+	store 3 // full tuple
+	int 8
+	swap
+	dupn 2
+	uncover 3
+	int 2
+	extract3
+	btoi // start of dynamic array
+	dup
+	cover 2 // duplicate start for later
+	int 2
+	extract3 // extract length of array
+	btoi
+	int 1
+	* // get array length
+	int 2
+	+ // add two for length
+	extract3
+	extract 2 0
+	==
+	assert
+
+	// ./contracts/app.algo.ts:77
+	// assert(verificationTxn.applicationID === method.app)
+	frame_dig -2 // verificationTxn: appl
+	gtxns ApplicationID
+	frame_dig -3 // method: {app: application, selector: string}
+	dup
+	store 3 // full tuple
+	int 0
+	int 8
+	extract3
+	btoi
+	==
+	assert
+	retsub
+
+main:
+	txn NumAppArgs
+	bnz route_abi
+
+	// default createApplication
+	txn ApplicationID
+	int 0
+	==
+	txn OnCompletion
+	int NoOp
+	==
+	&&
+	return
+
+route_abi:
+	method "setSigVerificationAddress(address)void"
+	method "setSignature(byte[64],address,account,txn)void"
+	method "setVerificationMehod(uint64,string)void"
+	method "verify(axfer,appl)void"
+	txna ApplicationArgs 0
+	match abi_route_setSigVerificationAddress abi_route_setSignature abi_route_setVerificationMehod abi_route_verify
