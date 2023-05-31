@@ -8,7 +8,7 @@ class Master extends Contract {
 
   sigVerificationAddress = new GlobalReference<Address>();
 
-  verificationMethod = new BoxMap<Address, Method>();
+  verificationMethods = new BoxMap<Address, Method[]>();
 
   /**
    * Set the address of the verifier lsig. This will only be called once after creation.
@@ -44,18 +44,14 @@ class Master extends Contract {
   }
 
   /**
-   * Sets which app and method should be called to verify an opt in
+   * Sets which apps/methods can be called to verify an opt in for the sender
    *
    * @param appID - The app with the verifcation method
    * @param selector - The selector of the verification method
    *
    */
-  setVerificationMehod(appID: uint64, selector: string): void {
-    assert(this.txn.sender === this.app.creator);
-
-    const method: Method = { app: Application.fromIndex(appID), selector: selector };
-
-    this.verificationMethod.put(this.txn.sender, method);
+  setVerificationMethods(methods: Method[]): void {
+    this.verificationMethods.put(this.txn.sender, methods);
   }
 
   /**
@@ -63,16 +59,18 @@ class Master extends Contract {
    *
    * @param optIn - The opt in transaction, presumably from the delegated lsig
    * @param verificationTxnIndex - The index of the app call to the verification app
+   * @param verifcationMethodIndex - The index of the method to call in the verification app
    *
    */
   verify(
     optIn: AssetTransferTxn,
     verificationTxnIndex: uint64,
+    verifcationMethodIndex: uint64,
   ): void {
-    if (!this.verificationMethod.exists(optIn.assetReceiver)) return;
+    if (!this.verificationMethods.exists(optIn.assetReceiver)) return;
 
     const verificationTxn = this.txnGroup[verificationTxnIndex] as AppCallTxn;
-    const method = this.verificationMethod.get(optIn.assetReceiver);
+    const method = this.verificationMethods.get(optIn.assetReceiver)[verifcationMethodIndex];
 
     assert(verificationTxn.applicationArgs[0] === method.selector);
     assert(verificationTxn.applicationID === method.app);
