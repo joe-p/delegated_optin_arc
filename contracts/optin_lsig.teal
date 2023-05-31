@@ -24,12 +24,12 @@ global ZeroAddress
 ==
 assert
 
-// Verify called atomically with whitelist app
+// Verify called atomically with allowlist app
 txn GroupIndex
 int 1
 +
 gtxns ApplicationID
-int TMPL_WHITELIST_APP
+int TMPL_ALLOWLIST_APP
 ==
 assert
 

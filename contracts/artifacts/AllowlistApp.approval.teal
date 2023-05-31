@@ -77,7 +77,7 @@ sendMBRPayment:
 	itxn_submit
 	retsub
 
-abi_route_addToWhitelist:
+abi_route_addToAllowlist:
 	txn OnCompletion
 	int NoOp
 	==
@@ -93,11 +93,11 @@ abi_route_addToWhitelist:
 	-
 	txna ApplicationArgs 2
 	txna ApplicationArgs 1
-	callsub addToWhitelist
+	callsub addToAllowlist
 	int 1
 	return
 
-addToWhitelist:
+addToAllowlist:
 	proto 6 0
 
 	// ./contracts/app.algo.ts:115
@@ -110,7 +110,7 @@ addToWhitelist:
 	frame_bury -4 // preMBR: uint64
 
 	// ./contracts/app.algo.ts:116
-	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
 	byte 0x0022 // initial head offset
@@ -120,12 +120,12 @@ addToWhitelist:
 	callsub process_static_tuple_element
 	pop // pop head offset
 	concat // concat head and tail
-	frame_bury -5 // whitelist: Whitelist
+	frame_bury -5 // allowlist: Allowlist
 
 	// if0_condition
 	// ./contracts/app.algo.ts:118
-	// this.whitelist.exists(whitelist)
-	frame_dig -5 // whitelist: Whitelist
+	// this.allowlist.exists(allowlist)
+	frame_dig -5 // allowlist: Allowlist
 	box_get
 	swap
 	pop
@@ -133,8 +133,8 @@ addToWhitelist:
 
 	// if0_consequent
 	// ./contracts/app.algo.ts:119
-	// this.whitelist.get(whitelist).push(addr)
-	frame_dig -5 // whitelist: Whitelist
+	// this.allowlist.get(allowlist).push(addr)
+	frame_dig -5 // allowlist: Allowlist
 	box_get
 	assert
 	dup
@@ -149,7 +149,7 @@ addToWhitelist:
 	concat
 	frame_dig -2 // addr: address
 	concat
-	frame_dig -5 // whitelist: Whitelist
+	frame_dig -5 // allowlist: Allowlist
 	dup
 	box_del
 	pop
@@ -159,20 +159,20 @@ addToWhitelist:
 
 if0_else:
 	// ./contracts/app.algo.ts:121
-	// newWhitelist: Address[] = [addr]
+	// newAllowlist: Address[] = [addr]
 	frame_dig -2 // addr: address
 	byte 0x0001
 	swap
 	concat
-	frame_bury -6 // newWhitelist: address[]
+	frame_bury -6 // newAllowlist: address[]
 
 	// ./contracts/app.algo.ts:122
-	// this.whitelist.put(whitelist, newWhitelist)
-	frame_dig -5 // whitelist: Whitelist
+	// this.allowlist.put(allowlist, newAllowlist)
+	frame_dig -5 // allowlist: Allowlist
 	dup
 	box_del
 	pop
-	frame_dig -6 // newWhitelist: address[]
+	frame_dig -6 // newAllowlist: address[]
 	box_put
 
 if0_end:
@@ -183,7 +183,7 @@ if0_end:
 	callsub verifyMBRPayment
 	retsub
 
-abi_route_setWhitelist:
+abi_route_setAllowlist:
 	txn OnCompletion
 	int NoOp
 	==
@@ -196,11 +196,11 @@ abi_route_setWhitelist:
 	dup
 	txna ApplicationArgs 2
 	txna ApplicationArgs 1
-	callsub setWhitelist
+	callsub setAllowlist
 	int 1
 	return
 
-setWhitelist:
+setAllowlist:
 	proto 4 0
 
 	// ./contracts/app.algo.ts:137
@@ -213,7 +213,7 @@ setWhitelist:
 	frame_bury -3 // preMBR: uint64
 
 	// ./contracts/app.algo.ts:138
-	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
 	byte 0x0022 // initial head offset
@@ -223,16 +223,16 @@ setWhitelist:
 	callsub process_static_tuple_element
 	pop // pop head offset
 	concat // concat head and tail
-	frame_bury -4 // whitelist: Whitelist
+	frame_bury -4 // allowlist: Allowlist
 
 	// ./contracts/app.algo.ts:140
-	// this.whitelist.delete(whitelist)
-	frame_dig -4 // whitelist: Whitelist
+	// this.allowlist.delete(allowlist)
+	frame_dig -4 // allowlist: Allowlist
 	box_del
 
 	// ./contracts/app.algo.ts:142
-	// this.whitelist.put(whitelist, addrs)
-	frame_dig -4 // whitelist: Whitelist
+	// this.allowlist.put(allowlist, addrs)
+	frame_dig -4 // allowlist: Allowlist
 	dup
 	box_del
 	pop
@@ -270,7 +270,7 @@ if1_else:
 if1_end:
 	retsub
 
-abi_route_deleteWhitelist:
+abi_route_deleteAllowlist:
 	txn OnCompletion
 	int NoOp
 	==
@@ -282,11 +282,11 @@ abi_route_deleteWhitelist:
 	byte 0x
 	dup
 	txna ApplicationArgs 1
-	callsub deleteWhitelist
+	callsub deleteAllowlist
 	int 1
 	return
 
-deleteWhitelist:
+deleteAllowlist:
 	proto 3 0
 
 	// ./contracts/app.algo.ts:158
@@ -299,7 +299,7 @@ deleteWhitelist:
 	frame_bury -2 // preMBR: uint64
 
 	// ./contracts/app.algo.ts:159
-	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
 	byte 0x0022 // initial head offset
@@ -309,11 +309,11 @@ deleteWhitelist:
 	callsub process_static_tuple_element
 	pop // pop head offset
 	concat // concat head and tail
-	frame_bury -3 // whitelist: Whitelist
+	frame_bury -3 // allowlist: Allowlist
 
 	// ./contracts/app.algo.ts:161
-	// this.whitelist.delete(whitelist)
-	frame_dig -3 // whitelist: Whitelist
+	// this.allowlist.delete(allowlist)
+	frame_dig -3 // allowlist: Allowlist
 	box_del
 
 	// ./contracts/app.algo.ts:163
@@ -322,7 +322,7 @@ deleteWhitelist:
 	callsub sendMBRPayment
 	retsub
 
-abi_route_deleteFromWhitelist:
+abi_route_deleteFromAllowlist:
 	txn OnCompletion
 	int NoOp
 	==
@@ -337,11 +337,11 @@ abi_route_deleteFromWhitelist:
 	btoi
 	txna ApplicationArgs 2
 	txna ApplicationArgs 1
-	callsub deleteFromWhitelist
+	callsub deleteFromAllowlist
 	int 1
 	return
 
-deleteFromWhitelist:
+deleteFromAllowlist:
 	proto 6 0
 
 	// ./contracts/app.algo.ts:175
@@ -354,7 +354,7 @@ deleteFromWhitelist:
 	frame_bury -4 // preMBR: uint64
 
 	// ./contracts/app.algo.ts:176
-	// whitelist: Whitelist = { account: this.txn.sender, boxID: boxID }
+	// allowlist: Allowlist = { account: this.txn.sender, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
 	byte 0x0022 // initial head offset
@@ -364,11 +364,11 @@ deleteFromWhitelist:
 	callsub process_static_tuple_element
 	pop // pop head offset
 	concat // concat head and tail
-	frame_bury -5 // whitelist: Whitelist
+	frame_bury -5 // allowlist: Allowlist
 
 	// ./contracts/app.algo.ts:178
-	// spliced = this.whitelist.get(whitelist).splice(index, 1)
-	frame_dig -5 // whitelist: Whitelist
+	// spliced = this.allowlist.get(allowlist).splice(index, 1)
+	frame_dig -5 // allowlist: Allowlist
 	box_get
 	assert
 	int 0
@@ -389,13 +389,13 @@ deleteFromWhitelist:
 	int 32
 	+
 	store 13 // splice byte length
-	frame_dig -5 // whitelist: Whitelist
+	frame_dig -5 // allowlist: Allowlist
 	box_get
 	assert
 	int 2
 	load 12 // splice start
 	substring3
-	frame_dig -5 // whitelist: Whitelist
+	frame_dig -5 // allowlist: Allowlist
 	box_get
 	assert
 	dup
@@ -412,7 +412,7 @@ deleteFromWhitelist:
 	int 1
 	itob
 	extract 6 2
-	frame_dig -5 // whitelist: Whitelist
+	frame_dig -5 // allowlist: Allowlist
 	box_get
 	assert
 	load 12 // splice start
@@ -422,7 +422,7 @@ deleteFromWhitelist:
 	extract3
 	concat
 	swap
-	frame_dig -5 // whitelist: Whitelist
+	frame_dig -5 // allowlist: Allowlist
 	dup
 	box_del
 	pop
@@ -533,7 +533,7 @@ if2_end:
 
 if3_end:
 	// ./contracts/app.algo.ts:203
-	// whitelist: Whitelist = { account: optIn.assetReceiver, boxID: boxID }
+	// allowlist: Allowlist = { account: optIn.assetReceiver, boxID: boxID }
 	byte 0x // initial head
 	byte 0x // initial tail
 	byte 0x0022 // initial head offset
@@ -544,11 +544,11 @@ if3_end:
 	callsub process_static_tuple_element
 	pop // pop head offset
 	concat // concat head and tail
-	frame_bury -5 // whitelist: Whitelist
+	frame_bury -5 // allowlist: Allowlist
 
 	// ./contracts/app.algo.ts:205
-	// whitelistAddr = this.whitelist.get(whitelist)[index]
-	frame_dig -5 // whitelist: Whitelist
+	// allowlistAddr = this.allowlist.get(allowlist)[index]
+	frame_dig -5 // allowlist: Allowlist
 	box_get
 	assert
 	frame_dig -2 // index: uint64
@@ -558,17 +558,17 @@ if3_end:
 	+ // add two for length
 	int 32
 	extract3
-	frame_bury -6 // whitelistAddr: address
+	frame_bury -6 // allowlistAddr: address
 
 	// ./contracts/app.algo.ts:206
-	// assert(whitelistAddr === this.txn.sender)
-	frame_dig -6 // whitelistAddr: address
+	// assert(allowlistAddr === this.txn.sender)
+	frame_dig -6 // allowlistAddr: address
 	txn Sender
 	==
 	assert
 	retsub
 
-abi_route_setWhitelistStatus:
+abi_route_setAllowlistStatus:
 	txn OnCompletion
 	int NoOp
 	==
@@ -578,11 +578,11 @@ abi_route_setWhitelistStatus:
 	&&
 	assert
 	txna ApplicationArgs 1
-	callsub setWhitelistStatus
+	callsub setAllowlistStatus
 	int 1
 	return
 
-setWhitelistStatus:
+setAllowlistStatus:
 	proto 1 0
 
 	// ./contracts/app.algo.ts:217
@@ -618,11 +618,11 @@ main:
 	return
 
 route_abi:
-	method "addToWhitelist(uint16,address,pay)void"
-	method "setWhitelist(uint16,address[])void"
-	method "deleteWhitelist(uint16)void"
-	method "deleteFromWhitelist(uint16,address,uint64)void"
+	method "addToAllowlist(uint16,address,pay)void"
+	method "setAllowlist(uint16,address[])void"
+	method "deleteAllowlist(uint16)void"
+	method "deleteFromAllowlist(uint16,address,uint64)void"
 	method "verifySender(uint16,uint64)void"
-	method "setWhitelistStatus(uint8)void"
+	method "setAllowlistStatus(uint8)void"
 	txna ApplicationArgs 0
-	match abi_route_addToWhitelist abi_route_setWhitelist abi_route_deleteWhitelist abi_route_deleteFromWhitelist abi_route_verifySender abi_route_setWhitelistStatus
+	match abi_route_addToAllowlist abi_route_setAllowlist abi_route_deleteAllowlist abi_route_deleteFromAllowlist abi_route_verifySender abi_route_setAllowlistStatus

@@ -1,9 +1,9 @@
 {
-  "name": "WhitelistApp",
+  "name": "AllowlistApp",
   "desc": "",
   "methods": [
     {
-      "name": "addToWhitelist",
+      "name": "addToAllowlist",
       "args": [
         {
           "name": "boxID",
@@ -28,7 +28,7 @@
       }
     },
     {
-      "name": "setWhitelist",
+      "name": "setAllowlist",
       "args": [
         {
           "name": "boxID",
@@ -48,7 +48,7 @@
       }
     },
     {
-      "name": "deleteWhitelist",
+      "name": "deleteAllowlist",
       "args": [
         {
           "name": "boxID",
@@ -63,7 +63,7 @@
       }
     },
     {
-      "name": "deleteFromWhitelist",
+      "name": "deleteFromAllowlist",
       "args": [
         {
           "name": "boxID",
@@ -108,7 +108,7 @@
       }
     },
     {
-      "name": "setWhitelistStatus",
+      "name": "setAllowlistStatus",
       "args": [
         {
           "name": "status",
