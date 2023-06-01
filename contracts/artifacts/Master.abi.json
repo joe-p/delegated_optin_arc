@@ -3,6 +3,21 @@
   "desc": "",
   "methods": [
     {
+      "name": "updateAssetMBR",
+      "args": [
+        {
+          "name": "asset",
+          "type": "asset",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
       "name": "setSigVerificationAddress",
       "args": [
         {
@@ -56,6 +71,15 @@
           "desc": ""
         }
       ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "deleteVerificationMethods",
+      "args": [],
       "desc": "",
       "returns": {
         "type": "void",

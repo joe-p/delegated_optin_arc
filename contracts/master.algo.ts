@@ -10,12 +10,39 @@ class Master extends Contract {
 
   verificationMethods = new BoxMap<Address, Method[]>();
 
-  // TOOD: Method to figure out asset MBR
   assetMBR = new GlobalReference<uint64>();
 
   @handle.createApplication
   create(): void {
     this.assetMBR.put(100_000);
+  }
+
+  /**
+   * Updates the asset MBR
+   * @param asset - The asset to opt into and opt out of to determine MBR
+  */
+  updateAssetMBR(asset: Asset): void {
+    const preMbr = this.app.address.minBalance;
+
+    sendAssetTransfer({
+      assetReceiver: this.app.address,
+      xferAsset: asset,
+      assetAmount: 0,
+      fee: 0,
+    });
+
+    const mbrDelta = preMbr - this.app.address.minBalance;
+
+    assert(mbrDelta !== this.assetMBR.get());
+    this.assetMBR.put(mbrDelta);
+
+    sendAssetTransfer({
+      assetReceiver: this.app.address,
+      xferAsset: asset,
+      assetAmount: 0,
+      fee: 0,
+      assetCloseTo: this.app.address,
+    });
   }
 
   /**
@@ -58,9 +85,19 @@ class Master extends Contract {
    * @param selector - The selector of the verification method
    *
    */
-  // TODO: Allow deleting verification methods
+  // TODO: Box MBR payment/return
   setVerificationMethods(methods: Method[]): void {
     this.verificationMethods.put(this.txn.sender, methods);
+  }
+
+  /**
+   * Deletes the verification methods box
+   *
+   *
+   */
+  // TODO: Box MBR return
+  deleteVerificationMethods(): void {
+    this.verificationMethods.delete(this.txn.sender);
   }
 
   /**
