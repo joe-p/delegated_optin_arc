@@ -1,6 +1,6 @@
 import { Contract } from '@algorandfoundation/tealscript';
 
-type Method = {app: Application, selector: string};
+type Method = [Application, string]
 
 // eslint-disable-next-line no-unused-vars
 class Master extends Contract {
@@ -9,6 +9,14 @@ class Master extends Contract {
   sigVerificationAddress = new GlobalReference<Address>();
 
   verificationMethods = new BoxMap<Address, Method[]>();
+
+  // TOOD: Method to figure out asset MBR
+  assetMBR = new GlobalReference<uint64>();
+
+  @handle.createApplication
+  create(): void {
+    this.assetMBR.put(100_000);
+  }
 
   /**
    * Set the address of the verifier lsig. This will only be called once after creation.
@@ -50,6 +58,7 @@ class Master extends Contract {
    * @param selector - The selector of the verification method
    *
    */
+  // TODO: Allow deleting verification methods
   setVerificationMethods(methods: Method[]): void {
     this.verificationMethods.put(this.txn.sender, methods);
   }
@@ -63,16 +72,22 @@ class Master extends Contract {
    *
    */
   verify(
+    mbrPayment: PayTxn,
     optIn: AssetTransferTxn,
     verificationTxnIndex: uint64,
     verifcationMethodIndex: uint64,
   ): void {
+    // Verify mbr payment
+    assert(optIn.assetReceiver === mbrPayment.receiver);
+    assert(mbrPayment.sender !== mbrPayment.receiver);
+    assert(mbrPayment.amount === this.assetMBR.get());
+
     if (!this.verificationMethods.exists(optIn.assetReceiver)) return;
 
     const verificationTxn = this.txnGroup[verificationTxnIndex] as AppCallTxn;
     const method = this.verificationMethods.get(optIn.assetReceiver)[verifcationMethodIndex];
 
-    assert(verificationTxn.applicationArgs[0] === method.selector);
-    assert(verificationTxn.applicationID === method.app);
+    assert(verificationTxn.applicationArgs[0] === method[1]);
+    assert(verificationTxn.applicationID === method[0]);
   }
 }

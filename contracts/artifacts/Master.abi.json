@@ -48,16 +48,11 @@
       }
     },
     {
-      "name": "setVerificationMehod",
+      "name": "setVerificationMethods",
       "args": [
         {
-          "name": "appID",
-          "type": "uint64",
-          "desc": ""
-        },
-        {
-          "name": "selector",
-          "type": "string",
+          "name": "methods",
+          "type": "(application,string)[]",
           "desc": ""
         }
       ],
@@ -71,13 +66,23 @@
       "name": "verify",
       "args": [
         {
+          "name": "mbrPayment",
+          "type": "pay",
+          "desc": ""
+        },
+        {
           "name": "optIn",
           "type": "axfer",
           "desc": ""
         },
         {
-          "name": "verificationTxn",
-          "type": "appl",
+          "name": "verificationTxnIndex",
+          "type": "uint64",
+          "desc": ""
+        },
+        {
+          "name": "verifcationMethodIndex",
+          "type": "uint64",
           "desc": ""
         }
       ],
