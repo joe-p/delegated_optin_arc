@@ -12,6 +12,20 @@ class Master extends Contract {
 
   assetMBR = new GlobalReference<uint64>();
 
+  private verifyMBRPayment(payment: PayTxn, preMBR: uint64): void {
+    assert(payment.amount === this.app.address.minBalance - preMBR);
+    assert(payment.receiver === this.app.address);
+  }
+
+  private sendMBRPayment(preMBR: uint64): void {
+    sendPayment({
+      sender: this.app.address,
+      receiver: this.txn.sender,
+      amount: preMBR - this.app.address.minBalance,
+      fee: 0,
+    });
+  }
+
   @handle.createApplication
   create(): void {
     this.assetMBR.put(100_000);
@@ -85,9 +99,16 @@ class Master extends Contract {
    * @param selector - The selector of the verification method
    *
    */
-  // TODO: Box MBR payment/return
   setVerificationMethods(methods: Method[]): void {
+    const preMBR = this.app.address.minBalance;
+
     this.verificationMethods.put(this.txn.sender, methods);
+
+    if (preMBR > this.app.address.minBalance) {
+      this.sendMBRPayment(preMBR);
+    } else {
+      this.verifyMBRPayment(this.txnGroup[this.txn.groupIndex - 1], preMBR);
+    }
   }
 
   /**
@@ -95,9 +116,12 @@ class Master extends Contract {
    *
    *
    */
-  // TODO: Box MBR return
   deleteVerificationMethods(): void {
+    const preMBR = this.app.address.minBalance;
+
     this.verificationMethods.delete(this.txn.sender);
+
+    this.sendMBRPayment(preMBR);
   }
 
   /**
