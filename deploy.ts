@@ -23,7 +23,7 @@ async function deploy() {
 
   const optInLsigTeal = readFileSync('./contracts/optin_lsig.teal')
     .toString()
-    .replace('TMPL_ALLOWLIST_APP', appId.toString());
+    .replace('TMPL_MASTER_APP', appId.toString());
 
   const compiledOptInLsig = await algodClient.compile(optInLsigTeal).do();
 
