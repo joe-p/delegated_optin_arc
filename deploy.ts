@@ -31,7 +31,7 @@ async function deploy() {
 
   const verifierLsigTeal = readFileSync('./contracts/verifier.teal')
     .toString()
-    .replace('TMPL_LSIG_PROGRAM', `0x${optInLsigBytes}`);
+    .replace('TMPL_OPT_IN_PROGRAM', `0x${optInLsigBytes}`);
 
   const compiledVerifierTeal = await algodClient.compile(verifierLsigTeal).do();
 

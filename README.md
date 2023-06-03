@@ -9,15 +9,15 @@ None of this code is tested. Right now it simply serves as a proof of concept.
 
 **DYANMO_DB** - A centralized server containing a mapping of addresses to signatures
 
-**OPT_IN_PROGRAM** - The logic for the logic signature that can opt into assets
+**OPT_IN_PROGRAM** - The logic for the logic signature that can opt into assets ([source](./contracts/optin_lsig.teal))
 
 **OPT_IN_SIGNATURE** - The signature of **OPT_IN_PROGRAM** used for delegated opt-ins
 
-**MASTER_APP** - A single app deployed on an Algorand network used for storing signatures and verifying delegated opt-ins
+**MASTER_APP** - A single app deployed on an Algorand network used for storing signatures and verifying delegated opt-ins ([source](./contracts/master.algo.ts))
 
-**VERIFIER_LSIG** - An lsig whos sole purpose is to verify a given **OPT_IN_SIGNATURE** against the authorization address of a given account
+**VERIFIER_LSIG** - An lsig whos sole purpose is to verify a given **OPT_IN_SIGNATURE** against the authorization address of a given account ([source](./contracts/verifier.teal))
 
-**ALLOWLIST_APP** - A single app deployed on an Algorand network used for only allowing certain addresses to opt them into assets
+**ALLOWLIST_APP** - A single app deployed on an Algorand network used for only allowing certain addresses to opt them into assets ([source](./contracts/allowlist.algo.ts))
 
 ## Wallet Onboarding
 This is the process for onboarding new users in a wallet (ie. Defly, Pera).
@@ -29,7 +29,7 @@ None
 
 1. Wallet generates keypair as per usual
 2. Wallet prompts user if they want to enable deletgated opt-ins
-3. If yes, the wallet will sign the standardized lsig with the generated sk
+3. If yes, the wallet will sign **OPT_IN_PROGRAM** with the generated sk
    1. This can be a single click
 4. Wallet sends address and lsig signature to **DYANMO_DB**
 

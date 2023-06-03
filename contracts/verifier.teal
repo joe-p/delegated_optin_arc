@@ -6,7 +6,7 @@ global ZeroAddress
 assert
 
 // data
-byte TMPL_LSIG_PROGRAM
+byte TMPL_OPT_IN_PROGRAM
 
 // signature
 txn GroupIndex
