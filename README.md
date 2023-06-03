@@ -22,9 +22,6 @@ None of this code is tested. Right now it simply serves as a proof of concept.
 ## Wallet Onboarding
 This is the process for onboarding new users in a wallet (ie. Defly, Pera).
 
-### Transaction Group
-None
-
 ### Steps
 
 1. Wallet generates keypair as per usual
@@ -45,11 +42,6 @@ This is the process for a user adding their **OPT_IN_SIGNATURE** to box strorage
    2. *acct* - The account for which we are adding the **OPT_IN_SIGNATURE**
    3. *authAddr* - The auth address of the aforementioned account
 
-### Steps
-
-1. Any account calls `setSignature` in **MASTER_APP** with the above arguments (including atomic txn from **VERIFIER_LSIG**)
-2. **MASTER_APP** stores a box whose key is the address and value is the **OPT_IN_SIGNATURE**
-
 ## Setting Allowlist
 
 This is the process for setting an allowlist to only allow specific address to opt you into assets
@@ -69,7 +61,10 @@ This is the process for setting an allowlist to only allow specific address to o
 
 This is the process for initiating a delegated opt in for an account that has not set or enabled allowlists.
 
-The **OPT_IN_SIGNATURE** can be read from either **DYNAMO_DB** or **MASTER_APP**
+### Steps
+1. Attempt to read signature from box in **MASTER_APP**
+   1. If missing or invalid, attempt to read signature from **DynamoDB**
+2. Send transaction group below
 
 ### Transaction Group
 1. MBR Payment - A payment transaction from the sender to the account opting in that covers the ASA MBR (0.1 ALGO)
@@ -82,7 +77,10 @@ The **OPT_IN_SIGNATURE** can be read from either **DYNAMO_DB** or **MASTER_APP**
 
 This is the process for initiating a delegated opt in for an account that has a set allowlist
 
-The **OPT_IN_SIGNATURE** can be read from either **DYNAMO_DB** or **MASTER_APP**
+### Steps
+1. Attempt to read signature from box in **MASTER_APP**
+   1. If missing or invalid, attempt to read signature from **DynamoDB**
+2. Send transaction group below
 
 ### Transaction Group
 1. **ALLOWLIST_APP**: `verifySender`
