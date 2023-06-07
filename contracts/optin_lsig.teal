@@ -38,6 +38,6 @@ txn GroupIndex
 int 1
 +
 gtxnsa ApplicationArgs 0
-method "verifySender(uint16,uint64,axfer)void"
+method "verify(pay,axfer)void"
 ==
 assert

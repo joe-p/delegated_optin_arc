@@ -1,30 +1,14 @@
 import { Contract } from '@algorandfoundation/tealscript';
 
-type Method = [Application, string]
-
 // eslint-disable-next-line no-unused-vars
 class Master extends Contract {
-  sigs = new BoxMap<Address, byte<64>>({ prefix: 'sig' });
+  sigs = new BoxMap<Address, byte<64>>({ prefix: 's-' });
+
+  endTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
 
   sigVerificationAddress = new GlobalReference<Address>();
 
-  verificationMethods = new BoxMap<Address, Method[]>();
-
   assetMBR = new GlobalReference<uint64>();
-
-  private verifyMBRPayment(payment: PayTxn, preMBR: uint64): void {
-    assert(payment.amount === this.app.address.minBalance - preMBR);
-    assert(payment.receiver === this.app.address);
-  }
-
-  private sendMBRPayment(preMBR: uint64): void {
-    sendPayment({
-      sender: this.app.address,
-      receiver: this.txn.sender,
-      amount: preMBR - this.app.address.minBalance,
-      fee: 0,
-    });
-  }
 
   @handle.createApplication
   create(): void {
@@ -93,62 +77,33 @@ class Master extends Contract {
   }
 
   /**
-   * Sets which apps/methods can be called to verify an opt in for the sender
-   *
-   * @param appID - The app with the verifcation method
-   * @param selector - The selector of the verification method
-   *
-   */
-  setVerificationMethods(methods: Method[]): void {
-    const preMBR = this.app.address.minBalance;
-
-    this.verificationMethods.put(this.txn.sender, methods);
-
-    if (preMBR > this.app.address.minBalance) {
-      this.sendMBRPayment(preMBR);
-    } else {
-      this.verifyMBRPayment(this.txnGroup[this.txn.groupIndex - 1], preMBR);
-    }
-  }
-
-  /**
-   * Deletes the verification methods box
-   *
-   *
-   */
-  deleteVerificationMethods(): void {
-    const preMBR = this.app.address.minBalance;
-
-    this.verificationMethods.delete(this.txn.sender);
-
-    this.sendMBRPayment(preMBR);
-  }
-
-  /**
    * Verifies that the opt in is allowed
    *
    * @param optIn - The opt in transaction, presumably from the delegated lsig
-   * @param verificationTxnIndex - The index of the app call to the verification app
-   * @param verifcationMethodIndex - The index of the method to call in the verification app
    *
    */
   verify(
     mbrPayment: PayTxn,
     optIn: AssetTransferTxn,
-    verificationTxnIndex: uint64,
-    verifcationMethodIndex: uint64,
   ): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
     assert(mbrPayment.sender !== mbrPayment.receiver);
     assert(mbrPayment.amount === this.assetMBR.get());
 
-    if (!this.verificationMethods.exists(optIn.assetReceiver)) return;
+    // If endTimes box exists, verify that the opt in is before the end time
+    if (this.endTimes.exists(optIn.assetReceiver)) {
+      assert(this.endTimes.get(optIn.assetReceiver) > globals.latestTimestamp);
+    }
+  }
 
-    const verificationTxn = this.txnGroup[verificationTxnIndex] as AppCallTxn;
-    const method = this.verificationMethods.get(optIn.assetReceiver)[verifcationMethodIndex];
-
-    assert(verificationTxn.applicationArgs[0] === method[1]);
-    assert(verificationTxn.applicationID === method[0]);
+  /**
+   * Set the timestamp until which the account allows opt ins
+   *
+   * @param timestamp - After this time, opt ins will no longer be allowed
+   *
+   */
+  setEndTime(timestamp: uint64): void {
+    this.endTimes.put(this.txn.sender, timestamp);
   }
 }
