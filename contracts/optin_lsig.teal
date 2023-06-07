@@ -36,8 +36,8 @@ assert
 // Verify the correct method is being called
 txn GroupIndex
 int 1
-+
+-
 gtxnsa ApplicationArgs 0
 method "verify(pay,axfer)void"
 ==
-assert
+

@@ -1,0 +1,56 @@
+#pragma version 8
+#define MBRPaymentTxn load 0
+
+// Save MBRPaymentTxn
+txn GroupIndex
+int 1
+-
+store 0
+
+//// Verify Opt In ////
+
+// Verify amount is 0
+txn AssetAmount
+int 0
+==
+assert
+
+// Verify sender == receiver
+txn AssetReceiver
+txn Sender
+==
+assert
+
+// Verify fee is 0 (covered by sender)
+txn Fee
+int 0
+==
+assert
+
+// Verify assetCloseTo is not set
+txn AssetCloseTo
+global ZeroAddress
+==
+assert
+
+//// Verify MBR Payment ////
+
+// Verify payment is to the sender
+MBRPaymentTxn
+gtxns Receiver
+txn Sender
+==
+assert
+
+// Verify payment is for the correct amount
+MBRPaymentTxn
+gtxns Amount
+int 100_000
+>=
+assert
+
+// Verify the payment is from the authorized address
+MBRPaymentTxn
+gtxns Sender
+addr TMPL_AUTHORIZED_ADDRESS
+==
