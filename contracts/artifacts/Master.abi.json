@@ -63,30 +63,6 @@
       }
     },
     {
-      "name": "setVerificationMethods",
-      "args": [
-        {
-          "name": "methods",
-          "type": "(application,string)[]",
-          "desc": ""
-        }
-      ],
-      "desc": "",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
-      "name": "deleteVerificationMethods",
-      "args": [],
-      "desc": "",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
       "name": "verify",
       "args": [
         {
@@ -98,14 +74,19 @@
           "name": "optIn",
           "type": "axfer",
           "desc": ""
-        },
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "setEndTime",
+      "args": [
         {
-          "name": "verificationTxnIndex",
-          "type": "uint64",
-          "desc": ""
-        },
-        {
-          "name": "verifcationMethodIndex",
+          "name": "timestamp",
           "type": "uint64",
           "desc": ""
         }

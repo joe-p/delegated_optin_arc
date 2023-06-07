@@ -1,73 +1,6 @@
 #pragma version 8
 	b main
 
-verifyMBRPayment:
-	proto 2 0
-
-	// ./contracts/master.algo.ts:16
-	// assert(payment.amount === this.app.address.minBalance - preMBR)
-	frame_dig -1 // payment: pay
-	gtxns Amount
-	txna Applications 0
-	app_params_get AppAddress
-	assert
-	acct_params_get AcctMinBalance
-	assert
-	frame_dig -2 // preMBR: uint64
-	-
-	==
-	assert
-
-	// ./contracts/master.algo.ts:17
-	// assert(payment.receiver === this.app.address)
-	frame_dig -1 // payment: pay
-	gtxns Receiver
-	txna Applications 0
-	app_params_get AppAddress
-	assert
-	==
-	assert
-	retsub
-
-sendMBRPayment:
-	proto 1 0
-
-	// ./contracts/master.algo.ts:21
-	// sendPayment({
-	itxn_begin
-	int pay
-	itxn_field TypeEnum
-
-	// ./contracts/master.algo.ts:22
-	// sender: this.app.address
-	txna Applications 0
-	app_params_get AppAddress
-	assert
-	itxn_field Sender
-
-	// ./contracts/master.algo.ts:23
-	// receiver: this.txn.sender
-	txn Sender
-	itxn_field Receiver
-
-	// ./contracts/master.algo.ts:24
-	// amount: preMBR - this.app.address.minBalance
-	frame_dig -1 // preMBR: uint64
-	txna Applications 0
-	app_params_get AppAddress
-	assert
-	acct_params_get AcctMinBalance
-	assert
-	-
-	itxn_field Amount
-
-	// ./contracts/master.algo.ts:25
-	// fee: 0
-	int 0
-	itxn_field Fee
-	itxn_submit
-	retsub
-
 bare_route_create:
 	txn OnCompletion
 	int NoOp
@@ -84,7 +17,7 @@ bare_route_create:
 create:
 	proto 0 0
 
-	// ./contracts/master.algo.ts:31
+	// ./contracts/master.algo.ts:15
 	// this.assetMBR.put(100_000)
 	byte "assetMBR"
 	int 100_000
@@ -112,7 +45,7 @@ abi_route_updateAssetMBR:
 updateAssetMBR:
 	proto 3 0
 
-	// ./contracts/master.algo.ts:39
+	// ./contracts/master.algo.ts:23
 	// preMbr = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -121,36 +54,36 @@ updateAssetMBR:
 	assert
 	frame_bury -2 // preMbr: uint64
 
-	// ./contracts/master.algo.ts:41
+	// ./contracts/master.algo.ts:25
 	// sendAssetTransfer({
 	itxn_begin
 	int axfer
 	itxn_field TypeEnum
 
-	// ./contracts/master.algo.ts:42
+	// ./contracts/master.algo.ts:26
 	// assetReceiver: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field AssetReceiver
 
-	// ./contracts/master.algo.ts:43
+	// ./contracts/master.algo.ts:27
 	// xferAsset: asset
 	frame_dig -1 // asset: asset
 	itxn_field XferAsset
 
-	// ./contracts/master.algo.ts:44
+	// ./contracts/master.algo.ts:28
 	// assetAmount: 0
 	int 0
 	itxn_field AssetAmount
 
-	// ./contracts/master.algo.ts:45
+	// ./contracts/master.algo.ts:29
 	// fee: 0
 	int 0
 	itxn_field Fee
 	itxn_submit
 
-	// ./contracts/master.algo.ts:48
+	// ./contracts/master.algo.ts:32
 	// mbrDelta = preMbr - this.app.address.minBalance
 	frame_dig -2 // preMbr: uint64
 	txna Applications 0
@@ -161,7 +94,7 @@ updateAssetMBR:
 	-
 	frame_bury -3 // mbrDelta: uint64
 
-	// ./contracts/master.algo.ts:50
+	// ./contracts/master.algo.ts:34
 	// assert(mbrDelta !== this.assetMBR.get())
 	frame_dig -3 // mbrDelta: uint64
 	byte "assetMBR"
@@ -169,41 +102,41 @@ updateAssetMBR:
 	!=
 	assert
 
-	// ./contracts/master.algo.ts:51
+	// ./contracts/master.algo.ts:35
 	// this.assetMBR.put(mbrDelta)
 	byte "assetMBR"
 	frame_dig -3 // mbrDelta: uint64
 	app_global_put
 
-	// ./contracts/master.algo.ts:53
+	// ./contracts/master.algo.ts:37
 	// sendAssetTransfer({
 	itxn_begin
 	int axfer
 	itxn_field TypeEnum
 
-	// ./contracts/master.algo.ts:54
+	// ./contracts/master.algo.ts:38
 	// assetReceiver: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field AssetReceiver
 
-	// ./contracts/master.algo.ts:55
+	// ./contracts/master.algo.ts:39
 	// xferAsset: asset
 	frame_dig -1 // asset: asset
 	itxn_field XferAsset
 
-	// ./contracts/master.algo.ts:56
+	// ./contracts/master.algo.ts:40
 	// assetAmount: 0
 	int 0
 	itxn_field AssetAmount
 
-	// ./contracts/master.algo.ts:57
+	// ./contracts/master.algo.ts:41
 	// fee: 0
 	int 0
 	itxn_field Fee
 
-	// ./contracts/master.algo.ts:58
+	// ./contracts/master.algo.ts:42
 	// assetCloseTo: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
@@ -229,7 +162,7 @@ abi_route_setSigVerificationAddress:
 setSigVerificationAddress:
 	proto 1 0
 
-	// ./contracts/master.algo.ts:69
+	// ./contracts/master.algo.ts:53
 	// assert(this.txn.sender === this.app.creator)
 	txn Sender
 	txna Applications 0
@@ -238,7 +171,7 @@ setSigVerificationAddress:
 	==
 	assert
 
-	// ./contracts/master.algo.ts:70
+	// ./contracts/master.algo.ts:54
 	// assert(!this.sigVerificationAddress.exists())
 	txna Applications 0
 	byte "sigVerificationAddress"
@@ -248,7 +181,7 @@ setSigVerificationAddress:
 	!
 	assert
 
-	// ./contracts/master.algo.ts:71
+	// ./contracts/master.algo.ts:55
 	// this.sigVerificationAddress.put(lsig)
 	byte "sigVerificationAddress"
 	frame_dig -1 // lsig: address
@@ -280,7 +213,7 @@ abi_route_setSignature:
 setSignature:
 	proto 5 0
 
-	// ./contracts/master.algo.ts:84
+	// ./contracts/master.algo.ts:68
 	// trueAuthAddr = (acct.authAddr === globals.zeroAddress) ? acct : acct.authAddr
 	frame_dig -3 // acct: account
 	acct_params_get AcctAuthAddr
@@ -299,14 +232,14 @@ ternary0_false:
 ternary0_end:
 	frame_bury -5 // trueAuthAddr: address
 
-	// ./contracts/master.algo.ts:86
+	// ./contracts/master.algo.ts:70
 	// assert(authAddr === trueAuthAddr)
 	frame_dig -2 // authAddr: address
 	frame_dig -5 // trueAuthAddr: address
 	==
 	assert
 
-	// ./contracts/master.algo.ts:87
+	// ./contracts/master.algo.ts:71
 	// assert(verifier.sender === this.sigVerificationAddress.get())
 	frame_dig -4 // verifier: txn
 	gtxns Sender
@@ -316,9 +249,9 @@ ternary0_end:
 	assert
 
 	// if0_condition
-	// ./contracts/master.algo.ts:90
+	// ./contracts/master.algo.ts:74
 	// this.sigs.exists(acct)
-	byte "sig"
+	byte "s-"
 	frame_dig -3 // acct: account
 	concat
 	box_get
@@ -327,9 +260,9 @@ ternary0_end:
 	bz if0_end
 
 	// if0_consequent
-	// ./contracts/master.algo.ts:90
+	// ./contracts/master.algo.ts:74
 	// assert(this.sigs.get(acct) !== sig)
-	byte "sig"
+	byte "s-"
 	frame_dig -3 // acct: account
 	concat
 	box_get
@@ -339,117 +272,13 @@ ternary0_end:
 	assert
 
 if0_end:
-	// ./contracts/master.algo.ts:92
+	// ./contracts/master.algo.ts:76
 	// this.sigs.put(acct, sig)
-	byte "sig"
+	byte "s-"
 	frame_dig -3 // acct: account
 	concat
 	frame_dig -1 // sig: byte[64]
 	box_put
-	retsub
-
-abi_route_setVerificationMethods:
-	txn OnCompletion
-	int NoOp
-	==
-	txn ApplicationID
-	int 0
-	!=
-	&&
-	assert
-	byte 0x
-	txna ApplicationArgs 1
-	callsub setVerificationMethods
-	int 1
-	return
-
-setVerificationMethods:
-	proto 2 0
-
-	// ./contracts/master.algo.ts:103
-	// preMBR = this.app.address.minBalance
-	txna Applications 0
-	app_params_get AppAddress
-	assert
-	acct_params_get AcctMinBalance
-	assert
-	frame_bury -2 // preMBR: uint64
-
-	// ./contracts/master.algo.ts:105
-	// this.verificationMethods.put(this.txn.sender, methods)
-	txn Sender
-	dup
-	box_del
-	pop
-	frame_dig -1 // methods: [application,string][]
-	box_put
-
-	// if1_condition
-	// ./contracts/master.algo.ts:107
-	// preMBR > this.app.address.minBalance
-	frame_dig -2 // preMBR: uint64
-	txna Applications 0
-	app_params_get AppAddress
-	assert
-	acct_params_get AcctMinBalance
-	assert
-	>
-	bz if1_else
-
-	// if1_consequent
-	// ./contracts/master.algo.ts:108
-	// this.sendMBRPayment(preMBR)
-	frame_dig -2 // preMBR: uint64
-	callsub sendMBRPayment
-	b if1_end
-
-if1_else:
-	// ./contracts/master.algo.ts:110
-	// this.verifyMBRPayment(this.txnGroup[this.txn.groupIndex - 1], preMBR)
-	frame_dig -2 // preMBR: uint64
-	txn GroupIndex
-	int 1
-	-
-	callsub verifyMBRPayment
-
-if1_end:
-	retsub
-
-abi_route_deleteVerificationMethods:
-	txn OnCompletion
-	int NoOp
-	==
-	txn ApplicationID
-	int 0
-	!=
-	&&
-	assert
-	byte 0x
-	callsub deleteVerificationMethods
-	int 1
-	return
-
-deleteVerificationMethods:
-	proto 1 0
-
-	// ./contracts/master.algo.ts:120
-	// preMBR = this.app.address.minBalance
-	txna Applications 0
-	app_params_get AppAddress
-	assert
-	acct_params_get AcctMinBalance
-	assert
-	frame_bury -1 // preMBR: uint64
-
-	// ./contracts/master.algo.ts:122
-	// this.verificationMethods.delete(this.txn.sender)
-	txn Sender
-	box_del
-
-	// ./contracts/master.algo.ts:124
-	// this.sendMBRPayment(preMBR)
-	frame_dig -1 // preMBR: uint64
-	callsub sendMBRPayment
 	retsub
 
 abi_route_verify:
@@ -461,12 +290,6 @@ abi_route_verify:
 	!=
 	&&
 	assert
-	byte 0x
-	dup
-	txna ApplicationArgs 2
-	btoi
-	txna ApplicationArgs 1
-	btoi
 	txn GroupIndex
 	int 1
 	-
@@ -478,9 +301,9 @@ abi_route_verify:
 	return
 
 verify:
-	proto 6 0
+	proto 2 0
 
-	// ./contracts/master.algo.ts:142
+	// ./contracts/master.algo.ts:90
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
@@ -489,7 +312,7 @@ verify:
 	==
 	assert
 
-	// ./contracts/master.algo.ts:143
+	// ./contracts/master.algo.ts:91
 	// assert(mbrPayment.sender !== mbrPayment.receiver)
 	frame_dig -1 // mbrPayment: pay
 	gtxns Sender
@@ -498,7 +321,7 @@ verify:
 	!=
 	assert
 
-	// ./contracts/master.algo.ts:144
+	// ./contracts/master.algo.ts:92
 	// assert(mbrPayment.amount === this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
@@ -507,100 +330,61 @@ verify:
 	==
 	assert
 
-	// if2_condition
-	// ./contracts/master.algo.ts:146
-	// !this.verificationMethods.exists(optIn.assetReceiver)
+	// if1_condition
+	// ./contracts/master.algo.ts:95
+	// this.endTimes.exists(optIn.assetReceiver)
+	byte "e-"
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
+	concat
 	box_get
 	swap
 	pop
-	!
-	bz if2_end
+	bz if1_end
 
-	// if2_consequent
-	// ./contracts/master.algo.ts:146
-	// return;
-	retsub
-
-if2_end:
-	// ./contracts/master.algo.ts:148
-	// verificationTxn = this.txnGroup[verificationTxnIndex] as AppCallTxn
-	frame_dig -3 // verificationTxnIndex: uint64
-	frame_bury -5 // verificationTxn: appl
-
-	// ./contracts/master.algo.ts:149
-	// method = this.verificationMethods.get(optIn.assetReceiver)[verifcationMethodIndex]
+	// if1_consequent
+	// ./contracts/master.algo.ts:96
+	// assert(this.endTimes.get(optIn.assetReceiver) > globals.latestTimestamp)
+	byte "e-"
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
+	concat
 	box_get
 	assert
-	dup
-	store 3 // full tuple
-	frame_dig -4 // verifcationMethodIndex: uint64
-	int 9 // element length
-	* // element offset
-	int 2
-	+ // add two for length
-	swap
-	dupn 2
-	uncover 3
-	int 2
-	extract3
-	btoi // start of dynamic array
-	dup
-	cover 2 // duplicate start for later
-	int 2
-	extract3 // extract length of array
 	btoi
-	int 9
-	* // get array length
-	int 2
-	+ // add two for length
-	extract3
-	frame_bury -6 // method: [application,bytes]
-
-	// ./contracts/master.algo.ts:151
-	// assert(verificationTxn.applicationArgs[0] === method[1])
-	frame_dig -5 // verificationTxn: appl
-	gtxns ApplicationArgs 0
-	frame_dig -6 // method: [application,bytes]
-	dup
-	store 3 // full tuple
-	int 8
-	swap
-	dupn 2
-	uncover 3
-	int 2
-	extract3
-	btoi // start of dynamic array
-	dup
-	cover 2 // duplicate start for later
-	int 2
-	extract3 // extract length of array
-	btoi
-	int 1
-	* // get array length
-	int 2
-	+ // add two for length
-	extract3
-	extract 2 0
-	==
+	global LatestTimestamp
+	>
 	assert
 
-	// ./contracts/master.algo.ts:152
-	// assert(verificationTxn.applicationID === method[0])
-	frame_dig -5 // verificationTxn: appl
-	gtxns ApplicationID
-	frame_dig -6 // method: [application,bytes]
-	dup
-	store 3 // full tuple
+if1_end:
+	retsub
+
+abi_route_setEndTime:
+	txn OnCompletion
+	int NoOp
+	==
+	txn ApplicationID
 	int 0
-	int 8
-	extract3
-	btoi
-	==
+	!=
+	&&
 	assert
+	txna ApplicationArgs 1
+	btoi
+	callsub setEndTime
+	int 1
+	return
+
+setEndTime:
+	proto 1 0
+
+	// ./contracts/master.algo.ts:107
+	// this.endTimes.put(this.txn.sender, timestamp)
+	byte "e-"
+	txn Sender
+	concat
+	frame_dig -1 // timestamp: uint64
+	itob
+	box_put
 	retsub
 
 main:
@@ -615,8 +399,7 @@ route_abi:
 	method "updateAssetMBR(asset)void"
 	method "setSigVerificationAddress(address)void"
 	method "setSignature(byte[64],address,account,txn)void"
-	method "setVerificationMethods((application,string)[])void"
-	method "deleteVerificationMethods()void"
-	method "verify(pay,axfer,uint64,uint64)void"
+	method "verify(pay,axfer)void"
+	method "setEndTime(uint64)void"
 	txna ApplicationArgs 0
-	match abi_route_updateAssetMBR abi_route_setSigVerificationAddress abi_route_setSignature abi_route_setVerificationMethods abi_route_deleteVerificationMethods abi_route_verify
+	match abi_route_updateAssetMBR abi_route_setSigVerificationAddress abi_route_setSignature abi_route_verify abi_route_setEndTime

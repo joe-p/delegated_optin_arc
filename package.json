@@ -6,9 +6,7 @@
     "algosdk": "^2.3.0"
   },
   "scripts": {
-    "build-master": "tealscript ./contracts/master.algo.ts ./contracts/artifacts",
-    "build-allowlist": "tealscript ./contracts/allowlist.algo.ts ./contracts/artifacts",
-    "build": "yarn build-master && yarn build-allowlist",
+    "build": "tealscript ./contracts/master.algo.ts ./contracts/artifacts",
     "deploy": "yarn build && tsx deploy.ts"
   },
   "devDependencies": {
