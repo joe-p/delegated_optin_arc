@@ -54,3 +54,6 @@ This is the process for initiating a delegated opt in.
 2. Opt In - A opt-in transaction signed by **OPT_IN_SIGNATURE**
 3. **MASTER_APP**: verify
 
+# Open Questions
+
+* Should the first sender be required to put the signature in the box?
