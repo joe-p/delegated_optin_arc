@@ -54,6 +54,14 @@ This is the process for initiating a delegated opt in.
 2. Opt In - A opt-in transaction signed by **OPT_IN_SIGNATURE**
 3. **MASTER_APP**: verify
 
+## Setting End Time
+This is the process for an end user setting an end time for their delegated opt ins. Any opt ins after this time will get rejected.
+
+### Transaction Group
+
+1. **MASTER_APP**: `setEndTime`
+   1. *timestamp* - uint64 timestamp
+
 # Open Questions
 
 * Should the first sender be required to put the signature in the box?
