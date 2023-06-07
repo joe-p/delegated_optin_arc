@@ -24,7 +24,7 @@ global ZeroAddress
 ==
 assert
 
-// Verify called atomically with allowlist app
+// Verify called atomically with master app
 txn GroupIndex
 int 1
 +
