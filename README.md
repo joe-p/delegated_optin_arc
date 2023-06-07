@@ -17,8 +17,6 @@ None of this code is tested. Right now it simply serves as a proof of concept.
 
 **VERIFIER_LSIG** - An lsig whos sole purpose is to verify a given **OPT_IN_SIGNATURE** against the authorization address of a given account ([source](./contracts/verifier.teal))
 
-**ALLOWLIST_APP** - A single app deployed on an Algorand network used for only allowing certain addresses to opt them into assets ([source](./contracts/allowlist.algo.ts))
-
 ## Wallet Onboarding
 This is the process for onboarding new users in a wallet (ie. Defly, Pera).
 
@@ -42,24 +40,9 @@ This is the process for a user adding their **OPT_IN_SIGNATURE** to box strorage
    2. *acct* - The account for which we are adding the **OPT_IN_SIGNATURE**
    3. *authAddr* - The auth address of the aforementioned account
 
-## Setting Allowlist
+## Delegated Opt-In
 
-This is the process for setting an allowlist to only allow specific address to opt you into assets
-
-### Transaction Group
-**Note**: These all *could* be done seperately
-
-1. **ALLOWLIST_APP**: `setAllowlist`
-   1. *boxID* - A single account can have multiple allowlists split across multiple boxes, so this uint64 indentifies which allowlist to set
-   2. *addrs* - A dynamic array of address to allow delegated opt-ins
-2. **ALLOWLIST_APP**: `setAllowlistStatus`
-   1. *status* - A uint8 that is either 0 for allowing all opt-ins, 1 for allowing only allowlisted accounts to opt in, or 2 for allowing no opt ins
-3. **MASTER_APP**: `setVerificationMethods`
-   1. *methods* - `[ALLOWLIST_APP appID, 0x30cec2f8]` `0x30cec2f8` is the method selector for `setVerificationMethods((application,string)[])void`
-
-## Delegated Opt-In (No Allowlist)
-
-This is the process for initiating a delegated opt in for an account that has not set or enabled allowlists.
+This is the process for initiating a delegated opt in.
 
 ### Steps
 1. Attempt to read signature from box in **MASTER_APP**
@@ -70,24 +53,4 @@ This is the process for initiating a delegated opt in for an account that has no
 1. MBR Payment - A payment transaction from the sender to the account opting in that covers the ASA MBR (0.1 ALGO)
 2. Opt In - A opt-in transaction signed by **OPT_IN_SIGNATURE**
 3. **MASTER_APP**: verify
-   1. *verificationTxnIndex* - Not used
-   2. *verifcationMethodIndex* - Not used
 
-## Delegated Opt-In (With Allowlist)
-
-This is the process for initiating a delegated opt in for an account that has a set allowlist
-
-### Steps
-1. Attempt to read signature from box in **MASTER_APP**
-   1. If missing or invalid, attempt to read signature from **DynamoDB**
-2. Send transaction group below
-
-### Transaction Group
-1. **ALLOWLIST_APP**: `verifySender`
-   1. *boxID* - uint16 identifying the box the sender address is contained in
-   2. *index* - uint64 which is the index of the sender address in the box
-2. MBR Payment - A payment transaction from the sender to the account opting in that covers the ASA MBR (0.1 ALGO)
-3. Opt In - A opt-in transaction signed by **OPT_IN_SIGNATURE**
-4. **MASTER_APP**: verify
-   1. *verificationTxnIndex* - 0
-   2. *verifcationMethodIndex* - 0
