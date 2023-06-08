@@ -83,7 +83,6 @@ class Master extends Contract {
   verify(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
-    assert(mbrPayment.sender !== mbrPayment.receiver);
     assert(mbrPayment.amount === this.assetMBR.get());
 
     // If endTimes box exists, verify that the opt in is before the end time
@@ -111,7 +110,6 @@ class Master extends Contract {
   verifySpecificAddress(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
-    assert(mbrPayment.sender !== mbrPayment.receiver);
     assert(mbrPayment.amount === this.assetMBR.get());
 
     const senderAndReceiver: SenderAndReceiver = {
