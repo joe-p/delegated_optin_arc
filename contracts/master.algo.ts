@@ -1,10 +1,14 @@
 import { Contract } from '@algorandfoundation/tealscript';
 
+type SenderAndReceiver = {sender: Address, receiver: Address};
+
 // eslint-disable-next-line no-unused-vars
 class Master extends Contract {
   sigs = new BoxMap<Address, byte<64>>({ prefix: 's-' });
 
   endTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
+
+  addressSpecificEndTimes = new BoxMap<SenderAndReceiver, uint64>();
 
   sigVerificationAddress = new GlobalReference<Address>();
 
@@ -96,5 +100,43 @@ class Master extends Contract {
    */
   setEndTime(timestamp: uint64): void {
     this.endTimes.put(this.txn.sender, timestamp);
+  }
+
+  /**
+   * Verifies that the opt in is allowed from the sender
+   *
+   * @param optIn - The opt in transaction, presumably from the delegated lsig
+   *
+   */
+  verifySpecificAddress(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
+    // Verify mbr payment
+    assert(optIn.assetReceiver === mbrPayment.receiver);
+    assert(mbrPayment.sender !== mbrPayment.receiver);
+    assert(mbrPayment.amount === this.assetMBR.get());
+
+    const senderAndReceiver: SenderAndReceiver = {
+      sender: this.txn.sender,
+      receiver: optIn.assetReceiver,
+    };
+
+    // If endTimes box exists, verify that the opt in is before the end time
+    if (this.addressSpecificEndTimes.exists(senderAndReceiver)) {
+      assert(this.addressSpecificEndTimes.get(senderAndReceiver) > globals.latestTimestamp);
+    }
+  }
+
+  /**
+     * Set the timestamp until which the account allows opt ins for a specific address
+     *
+     * @param timestamp - After this time, opt ins will no longer be allowed
+     *
+     */
+  setEndTimeForSpecificAddress(timestamp: uint64, allowedAddress: Address): void {
+    const senderAndReceiver: SenderAndReceiver = {
+      sender: allowedAddress,
+      receiver: this.txn.sender,
+    };
+
+    this.addressSpecificEndTimes.put(senderAndReceiver, timestamp);
   }
 }
