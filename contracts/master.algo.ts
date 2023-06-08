@@ -76,10 +76,7 @@ class Master extends Contract {
    * @param optIn - The opt in transaction, presumably from the delegated lsig
    *
    */
-  verify(
-    mbrPayment: PayTxn,
-    optIn: AssetTransferTxn,
-  ): void {
+  verify(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
     assert(mbrPayment.sender !== mbrPayment.receiver);
