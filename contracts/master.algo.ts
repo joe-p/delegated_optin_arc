@@ -59,21 +59,15 @@ class Master extends Contract {
    * Set the signature of the lsig for the given account
    *
    * @param sig - The signature of the lsig
-   * @param authAddr - The auth address of the account
-   * @param acct - The account to set the signature for
+   * @param signer - The public key corresponding to the signature
    * @param verifier - A txn from the verifier lsig to verify the signature
    *
    */
-  setSignature(sig: byte<64>, authAddr: Address, acct: Account, verifier: Txn): void {
-    const trueAuthAddr = (acct.authAddr === globals.zeroAddress) ? acct : acct.authAddr;
-
-    assert(authAddr === trueAuthAddr);
+  setSignature(sig: byte<64>, signer: Address, verifier: Txn): void {
     assert(verifier.sender === this.sigVerificationAddress.get());
+    assert(!this.sigs.exists(signer));
 
-    // Only allow this method to be called if the sig is new (acct has been rekeyed)
-    if (this.sigs.exists(acct)) assert(this.sigs.get(acct) !== sig);
-
-    this.sigs.put(acct, sig);
+    this.sigs.put(signer, sig);
   }
 
   /**
