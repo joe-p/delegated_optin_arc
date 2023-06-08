@@ -1,7 +1,7 @@
 #pragma version 8
 #define MasterAppCall load 0
 
-// Save MASTER_APP_CALL
+// Save MasterAppCall
 txn GroupIndex
 int 1
 +
