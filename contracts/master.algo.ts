@@ -21,8 +21,10 @@ class Master extends Contract {
 
   /**
    * Updates the asset MBR
+   *
    * @param asset - The asset to opt into and opt out of to determine MBR
-  */
+   *
+   */
   updateAssetMBR(asset: Asset): void {
     const preMbr = this.app.address.minBalance;
 
@@ -50,7 +52,7 @@ class Master extends Contract {
   /**
    * Set the address of the verifier lsig. This will only be called once after creation.
    *
-   * @param setVerifierAddress - The address of the verifier lsig
+   * @param lsig - The address of the verifier lsig
    *
    */
   setSigVerificationAddress(lsig: Address): void {
@@ -124,11 +126,12 @@ class Master extends Contract {
   }
 
   /**
-     * Set the timestamp until which the account allows opt ins for a specific address
-     *
-     * @param timestamp - After this time, opt ins will no longer be allowed
-     *
-     */
+   * Set the timestamp until which the account allows opt ins for a specific address
+   *
+   * @param timestamp - After this time, opt ins will no longer be allowed
+   * @param allowedAddress - The address to set the end time for
+   *
+   */
   setEndTimeForSpecificAddress(timestamp: uint64, allowedAddress: Address): void {
     const senderAndReceiver: SenderAndReceiver = {
       sender: allowedAddress,

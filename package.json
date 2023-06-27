@@ -1,12 +1,13 @@
 {
   "license": "MIT",
   "dependencies": {
+    "@algorandfoundation/algokit-client-generator": "^2.2.2",
     "@algorandfoundation/algokit-utils": "^2.2.1",
     "@algorandfoundation/tealscript": "^0.15.0",
     "algosdk": "^2.3.0"
   },
   "scripts": {
-    "build": "tealscript ./contracts/master.algo.ts ./contracts/artifacts",
+    "build": "tealscript ./contracts/master.algo.ts ./contracts/artifacts && algokitgen generate -a ./contracts/artifacts/Master.json -o ./client.ts",
     "deploy": "yarn build && tsx deploy.ts"
   },
   "devDependencies": {
