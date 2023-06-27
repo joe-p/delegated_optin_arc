@@ -41,13 +41,8 @@
           "desc": ""
         },
         {
-          "name": "authAddr",
+          "name": "signer",
           "type": "address",
-          "desc": ""
-        },
-        {
-          "name": "acct",
-          "type": "account",
           "desc": ""
         },
         {
@@ -88,6 +83,46 @@
         {
           "name": "timestamp",
           "type": "uint64",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "verifySpecificAddress",
+      "args": [
+        {
+          "name": "mbrPayment",
+          "type": "pay",
+          "desc": ""
+        },
+        {
+          "name": "optIn",
+          "type": "axfer",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "setEndTimeForSpecificAddress",
+      "args": [
+        {
+          "name": "timestamp",
+          "type": "uint64",
+          "desc": ""
+        },
+        {
+          "name": "allowedAddress",
+          "type": "address",
           "desc": ""
         }
       ],

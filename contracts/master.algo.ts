@@ -4,15 +4,15 @@ type SenderAndReceiver = {sender: Address, receiver: Address};
 
 // eslint-disable-next-line no-unused-vars
 class Master extends Contract {
-  sigs = new BoxMap<Address, byte<64>>({ prefix: 's-' });
+  sigs = new BoxMap<Address, StaticArray<byte, 64>>({ prefix: 's-' });
 
   endTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
 
   addressSpecificEndTimes = new BoxMap<SenderAndReceiver, uint64>();
 
-  sigVerificationAddress = new GlobalReference<Address>();
+  sigVerificationAddress = new GlobalStateKey<Address>();
 
-  assetMBR = new GlobalReference<uint64>();
+  assetMBR = new GlobalStateKey<uint64>();
 
   @handle.createApplication
   create(): void {
@@ -67,7 +67,7 @@ class Master extends Contract {
    * @param verifier - A txn from the verifier lsig to verify the signature
    *
    */
-  setSignature(sig: byte<64>, signer: Address, verifier: Txn): void {
+  setSignature(sig: StaticArray<byte, 64>, signer: Address, verifier: Txn): void {
     assert(verifier.sender === this.sigVerificationAddress.get());
     assert(!this.sigs.exists(signer));
 

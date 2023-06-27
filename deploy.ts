@@ -13,8 +13,8 @@ async function deploy() {
     {
       app: JSON.stringify(masterAppSpec),
       sender,
-      creatorAddress: sender.addr,
-      indexer: indexerClient,
+      resolveBy: 'id',
+      id: 0,
     },
     algodClient,
   );
