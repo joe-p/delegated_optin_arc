@@ -277,12 +277,12 @@ verify:
 	assert
 
 	// ./contracts/master.algo.ts:88
-	// assert(mbrPayment.amount === this.assetMBR.get())
+	// assert(mbrPayment.amount >= this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
 	byte "assetMBR"
 	app_global_get
-	==
+	>=
 	assert
 
 	// if0_condition

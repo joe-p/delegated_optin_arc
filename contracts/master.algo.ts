@@ -85,7 +85,7 @@ class Master extends Contract {
   verify(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
-    assert(mbrPayment.amount === this.assetMBR.get());
+    assert(mbrPayment.amount >= this.assetMBR.get());
 
     // If endTimes box exists, verify that the opt in is before the end time
     if (this.endTimes.exists(optIn.assetReceiver)) {

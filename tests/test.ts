@@ -1,7 +1,7 @@
 /* eslint-disable no-plusplus */
 import { algorandFixture } from '@algorandfoundation/algokit-utils/testing';
 import {
-  describe, beforeEach, test, expect,
+  describe, beforeEach, test, expect, beforeAll,
 } from '@jest/globals';
 import { readFileSync } from 'fs';
 import algosdk from 'algosdk';
@@ -47,14 +47,20 @@ async function createASA(algod: algosdk.Algodv2, sender: algosdk.Account): Promi
   return (await algod.pendingTransactionInformation(assetCreateTxn.txID()).do())['asset-index'];
 }
 
-let master: MasterClient;
-let compiledVerifierTeal: {hash: string, result: string};
-let compiledOptInTeal: {hash: string, result: string};
-
 const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
 
 describe('Master Contract', () => {
   const fixture = algorandFixture();
+
+  let master: MasterClient;
+  let compiledVerifierTeal: {hash: string, result: string};
+  let compiledOptInTeal: {hash: string, result: string};
+  let receiver: algosdk.Account;
+
+  beforeAll(() => {
+    receiver = algosdk.generateAccount();
+  });
+
   beforeEach(fixture.beforeEach, 10_000);
 
   test('Create', async () => {
@@ -101,8 +107,6 @@ describe('Master Contract', () => {
   test('setSignature', async () => {
     const { algod } = fixture.context;
 
-    const receiver = algosdk.generateAccount();
-
     const optInLsig = new algosdk.LogicSig(
       Buffer.from(compiledOptInTeal.result, 'base64'),
     );
@@ -146,5 +150,64 @@ describe('Master Contract', () => {
     const boxValue = await master.appClient.getBoxValue(boxRef);
 
     expect(boxValue).toEqual(optInLsig.sig);
+  });
+
+  test('verify', async () => {
+    const { testAccount, algod } = fixture.context;
+
+    const asa = await createASA(algod, fixture.context.testAccount);
+
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects
+      .toThrowError();
+
+    const optInLsig = new algosdk.LogicSigAccount(
+      Buffer.from(compiledOptInTeal.result, 'base64'),
+    );
+
+    optInLsig.sign(receiver.sk);
+
+    const sp = await algod.getTransactionParams().do();
+
+    const pay = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      from: testAccount.addr,
+      to: receiver.addr,
+      amount: 200_000,
+      suggestedParams: { ...sp, fee: 2_000, flatFee: true },
+    });
+
+    const optIn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+      from: receiver.addr,
+      to: receiver.addr,
+      assetIndex: asa,
+      amount: 0,
+      suggestedParams: { ...sp, fee: 0, flatFee: true },
+    });
+
+    const prefix = Buffer.from('e-');
+    const key = algosdk.decodeAddress(receiver.addr).publicKey;
+    const boxRef = concatArrays(prefix, key);
+
+    await master.verify(
+      {
+        mbrPayment: {
+          txn: pay,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          signer: algosdk.makeBasicAccountTransactionSigner(testAccount),
+        },
+        optIn: {
+          txn: optIn,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          signer: algosdk.makeLogicSigAccountTransactionSigner(optInLsig),
+        },
+      },
+      {
+        boxes: [boxRef],
+      },
+    );
+
+    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
 });
