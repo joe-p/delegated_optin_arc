@@ -1,7 +1,11 @@
+/* eslint-disable no-plusplus */
 import { algorandFixture } from '@algorandfoundation/algokit-utils/testing';
-import { describe, beforeEach, test } from '@jest/globals';
+import {
+  describe, beforeEach, test, expect,
+} from '@jest/globals';
 import { readFileSync } from 'fs';
-import algosdk, { AtomicTransactionComposer } from 'algosdk';
+import algosdk from 'algosdk';
+import * as algokit from '@algorandfoundation/algokit-utils';
 import { MasterClient } from '../master_client';
 
 /**
@@ -47,6 +51,8 @@ let master: MasterClient;
 let compiledVerifierTeal: {hash: string, result: string};
 let compiledOptInTeal: {hash: string, result: string};
 
+const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
+
 describe('Master Contract', () => {
   const fixture = algorandFixture();
   beforeEach(fixture.beforeEach, 10_000);
@@ -60,7 +66,7 @@ describe('Master Contract', () => {
       id: 0,
     }, fixture.context.algod);
 
-    await master.create.bare();
+    await master.create.bare(SUPPRESS_LOG);
 
     const { appId } = await master.appClient.getAppReference();
 
@@ -84,9 +90,12 @@ describe('Master Contract', () => {
   });
 
   test('setSigVerificationAddress', async () => {
-    await master.setSigVerificationAddress({
-      lsig: compiledVerifierTeal.hash,
-    });
+    await master.setSigVerificationAddress(
+      {
+        lsig: compiledVerifierTeal.hash,
+      },
+      SUPPRESS_LOG,
+    );
   });
 
   test('setSignature', async () => {
@@ -105,50 +114,37 @@ describe('Master Contract', () => {
     const verifierAcct = new algosdk.LogicSigAccount(verifierBytes);
 
     const verifierTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-      suggestedParams: await algod.getTransactionParams().do(),
+      suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 0, flatFee: true },
       from: verifierAcct.address(),
       to: verifierAcct.address(),
       amount: 0,
     });
 
-    const atc = new AtomicTransactionComposer();
+    const prefix = Buffer.from('s-');
+    const key = algosdk.decodeAddress(receiver.addr).publicKey;
+    const boxRef = concatArrays(prefix, key);
 
-    atc.addMethodCall({
-      appID: Number((await master.appClient.getAppReference()).appId),
-      suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 2_000, flatFee: true },
-      method: master.appClient.getABIMethod('setSignature')!,
-      methodArgs: [optInLsig.sig!, fixture.context.testAccount.addr, {
-        txn: verifierTxn,
-        signer: algosdk.makeLogicSigAccountTransactionSigner(verifierAcct),
-      }],
-      sender: fixture.context.testAccount.addr,
-      signer: algosdk.makeBasicAccountTransactionSigner(fixture.context.testAccount),
-    });
+    await master.appClient.fundAppAccount({ amount: algokit.microAlgos(141700), ...SUPPRESS_LOG });
 
-    const txns = atc.buildGroup().map((t) => t.txn);
-    const sigs = (await atc.gatherSignatures())
-      .map((s) => (algosdk.decodeObj(s) as algosdk.SignedTransaction).sig);
-
-    const dr = await algosdk.createDryrun({
-      client: algod,
-      txns: [{ txn: txns[0] }, { txn: txns[1], sig: sigs[1] }],
-    });
-
-    const drr = new algosdk.DryrunResult(await algod.dryrun(dr).do());
-
-    console.log(drr.txns[0].logicSigTrace);
-    await atc.execute(algod, 3);
-
-    /*
-    await master.setSignature({
-      sig: optInLsig.sig!,
-      signer: fixture.context.testAccount.addr,
-      verifier: {
-        txn: verifierTxn,
-        // @ts-ignore
-        signer: algosdk.makeLogicSigAccountTransactionSigner(verifierAcct),
+    await master.setSignature(
+      {
+        sig: optInLsig.sig!,
+        signer: receiver.addr,
+        verifier: {
+          txn: verifierTxn,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          signer: algosdk.makeLogicSigAccountTransactionSigner(verifierAcct),
+        },
       },
-    });
-    */
+      {
+        boxes: [boxRef],
+        sendParams: { suppressLog: true, fee: algokit.microAlgos(2_000) },
+      },
+    );
+
+    const boxValue = await master.appClient.getBoxValue(boxRef);
+
+    expect(boxValue).toEqual(optInLsig.sig);
   });
 });
