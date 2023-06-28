@@ -115,7 +115,7 @@ describe('Master Contract', () => {
 
     atc.addMethodCall({
       appID: Number((await master.appClient.getAppReference()).appId),
-      suggestedParams: await algod.getTransactionParams().do(),
+      suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 2_000, flatFee: true },
       method: master.appClient.getABIMethod('setSignature')!,
       methodArgs: [optInLsig.sig!, fixture.context.testAccount.addr, {
         txn: verifierTxn,
