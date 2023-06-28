@@ -104,6 +104,23 @@ async function delegatedOptIn(testAccount: algosdk.Account, asa: number, algod: 
   );
 }
 
+async function setEndTime(time: number) {
+  const prefix = Buffer.from('e-');
+  const key = algosdk.decodeAddress(receiver.addr).publicKey;
+  const boxRef = concatArrays(prefix, key);
+
+  await master.setEndTime(
+    {
+      timestamp: BigInt(time),
+    },
+    {
+      boxes: [boxRef],
+      sender: receiver,
+      ...SUPPRESS_LOG,
+    },
+  );
+}
+
 describe('Master Contract', () => {
   const fixture = algorandFixture();
 
@@ -207,9 +224,7 @@ describe('Master Contract', () => {
 
     const asa = await createASA(algod, fixture.context.testAccount);
 
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects
-      .toThrowError();
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do()).rejects.toThrowError('account asset info not found');
 
     await delegatedOptIn(testAccount, asa, algod);
 
@@ -219,11 +234,10 @@ describe('Master Contract', () => {
   test('setEndTime - 0xffffffff', async () => {
     const { testAccount, algod } = fixture.context;
 
+    await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
     const asa = await createASA(algod, fixture.context.testAccount);
 
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects
-      .toThrowError();
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do()).rejects.toThrowError('account asset info not found');
 
     await algokit.ensureFunded(
       {
@@ -235,24 +249,31 @@ describe('Master Contract', () => {
       fixture.context.kmd,
     );
 
-    const prefix = Buffer.from('e-');
-    const key = algosdk.decodeAddress(receiver.addr).publicKey;
-    const boxRef = concatArrays(prefix, key);
-
-    await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
-
-    await master.setEndTime(
-      {
-        timestamp: BigInt(0xffffffff),
-      },
-      {
-        boxes: [boxRef],
-        sender: receiver,
-        ...SUPPRESS_LOG,
-      },
-    );
+    await setEndTime(0xffffffff);
     await delegatedOptIn(testAccount, asa, algod);
 
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
+  });
+
+  test('setEndTime - 0', async () => {
+    const { testAccount, algod } = fixture.context;
+
+    await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
+    const asa = await createASA(algod, fixture.context.testAccount);
+
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do()).rejects.toThrowError('account asset info not found');
+
+    await algokit.ensureFunded(
+      {
+        accountToFund: receiver.addr,
+        minSpendingBalance: algokit.microAlgos(100_000),
+        suppressLog: true,
+      },
+      algod,
+      fixture.context.kmd,
+    );
+
+    await setEndTime(0);
+    await expect(delegatedOptIn(testAccount, asa, algod)).rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
   });
 });
