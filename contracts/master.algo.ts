@@ -4,15 +4,20 @@ type SenderAndReceiver = {sender: Address, receiver: Address};
 
 // eslint-disable-next-line no-unused-vars
 class Master extends Contract {
+  // Meta State
+  sigVerificationAddress = new GlobalStateKey<Address>();
+
+  assetMBR = new GlobalStateKey<uint64>();
+
+  // Delegated Opt-In State
   sigs = new BoxMap<Address, StaticArray<byte, 64>>({ prefix: 's-' });
 
   endTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
 
-  addressSpecificEndTimes = new BoxMap<SenderAndReceiver, uint64>();
+  // Address-Specific Opt-In Delegation State
+  addressSpecificEndTimes = new BoxMap<SenderAndReceiver, uint64>({ prefix: 'e-' });
 
-  sigVerificationAddress = new GlobalStateKey<Address>();
-
-  assetMBR = new GlobalStateKey<uint64>();
+  addressSpecificSigs = new BoxMap<SenderAndReceiver, StaticArray<byte, 64>>({ prefix: 's-' });
 
   @handle.createApplication
   create(): void {
@@ -139,5 +144,23 @@ class Master extends Contract {
     };
 
     this.addressSpecificEndTimes.put(senderAndReceiver, timestamp);
+  }
+
+  /**
+   * Set the signature of the lsig for the given account
+   *
+   * @param sig - The signature of the lsig
+   * @param signer - The public key corresponding to the signature
+   *
+   */
+  setSignatureForSpecificAddress(sig: StaticArray<byte, 64>, signer: Address): void {
+    const senderAndReceiver: SenderAndReceiver = {
+      sender: this.txn.sender,
+      receiver: signer,
+    };
+
+    assert(!this.addressSpecificSigs.exists(senderAndReceiver));
+
+    this.addressSpecificSigs.put(senderAndReceiver, sig);
   }
 }

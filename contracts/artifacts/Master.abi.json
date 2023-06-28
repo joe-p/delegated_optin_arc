@@ -131,6 +131,26 @@
         "type": "void",
         "desc": ""
       }
+    },
+    {
+      "name": "setSignatureForSpecificAddress",
+      "args": [
+        {
+          "name": "sig",
+          "type": "byte[64]",
+          "desc": ""
+        },
+        {
+          "name": "signer",
+          "type": "address",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
     }
   ]
 }
