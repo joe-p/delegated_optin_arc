@@ -4,9 +4,16 @@ import {
   describe, beforeEach, test, expect, beforeAll,
 } from '@jest/globals';
 import { readFileSync } from 'fs';
-import algosdk from 'algosdk';
+import algosdk, { AtomicTransactionComposer } from 'algosdk';
 import * as algokit from '@algorandfoundation/algokit-utils';
 import { MasterClient } from '../master_client';
+
+let master: MasterClient;
+let compiledVerifierTeal: {hash: string, result: string};
+let compiledOptInTeal: {hash: string, result: string};
+let receiver: algosdk.Account;
+
+const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
 
 /**
  * ConcatArrays takes n number arrays and returns a joint Uint8Array
@@ -47,15 +54,58 @@ async function createASA(algod: algosdk.Algodv2, sender: algosdk.Account): Promi
   return (await algod.pendingTransactionInformation(assetCreateTxn.txID()).do())['asset-index'];
 }
 
-const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
+async function delegatedOptIn(testAccount: algosdk.Account, asa: number, algod: algosdk.Algodv2) {
+  const optInLsig = new algosdk.LogicSigAccount(
+    Buffer.from(compiledOptInTeal.result, 'base64'),
+  );
+
+  optInLsig.sign(receiver.sk);
+
+  const sp = await algod.getTransactionParams().do();
+
+  const pay = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    from: testAccount.addr,
+    to: receiver.addr,
+    amount: 200_000,
+    suggestedParams: { ...sp, fee: 2_000, flatFee: true },
+  });
+
+  const optIn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+    from: receiver.addr,
+    to: receiver.addr,
+    assetIndex: asa,
+    amount: 0,
+    suggestedParams: { ...sp, fee: 0, flatFee: true },
+  });
+
+  const prefix = Buffer.from('e-');
+  const key = algosdk.decodeAddress(receiver.addr).publicKey;
+  const boxRef = concatArrays(prefix, key);
+
+  await master.verify(
+    {
+      mbrPayment: {
+        txn: pay,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        signer: algosdk.makeBasicAccountTransactionSigner(testAccount),
+      },
+      optIn: {
+        txn: optIn,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        signer: algosdk.makeLogicSigAccountTransactionSigner(optInLsig),
+      },
+    },
+    {
+      boxes: [boxRef],
+      ...SUPPRESS_LOG,
+    },
+  );
+}
 
 describe('Master Contract', () => {
   const fixture = algorandFixture();
-
-  let master: MasterClient;
-  let compiledVerifierTeal: {hash: string, result: string};
-  let compiledOptInTeal: {hash: string, result: string};
-  let receiver: algosdk.Account;
 
   beforeAll(() => {
     receiver = algosdk.generateAccount();
@@ -161,52 +211,47 @@ describe('Master Contract', () => {
       .rejects
       .toThrowError();
 
-    const optInLsig = new algosdk.LogicSigAccount(
-      Buffer.from(compiledOptInTeal.result, 'base64'),
+    await delegatedOptIn(testAccount, asa, algod);
+
+    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
+  });
+
+  test('setEndTime - 0xffffffff', async () => {
+    const { testAccount, algod } = fixture.context;
+
+    const asa = await createASA(algod, fixture.context.testAccount);
+
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects
+      .toThrowError();
+
+    await algokit.ensureFunded(
+      {
+        accountToFund: receiver.addr,
+        minSpendingBalance: algokit.microAlgos(100_000),
+        suppressLog: true,
+      },
+      algod,
+      fixture.context.kmd,
     );
-
-    optInLsig.sign(receiver.sk);
-
-    const sp = await algod.getTransactionParams().do();
-
-    const pay = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-      from: testAccount.addr,
-      to: receiver.addr,
-      amount: 200_000,
-      suggestedParams: { ...sp, fee: 2_000, flatFee: true },
-    });
-
-    const optIn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
-      from: receiver.addr,
-      to: receiver.addr,
-      assetIndex: asa,
-      amount: 0,
-      suggestedParams: { ...sp, fee: 0, flatFee: true },
-    });
 
     const prefix = Buffer.from('e-');
     const key = algosdk.decodeAddress(receiver.addr).publicKey;
     const boxRef = concatArrays(prefix, key);
 
-    await master.verify(
+    await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
+
+    await master.setEndTime(
       {
-        mbrPayment: {
-          txn: pay,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          signer: algosdk.makeBasicAccountTransactionSigner(testAccount),
-        },
-        optIn: {
-          txn: optIn,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          signer: algosdk.makeLogicSigAccountTransactionSigner(optInLsig),
-        },
+        timestamp: BigInt(0xffffffff),
       },
       {
         boxes: [boxRef],
+        sender: receiver,
+        ...SUPPRESS_LOG,
       },
     );
+    await delegatedOptIn(testAccount, asa, algod);
 
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
