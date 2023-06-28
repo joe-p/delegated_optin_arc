@@ -6,7 +6,7 @@ global ZeroAddress
 assert
 
 // data
-byte TMPL_OPT_IN_PROGRAM
+byte TMPL_TO_BE_SIGNED
 
 // signature
 txn GroupIndex
@@ -20,4 +20,4 @@ int 1
 +
 gtxnsa ApplicationArgs 2
 
-ed25519verify
+ed25519verify_bare
