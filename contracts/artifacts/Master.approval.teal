@@ -468,7 +468,11 @@ abi_route_setSignatureForSpecificAddress:
 	!=
 	&&
 	assert
-	byte 0x; dup
+	byte 0x
+	txn GroupIndex
+	int 1
+	-
+	txna ApplicationArgs 3
 	txna ApplicationArgs 2
 	txna ApplicationArgs 1
 	callsub setSignatureForSpecificAddress
@@ -476,39 +480,29 @@ abi_route_setSignatureForSpecificAddress:
 	return
 
 setSignatureForSpecificAddress:
-	proto 4 0
-
-	// ./contracts/master.algo.ts:155
-	// authAddr = this.txn.sender.authAddr === globals.zeroAddress
-	txn Sender
-	acct_params_get AcctAuthAddr
-	assert
-	global ZeroAddress
-	==
-	bz ternary0_false
-	txn Sender
-	b ternary0_end
-
-ternary0_false:
-	txn Sender
-	acct_params_get AcctAuthAddr
-	assert
-
-ternary0_end:
-	frame_bury -3 // authAddr: address
-
-	// ./contracts/master.algo.ts:158
-	// hash = this.getSenderReceiverHash(allowedAddress, authAddr)
-	// no dupn needed
-	frame_dig -3 // authAddr: address
-	frame_dig -2 // allowedAddress: address
-	callsub getSenderReceiverHash
-	frame_bury -4 // hash: bytes
+	proto 5 0
 
 	// ./contracts/master.algo.ts:160
+	// assert(verifier.sender === this.sigVerificationAddress.get())
+	frame_dig -4 // verifier: txn
+	gtxns Sender
+	byte "sigVerificationAddress"
+	app_global_get
+	==
+	assert
+
+	// ./contracts/master.algo.ts:162
+	// hash = this.getSenderReceiverHash(allowedAddress, signer)
+	// no dupn needed
+	frame_dig -2 // signer: address
+	frame_dig -3 // allowedAddress: address
+	callsub getSenderReceiverHash
+	frame_bury -5 // hash: bytes
+
+	// ./contracts/master.algo.ts:164
 	// this.addressSpecificSigs.put(hash, sig)
 	byte "s-"
-	frame_dig -4 // hash: bytes
+	frame_dig -5 // hash: bytes
 	concat
 	frame_dig -1 // sig: byte[64]
 	box_put
@@ -530,7 +524,7 @@ route_abi:
 	method "setEndTime(uint64)void"
 	method "verifySpecificAddress(pay,axfer)void"
 	method "setEndTimeForSpecificAddress(uint64,address)void"
-	method "setSignatureForSpecificAddress(byte[64],address)void"
+	method "setSignatureForSpecificAddress(byte[64],address,address,txn)void"
 	txna ApplicationArgs 0
 	match abi_route_updateAssetMBR abi_route_setSigVerificationAddress abi_route_setSignature abi_route_verify abi_route_setEndTime abi_route_verifySpecificAddress abi_route_setEndTimeForSpecificAddress abi_route_setSignatureForSpecificAddress
 	err

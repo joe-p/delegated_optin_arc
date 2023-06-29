@@ -10,10 +10,8 @@ import sha256 from 'sha256';
 import { MasterClient } from '../master_client';
 
 let master: MasterClient;
-let compiledVerifierTeal: {hash: string, result: string};
-let compiledOptInTeal: {hash: string, result: string};
-let compiledAddressSpecificOptInTeal: {hash: string, result: string};
 let receiver: algosdk.Account;
+let appId: number;
 
 const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
 
@@ -56,10 +54,60 @@ async function createASA(algod: algosdk.Algodv2, sender: algosdk.Account): Promi
   return (await algod.pendingTransactionInformation(assetCreateTxn.txID()).do())['asset-index'];
 }
 
-async function delegatedOptIn(testAccount: algosdk.Account, asa: number, algod: algosdk.Algodv2) {
-  const optInLsig = new algosdk.LogicSigAccount(
-    Buffer.from(compiledOptInTeal.result, 'base64'),
+const ADDR_SPECIFIC_TEAL = readFileSync('./contracts/addr_specific_lsig.teal').toString();
+const OPT_IN_TEAL = readFileSync('./contracts/optin_lsig.teal').toString();
+const VERIFIER_TEAL = readFileSync('./contracts/verifier.teal').toString();
+
+async function generateAddressSpecificOptInLsig(
+  algod: algosdk.Algodv2,
+  authorizedAddr: string,
+): Promise<algosdk.LogicSigAccount> {
+  const teal = ADDR_SPECIFIC_TEAL
+    .replace('TMPL_MASTER_APP', appId.toString())
+    .replace('TMPL_AUTHORIZED_ADDRESS', authorizedAddr);
+
+  const compiledTeal = await algod.compile(teal).do();
+
+  return new algosdk.LogicSigAccount(Buffer.from(compiledTeal.result, 'base64'));
+}
+
+async function generateOptInLsig(
+  algod: algosdk.Algodv2,
+): Promise<algosdk.LogicSigAccount> {
+  const teal = OPT_IN_TEAL.replace('TMPL_MASTER_APP', appId.toString());
+
+  const compiledTeal = await algod.compile(teal).do();
+
+  return new algosdk.LogicSigAccount(
+    Buffer.from(compiledTeal.result, 'base64'),
   );
+}
+
+async function generateVerifierLsig(
+  algod: algosdk.Algodv2,
+): Promise<algosdk.LogicSigAccount> {
+  const optInLsig = await generateOptInLsig(algod);
+  const toBeSigned = concatArrays(optInLsig.lsig.tag, optInLsig.lsig.logic);
+
+  const addrOptInLsig = await generateAddressSpecificOptInLsig(algod, receiver.addr);
+  const addrToBeSigned = concatArrays(addrOptInLsig.lsig.tag, addrOptInLsig.lsig.logic);
+
+  const teal = VERIFIER_TEAL
+    .replace('TMPL_TO_BE_SIGNED', `0x${Buffer.from(toBeSigned).toString('hex')}`)
+    .replace('TMPL_ADDR_SPECIFIC_TO_BE_SIGNED', `0x${Buffer.from(addrToBeSigned).toString('hex')}`);
+  const compiledTeal = await algod.compile(teal).do();
+
+  return new algosdk.LogicSigAccount(
+    Buffer.from(compiledTeal.result, 'base64'),
+  );
+}
+
+async function delegatedOptIn(
+  testAccount: algosdk.Account,
+  asa: number,
+  algod: algosdk.Algodv2,
+) {
+  const optInLsig = await generateOptInLsig(algod);
 
   optInLsig.sign(receiver.sk);
 
@@ -133,8 +181,6 @@ describe('Master Contract', () => {
   beforeEach(fixture.beforeEach, 10_000);
 
   test('Create', async () => {
-    const { algod } = fixture.context;
-
     master = new MasterClient({
       sender: fixture.context.testAccount,
       resolveBy: 'id',
@@ -143,31 +189,15 @@ describe('Master Contract', () => {
 
     await master.create.bare(SUPPRESS_LOG);
 
-    const { appId } = await master.appClient.getAppReference();
-
-    const optInLsigTeal = readFileSync('./contracts/optin_lsig.teal')
-      .toString()
-      .replace('TMPL_MASTER_APP', appId.toString());
-
-    compiledOptInTeal = await algod.compile(optInLsigTeal).do();
-
-    const optInLsig = new algosdk.LogicSig(
-      Buffer.from(compiledOptInTeal.result, 'base64'),
-    );
-
-    const toBeSigned = concatArrays(optInLsig.tag, optInLsig.logic);
-
-    const verifierLsigTeal = readFileSync('./contracts/verifier.teal')
-      .toString()
-      .replace('TMPL_TO_BE_SIGNED', `0x${Buffer.from(toBeSigned).toString('hex')}`);
-
-    compiledVerifierTeal = await algod.compile(verifierLsigTeal).do();
+    appId = Number((await master.appClient.getAppReference()).appId);
   });
 
   test('setSigVerificationAddress', async () => {
+    const verifierLsig = await generateVerifierLsig(fixture.context.algod);
+
     await master.setSigVerificationAddress(
       {
-        lsig: compiledVerifierTeal.hash,
+        lsig: verifierLsig.address(),
       },
       SUPPRESS_LOG,
     );
@@ -176,20 +206,16 @@ describe('Master Contract', () => {
   test('setSignature', async () => {
     const { algod } = fixture.context;
 
-    const optInLsig = new algosdk.LogicSig(
-      Buffer.from(compiledOptInTeal.result, 'base64'),
-    );
+    const optInLsig = await generateOptInLsig(algod);
 
     optInLsig.sign(receiver.sk);
 
-    const verifierBytes = Buffer.from(compiledVerifierTeal.result, 'base64');
-
-    const verifierAcct = new algosdk.LogicSigAccount(verifierBytes);
+    const verifierLsig = await generateVerifierLsig(algod);
 
     const verifierTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
       suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 0, flatFee: true },
-      from: verifierAcct.address(),
-      to: verifierAcct.address(),
+      from: verifierLsig.address(),
+      to: verifierLsig.address(),
       amount: 0,
     });
 
@@ -201,13 +227,13 @@ describe('Master Contract', () => {
 
     await master.setSignature(
       {
-        sig: optInLsig.sig!,
+        sig: optInLsig.lsig.sig!,
         signer: receiver.addr,
         verifier: {
           txn: verifierTxn,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          signer: algosdk.makeLogicSigAccountTransactionSigner(verifierAcct),
+          signer: algosdk.makeLogicSigAccountTransactionSigner(verifierLsig),
         },
       },
       {
@@ -218,7 +244,7 @@ describe('Master Contract', () => {
 
     const boxValue = await master.appClient.getBoxValue(boxRef);
 
-    expect(boxValue).toEqual(optInLsig.sig);
+    expect(boxValue).toEqual(optInLsig.lsig.sig);
   });
 
   test('verify', async () => {
@@ -226,7 +252,8 @@ describe('Master Contract', () => {
 
     const asa = await createASA(algod, fixture.context.testAccount);
 
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do()).rejects.toThrowError('account asset info not found');
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects.toThrowError('account asset info not found');
 
     await delegatedOptIn(testAccount, asa, algod);
 
@@ -239,7 +266,8 @@ describe('Master Contract', () => {
     await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
     const asa = await createASA(algod, fixture.context.testAccount);
 
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do()).rejects.toThrowError('account asset info not found');
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects.toThrowError('account asset info not found');
 
     await algokit.ensureFunded(
       {
@@ -263,7 +291,8 @@ describe('Master Contract', () => {
     await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
     const asa = await createASA(algod, fixture.context.testAccount);
 
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do()).rejects.toThrowError('account asset info not found');
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects.toThrowError('account asset info not found');
 
     await algokit.ensureFunded(
       {
@@ -276,21 +305,14 @@ describe('Master Contract', () => {
     );
 
     await setEndTime(0);
-    await expect(delegatedOptIn(testAccount, asa, algod)).rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
+    await expect(delegatedOptIn(testAccount, asa, algod))
+      .rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
   });
 
   test('setSignatureForSpecificAddress', async () => {
-    const { appId } = await master.appClient.getAppReference();
     const { algod, testAccount } = fixture.context;
 
-    const addressSpecificOptInTeal = readFileSync('./contracts/optin_lsig.teal')
-      .toString()
-      .replace('TMPL_MASTER_APP', appId.toString())
-      .replace('TMPL_AUTHORIZED_ADDRESS', testAccount.addr);
-
-    compiledAddressSpecificOptInTeal = await algod.compile(addressSpecificOptInTeal).do();
-
-    const lsig = new algosdk.LogicSigAccount(Buffer.from(compiledAddressSpecificOptInTeal.result, 'base64'));
+    const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr);
 
     lsig.sign(receiver.sk);
 
@@ -303,14 +325,31 @@ describe('Master Contract', () => {
 
     await master.appClient.fundAppAccount({ amount: algokit.microAlgos(22400), ...SUPPRESS_LOG });
 
+    const verifierLsig = await generateVerifierLsig(algod);
+
+    const verifierTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 0, flatFee: true },
+      from: verifierLsig.address(),
+      to: verifierLsig.address(),
+      amount: 0,
+    });
+
     await master.setSignatureForSpecificAddress(
       {
         sig: lsig.lsig.sig!,
+        signer: receiver.addr,
         allowedAddress: testAccount.addr,
+        verifier: {
+          txn: verifierTxn,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          signer: algosdk.makeLogicSigAccountTransactionSigner(verifierLsig),
+        },
       },
       {
         sender: receiver,
         boxes: [boxRef],
+        sendParams: { fee: algokit.microAlgos(2_000), suppressLog: true },
       },
     );
 

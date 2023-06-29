@@ -151,11 +151,15 @@ class Master extends Contract {
    * @param signer - The public key corresponding to the signature
    *
    */
-  setSignatureForSpecificAddress(sig: StaticArray<byte, 64>, allowedAddress: Address): void {
-    const authAddr = this.txn.sender.authAddr === globals.zeroAddress
-      ? this.txn.sender : this.txn.sender.authAddr;
+  setSignatureForSpecificAddress(
+    sig: StaticArray<byte, 64>,
+    signer: Address,
+    allowedAddress: Address,
+    verifier: Txn,
+  ): void {
+    assert(verifier.sender === this.sigVerificationAddress.get());
 
-    const hash = this.getSenderReceiverHash(allowedAddress, authAddr);
+    const hash = this.getSenderReceiverHash(allowedAddress, signer);
 
     this.addressSpecificSigs.put(hash, sig);
   }

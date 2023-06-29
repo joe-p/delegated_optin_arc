@@ -1,23 +1,47 @@
 #pragma version 8
+
 // Verify not rekeyed
 txn RekeyTo
 global ZeroAddress
 ==
 assert
 
-// data
-byte TMPL_TO_BE_SIGNED
-
-// signature
+// Determine if the signature is for an addr specific lsig or not
 txn GroupIndex
 int 1
 +
-gtxnsa ApplicationArgs 1
+gtxns NumAppArgs
+switch _ _ _ non_addr_specific_data addr_specific_data
 
-// public key
-txn GroupIndex
-int 1
-+
-gtxnsa ApplicationArgs 2
+addr_specific_data:
+    byte TMPL_ADDR_SPECIFIC_TO_BE_SIGNED
+    txn GroupIndex
+    int 1
+    +
+    gtxnsa ApplicationArgs 3
+    replace2 68 
+    b verify
 
-ed25519verify_bare
+non_addr_specific_data:
+    // data
+    byte TMPL_TO_BE_SIGNED
+
+verify:
+    // signature
+    txn GroupIndex
+    int 1
+    +
+    gtxnsa ApplicationArgs 1
+
+    // public key
+    txn GroupIndex
+    int 1
+    +
+    gtxnsa ApplicationArgs 2
+
+    ed25519verify_bare
+
+    return
+
+_:
+    err

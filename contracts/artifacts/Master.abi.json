@@ -141,8 +141,18 @@
           "desc": ""
         },
         {
+          "name": "signer",
+          "type": "address",
+          "desc": ""
+        },
+        {
           "name": "allowedAddress",
           "type": "address",
+          "desc": ""
+        },
+        {
+          "name": "verifier",
+          "type": "txn",
           "desc": ""
         }
       ],
