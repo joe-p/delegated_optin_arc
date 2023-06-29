@@ -3,11 +3,11 @@
   "desc": "",
   "methods": [
     {
-      "name": "updateAssetMBR",
+      "name": "setSigVerificationAddress",
       "args": [
         {
-          "name": "asset",
-          "type": "asset",
+          "name": "lsig",
+          "type": "address",
           "desc": ""
         }
       ],
@@ -18,11 +18,11 @@
       }
     },
     {
-      "name": "setSigVerificationAddress",
+      "name": "updateAssetMBR",
       "args": [
         {
-          "name": "lsig",
-          "type": "address",
+          "name": "asset",
+          "type": "asset",
           "desc": ""
         }
       ],
@@ -93,6 +93,36 @@
       }
     },
     {
+      "name": "setSignatureForSpecificAddress",
+      "args": [
+        {
+          "name": "sig",
+          "type": "byte[64]",
+          "desc": ""
+        },
+        {
+          "name": "signer",
+          "type": "address",
+          "desc": ""
+        },
+        {
+          "name": "allowedAddress",
+          "type": "address",
+          "desc": ""
+        },
+        {
+          "name": "verifier",
+          "type": "txn",
+          "desc": ""
+        }
+      ],
+      "desc": "",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
       "name": "verifySpecificAddress",
       "args": [
         {
@@ -123,36 +153,6 @@
         {
           "name": "allowedAddress",
           "type": "address",
-          "desc": ""
-        }
-      ],
-      "desc": "",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
-      "name": "setSignatureForSpecificAddress",
-      "args": [
-        {
-          "name": "sig",
-          "type": "byte[64]",
-          "desc": ""
-        },
-        {
-          "name": "signer",
-          "type": "address",
-          "desc": ""
-        },
-        {
-          "name": "allowedAddress",
-          "type": "address",
-          "desc": ""
-        },
-        {
-          "name": "verifier",
-          "type": "txn",
           "desc": ""
         }
       ],

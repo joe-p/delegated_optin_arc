@@ -36,6 +36,20 @@ class Master extends Contract {
     this.assetMBR.put(100_000);
   }
 
+  // ************ Meta Methods ************ //
+
+  /**
+   * Set the address of the verifier lsig. This will only be called once after creation.
+   *
+   * @param lsig - The address of the verifier lsig
+   *
+   */
+  setSigVerificationAddress(lsig: Address): void {
+    assert(this.txn.sender === this.app.creator);
+    assert(!this.sigVerificationAddress.exists());
+    this.sigVerificationAddress.put(lsig);
+  }
+
   /**
    * Updates the asset MBR
    *
@@ -66,17 +80,7 @@ class Master extends Contract {
     });
   }
 
-  /**
-   * Set the address of the verifier lsig. This will only be called once after creation.
-   *
-   * @param lsig - The address of the verifier lsig
-   *
-   */
-  setSigVerificationAddress(lsig: Address): void {
-    assert(this.txn.sender === this.app.creator);
-    assert(!this.sigVerificationAddress.exists());
-    this.sigVerificationAddress.put(lsig);
-  }
+  // ************ Delegated Opt-In Methods ************ //
 
   /**
    * Set the signature of the lsig for the given account
@@ -119,6 +123,28 @@ class Master extends Contract {
     this.endTimes.put(this.txn.sender, timestamp);
   }
 
+  // ************ Address Opt-In Methods ************ //
+
+  /**
+   * Set the signature of the lsig for the given account
+   *
+   * @param sig - The signature of the lsig
+   * @param signer - The public key corresponding to the signature
+   *
+   */
+  setSignatureForSpecificAddress(
+    sig: StaticArray<byte, 64>,
+    signer: Address,
+    allowedAddress: Address,
+    verifier: Txn,
+  ): void {
+    assert(verifier.sender === this.sigVerificationAddress.get());
+
+    const hash = this.getSenderReceiverHash(allowedAddress, signer);
+
+    this.addressSpecificSigs.put(hash, sig);
+  }
+
   /**
    * Verifies that the opt in is allowed from the sender
    *
@@ -150,25 +176,5 @@ class Master extends Contract {
     const hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender);
 
     this.addressSpecificEndTimes.put(hash, timestamp);
-  }
-
-  /**
-   * Set the signature of the lsig for the given account
-   *
-   * @param sig - The signature of the lsig
-   * @param signer - The public key corresponding to the signature
-   *
-   */
-  setSignatureForSpecificAddress(
-    sig: StaticArray<byte, 64>,
-    signer: Address,
-    allowedAddress: Address,
-    verifier: Txn,
-  ): void {
-    assert(verifier.sender === this.sigVerificationAddress.get());
-
-    const hash = this.getSenderReceiverHash(allowedAddress, signer);
-
-    this.addressSpecificSigs.put(hash, sig);
   }
 }
