@@ -11,7 +11,7 @@
     "ts-jest": "^29.1.0"
   },
   "scripts": {
-    "build": "tealscript ./contracts/master.algo.ts ./contracts/artifacts && algokitgen generate -a ./contracts/artifacts/Master.json -o ./master_client.ts",
+    "build": "tealscript ./contracts/delegated_optin_app.algo.ts ./contracts/artifacts && algokitgen generate -a ./contracts/artifacts/DelegatedOptIn.json -o ./delegated_optin_client.ts",
     "test": "yarn jest"
   },
   "devDependencies": {

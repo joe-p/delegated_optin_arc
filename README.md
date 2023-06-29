@@ -13,7 +13,7 @@ None of this code is tested. Right now it simply serves as a proof of concept.
 
 **OPT_IN_SIGNATURE** - The signature of **OPT_IN_PROGRAM** used for delegated opt-ins
 
-**MASTER_APP** - A single app deployed on an Algorand network used for storing signatures and verifying delegated opt-ins ([source](./contracts/master.algo.ts))
+**DELEGATED_OPTIN_APP** - A single app deployed on an Algorand network used for storing signatures and verifying delegated opt-ins ([source](./contracts/delegated_optin_app.algo.ts))
 
 **VERIFIER_LSIG** - An lsig whos sole purpose is to verify a given **OPT_IN_SIGNATURE** against the authorization address of a given account ([source](./contracts/verifier_lsig.teal))
 
@@ -33,9 +33,9 @@ This is the process for a user adding their **OPT_IN_SIGNATURE** to box strorage
 
 ### Transaction Group
 
-1. MBR Payment: Payent to **MASTER_APP** to cover cost of storing **OPT_IN_SIGNATURE** in a box 
+1. MBR Payment: Payent to **DELEGATED_OPTIN_APP** to cover cost of storing **OPT_IN_SIGNATURE** in a box 
 2. **VERIFIER_LSIG**: Any type of transaction from **VERIFIER_LSIG**
-3. **MASTER_APP**: `setOpenOptInSignature`
+3. **DELEGATED_OPTIN_APP**: `setOpenOptInSignature`
    1. *sig* - **OPT_IN_SIGNATURE**
    2. *acct* - The account for which we are adding the **OPT_IN_SIGNATURE**
    3. *authAddr* - The auth address of the aforementioned account
@@ -45,21 +45,21 @@ This is the process for a user adding their **OPT_IN_SIGNATURE** to box strorage
 This is the process for initiating a delegated opt in.
 
 ### Steps
-1. Attempt to read signature from box in **MASTER_APP**
+1. Attempt to read signature from box in **DELEGATED_OPTIN_APP**
    1. If missing or invalid, attempt to read signature from **DynamoDB**
 2. Send transaction group below
 
 ### Transaction Group
 1. MBR Payment - A payment transaction from the sender to the account opting in that covers the ASA MBR (0.1 ALGO)
 2. Opt In - A opt-in transaction signed by **OPT_IN_SIGNATURE**
-3. **MASTER_APP**: verify
+3. **DELEGATED_OPTIN_APP**: verify
 
 ## Setting End Time
 This is the process for an end user setting an end time for their delegated opt ins. Any opt ins after this time will get rejected.
 
 ### Transaction Group
 
-1. **MASTER_APP**: `setOpenOptInEndTime`
+1. **DELEGATED_OPTIN_APP**: `setOpenOptInEndTime`
    1. *timestamp* - uint64 timestamp
 
 # Open Questions

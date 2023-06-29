@@ -1,7 +1,7 @@
 import { Contract } from '@algorandfoundation/tealscript';
 
 // eslint-disable-next-line no-unused-vars
-class Master extends Contract {
+class DelegatedOptIn extends Contract {
   // ************ Meta State ************ //
 
   // The address of the lsig that verifies signatures before being added to box storage

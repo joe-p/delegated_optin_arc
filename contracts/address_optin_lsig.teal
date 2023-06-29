@@ -34,7 +34,7 @@ assert
 // Verify called atomically with master app
 MasterAppCall
 gtxns ApplicationID
-int TMPL_MASTER_APP
+int TMPL_DELEGATED_OPTIN_APP_ID
 ==
 assert
 
