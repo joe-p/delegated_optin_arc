@@ -54,15 +54,15 @@ async function createASA(algod: algosdk.Algodv2, sender: algosdk.Account): Promi
   return (await algod.pendingTransactionInformation(assetCreateTxn.txID()).do())['asset-index'];
 }
 
-const ADDR_SPECIFIC_TEAL = readFileSync('./contracts/address_optin_lsig.teal').toString();
-const OPT_IN_TEAL = readFileSync('./contracts/open_optin_lsig.teal').toString();
+const ADDRESS_OPTIN_TEAL = readFileSync('./contracts/address_optin_lsig.teal').toString();
+const OPEN_OPTIN_TEAL = readFileSync('./contracts/open_optin_lsig.teal').toString();
 const VERIFIER_TEAL = readFileSync('./contracts/verifier_lsig.teal').toString();
 
 async function generateAddressSpecificOptInLsig(
   algod: algosdk.Algodv2,
   authorizedAddr: string,
 ): Promise<algosdk.LogicSigAccount> {
-  const teal = ADDR_SPECIFIC_TEAL
+  const teal = ADDRESS_OPTIN_TEAL
     .replace('TMPL_DELEGATED_OPTIN_APP_ID', appId.toString())
     .replace('TMPL_AUTHORIZED_ADDRESS', authorizedAddr);
 
@@ -74,7 +74,7 @@ async function generateAddressSpecificOptInLsig(
 async function generateOptInLsig(
   algod: algosdk.Algodv2,
 ): Promise<algosdk.LogicSigAccount> {
-  const teal = OPT_IN_TEAL.replace('TMPL_DELEGATED_OPTIN_APP_ID', appId.toString());
+  const teal = OPEN_OPTIN_TEAL.replace('TMPL_DELEGATED_OPTIN_APP_ID', appId.toString());
 
   const compiledTeal = await algod.compile(teal).do();
 
@@ -93,8 +93,8 @@ async function generateVerifierLsig(
   const addrToBeSigned = concatArrays(addrOptInLsig.lsig.tag, addrOptInLsig.lsig.logic);
 
   const teal = VERIFIER_TEAL
-    .replace('TMPL_TO_BE_SIGNED', `0x${Buffer.from(toBeSigned).toString('hex')}`)
-    .replace('TMPL_ADDR_SPECIFIC_TO_BE_SIGNED', `0x${Buffer.from(addrToBeSigned).toString('hex')}`);
+    .replace('TMPL_OPEN_OPTIN_DATA', `0x${Buffer.from(toBeSigned).toString('hex')}`)
+    .replace('TMPL_ADDRESS_OPTIN_DATA', `0x${Buffer.from(addrToBeSigned).toString('hex')}`);
   const compiledTeal = await algod.compile(teal).do();
 
   return new algosdk.LogicSigAccount(

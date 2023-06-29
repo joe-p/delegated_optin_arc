@@ -6,15 +6,15 @@ global ZeroAddress
 ==
 assert
 
-// Determine if the signature is for an addr specific lsig or not
+// Determine if the signature is for an address opt-in lsig or open opt-in lsig
 txn GroupIndex
 int 1
 +
 gtxns NumAppArgs
-switch _ _ _ non_addr_specific_data addr_specific_data
+switch _ _ _ open_optin_data addr_optin_data
 
-addr_specific_data:
-    byte TMPL_ADDR_SPECIFIC_TO_BE_SIGNED
+addr_optin_data:
+    byte TMPL_ADDRESS_OPTIN_DATA
     txn GroupIndex
     int 1
     +
@@ -22,9 +22,9 @@ addr_specific_data:
     replace2 68 
     b verify
 
-non_addr_specific_data:
+open_optin_data:
     // data
-    byte TMPL_TO_BE_SIGNED
+    byte TMPL_OPEN_OPTIN_DATA
 
 verify:
     // signature
