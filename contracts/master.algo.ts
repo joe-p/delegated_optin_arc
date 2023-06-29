@@ -1,24 +1,31 @@
 import { Contract } from '@algorandfoundation/tealscript';
-import { get } from 'http';
-
-type SenderAndReceiver = {sender: Address, receiver: Address};
 
 // eslint-disable-next-line no-unused-vars
 class Master extends Contract {
-  // Meta State
+  // ************ Meta State ************ //
+
+  // The address of the lsig that verifies signatures before being added to box storage
   sigVerificationAddress = new GlobalStateKey<Address>();
 
+  // The minimum balance requirement for ASAs
   assetMBR = new GlobalStateKey<uint64>();
 
-  // Delegated Opt-In State
+  // ************ Delegated Opt-In State ************ //
+
+  // Mapping of public key to signed delegated opt-in lsig
   sigs = new BoxMap<Address, StaticArray<byte, 64>>({ prefix: 's-' });
 
+  // Mapping of address to timestamp until which delegated opt-ins are allowed
   endTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
 
-  // Address-Specific Opt-In Delegation State
-  addressSpecificEndTimes = new BoxMap<bytes, uint64>({ prefix: 'e-' });
+  // ************ Address Opt-In State ************ //
 
+  // Mapping of hash(sender address + receiver public key) to signed opt-in lsig for sender address
   addressSpecificSigs = new BoxMap<bytes, StaticArray<byte, 64>>({ prefix: 's-' });
+
+  // Mapping of hash(sender address + receiver address ) to to timestamp until which
+  // opt-ins from the sender address are allowed
+  addressSpecificEndTimes = new BoxMap<bytes, uint64>({ prefix: 'e-' });
 
   private getSenderReceiverHash(sender: Address, receiverOrSigner: Address): bytes {
     return sha256(concat(sender, receiverOrSigner));
@@ -115,13 +122,14 @@ class Master extends Contract {
   /**
    * Verifies that the opt in is allowed from the sender
    *
+   * @param mbrPayment - Payment to the receiver that covers the ASA MBR
    * @param optIn - The opt in transaction, presumably from the delegated lsig
    *
    */
   verifySpecificAddress(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
-    assert(mbrPayment.amount === this.assetMBR.get());
+    assert(mbrPayment.amount >= this.assetMBR.get());
 
     const hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver);
 
