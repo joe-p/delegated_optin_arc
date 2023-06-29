@@ -1,4 +1,5 @@
 import { Contract } from '@algorandfoundation/tealscript';
+import { get } from 'http';
 
 type SenderAndReceiver = {sender: Address, receiver: Address};
 
@@ -15,9 +16,13 @@ class Master extends Contract {
   endTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
 
   // Address-Specific Opt-In Delegation State
-  addressSpecificEndTimes = new BoxMap<SenderAndReceiver, uint64>({ prefix: 'e-' });
+  addressSpecificEndTimes = new BoxMap<bytes, uint64>({ prefix: 'e-' });
 
-  addressSpecificSigs = new BoxMap<SenderAndReceiver, StaticArray<byte, 64>>({ prefix: 's-' });
+  addressSpecificSigs = new BoxMap<bytes, StaticArray<byte, 64>>({ prefix: 's-' });
+
+  private getSenderReceiverHash(sender: Address, receiverOrSigner: Address): bytes {
+    return sha256(concat(sender, receiverOrSigner));
+  }
 
   @handle.createApplication
   create(): void {
@@ -76,7 +81,6 @@ class Master extends Contract {
    */
   setSignature(sig: StaticArray<byte, 64>, signer: Address, verifier: Txn): void {
     assert(verifier.sender === this.sigVerificationAddress.get());
-    assert(!this.sigs.exists(signer));
 
     this.sigs.put(signer, sig);
   }
@@ -119,14 +123,11 @@ class Master extends Contract {
     assert(optIn.assetReceiver === mbrPayment.receiver);
     assert(mbrPayment.amount === this.assetMBR.get());
 
-    const senderAndReceiver: SenderAndReceiver = {
-      sender: this.txn.sender,
-      receiver: optIn.assetReceiver,
-    };
+    const hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver);
 
     // If endTimes box exists, verify that the opt in is before the end time
-    if (this.addressSpecificEndTimes.exists(senderAndReceiver)) {
-      assert(this.addressSpecificEndTimes.get(senderAndReceiver) > globals.latestTimestamp);
+    if (this.addressSpecificEndTimes.exists(hash)) {
+      assert(this.addressSpecificEndTimes.get(hash) > globals.latestTimestamp);
     }
   }
 
@@ -138,12 +139,9 @@ class Master extends Contract {
    *
    */
   setEndTimeForSpecificAddress(timestamp: uint64, allowedAddress: Address): void {
-    const senderAndReceiver: SenderAndReceiver = {
-      sender: allowedAddress,
-      receiver: this.txn.sender,
-    };
+    const hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender);
 
-    this.addressSpecificEndTimes.put(senderAndReceiver, timestamp);
+    this.addressSpecificEndTimes.put(hash, timestamp);
   }
 
   /**
@@ -153,14 +151,12 @@ class Master extends Contract {
    * @param signer - The public key corresponding to the signature
    *
    */
-  setSignatureForSpecificAddress(sig: StaticArray<byte, 64>, signer: Address): void {
-    const senderAndReceiver: SenderAndReceiver = {
-      sender: this.txn.sender,
-      receiver: signer,
-    };
+  setSignatureForSpecificAddress(sig: StaticArray<byte, 64>, allowedAddress: Address): void {
+    const authAddr = this.txn.sender.authAddr === globals.zeroAddress
+      ? this.txn.sender : this.txn.sender.authAddr;
 
-    assert(!this.addressSpecificSigs.exists(senderAndReceiver));
+    const hash = this.getSenderReceiverHash(allowedAddress, authAddr);
 
-    this.addressSpecificSigs.put(senderAndReceiver, sig);
+    this.addressSpecificSigs.put(hash, sig);
   }
 }

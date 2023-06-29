@@ -1,6 +1,17 @@
 #pragma version 8
 	b main
 
+getSenderReceiverHash:
+	proto 2 1
+
+	// ./contracts/master.algo.ts:24
+	// return sha256(concat(sender, receiverOrSigner));
+	frame_dig -1 // sender: address
+	frame_dig -2 // receiverOrSigner: address
+	concat
+	sha256
+	retsub
+
 bare_route_create:
 	txn OnCompletion
 	int NoOp
@@ -19,7 +30,7 @@ bare_route_create:
 create:
 	proto 0 0
 
-	// ./contracts/master.algo.ts:24
+	// ./contracts/master.algo.ts:29
 	// this.assetMBR.put(100_000)
 	byte "assetMBR"
 	int 100_000
@@ -46,7 +57,7 @@ abi_route_updateAssetMBR:
 updateAssetMBR:
 	proto 3 0
 
-	// ./contracts/master.algo.ts:34
+	// ./contracts/master.algo.ts:39
 	// preMbr = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -55,36 +66,36 @@ updateAssetMBR:
 	assert
 	frame_bury -2 // preMbr: uint64
 
-	// ./contracts/master.algo.ts:36
+	// ./contracts/master.algo.ts:41
 	// sendAssetTransfer({
 	itxn_begin
 	int axfer
 	itxn_field TypeEnum
 
-	// ./contracts/master.algo.ts:37
+	// ./contracts/master.algo.ts:42
 	// assetReceiver: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field AssetReceiver
 
-	// ./contracts/master.algo.ts:38
+	// ./contracts/master.algo.ts:43
 	// xferAsset: asset
 	frame_dig -1 // asset: asset
 	itxn_field XferAsset
 
-	// ./contracts/master.algo.ts:39
+	// ./contracts/master.algo.ts:44
 	// assetAmount: 0
 	int 0
 	itxn_field AssetAmount
 
-	// ./contracts/master.algo.ts:40
+	// ./contracts/master.algo.ts:45
 	// fee: 0
 	int 0
 	itxn_field Fee
 	itxn_submit
 
-	// ./contracts/master.algo.ts:43
+	// ./contracts/master.algo.ts:48
 	// mbrDelta = preMbr - this.app.address.minBalance
 	frame_dig -2 // preMbr: uint64
 	txna Applications 0
@@ -95,7 +106,7 @@ updateAssetMBR:
 	-
 	frame_bury -3 // mbrDelta: uint64
 
-	// ./contracts/master.algo.ts:45
+	// ./contracts/master.algo.ts:50
 	// assert(mbrDelta !== this.assetMBR.get())
 	frame_dig -3 // mbrDelta: uint64
 	byte "assetMBR"
@@ -103,41 +114,41 @@ updateAssetMBR:
 	!=
 	assert
 
-	// ./contracts/master.algo.ts:46
+	// ./contracts/master.algo.ts:51
 	// this.assetMBR.put(mbrDelta)
 	byte "assetMBR"
 	frame_dig -3 // mbrDelta: uint64
 	app_global_put
 
-	// ./contracts/master.algo.ts:48
+	// ./contracts/master.algo.ts:53
 	// sendAssetTransfer({
 	itxn_begin
 	int axfer
 	itxn_field TypeEnum
 
-	// ./contracts/master.algo.ts:49
+	// ./contracts/master.algo.ts:54
 	// assetReceiver: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field AssetReceiver
 
-	// ./contracts/master.algo.ts:50
+	// ./contracts/master.algo.ts:55
 	// xferAsset: asset
 	frame_dig -1 // asset: asset
 	itxn_field XferAsset
 
-	// ./contracts/master.algo.ts:51
+	// ./contracts/master.algo.ts:56
 	// assetAmount: 0
 	int 0
 	itxn_field AssetAmount
 
-	// ./contracts/master.algo.ts:52
+	// ./contracts/master.algo.ts:57
 	// fee: 0
 	int 0
 	itxn_field Fee
 
-	// ./contracts/master.algo.ts:53
+	// ./contracts/master.algo.ts:58
 	// assetCloseTo: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
@@ -165,7 +176,7 @@ abi_route_setSigVerificationAddress:
 setSigVerificationAddress:
 	proto 1 0
 
-	// ./contracts/master.algo.ts:64
+	// ./contracts/master.algo.ts:69
 	// assert(this.txn.sender === this.app.creator)
 	txn Sender
 	txna Applications 0
@@ -174,7 +185,7 @@ setSigVerificationAddress:
 	==
 	assert
 
-	// ./contracts/master.algo.ts:65
+	// ./contracts/master.algo.ts:70
 	// assert(!this.sigVerificationAddress.exists())
 	txna Applications 0
 	byte "sigVerificationAddress"
@@ -184,7 +195,7 @@ setSigVerificationAddress:
 	!
 	assert
 
-	// ./contracts/master.algo.ts:66
+	// ./contracts/master.algo.ts:71
 	// this.sigVerificationAddress.put(lsig)
 	byte "sigVerificationAddress"
 	frame_dig -1 // lsig: address
@@ -214,7 +225,7 @@ abi_route_setSignature:
 setSignature:
 	proto 3 0
 
-	// ./contracts/master.algo.ts:78
+	// ./contracts/master.algo.ts:83
 	// assert(verifier.sender === this.sigVerificationAddress.get())
 	frame_dig -3 // verifier: txn
 	gtxns Sender
@@ -223,18 +234,7 @@ setSignature:
 	==
 	assert
 
-	// ./contracts/master.algo.ts:79
-	// assert(!this.sigs.exists(signer))
-	byte "s-"
-	frame_dig -2 // signer: address
-	concat
-	box_get
-	swap
-	pop
-	!
-	assert
-
-	// ./contracts/master.algo.ts:81
+	// ./contracts/master.algo.ts:85
 	// this.sigs.put(signer, sig)
 	byte "s-"
 	frame_dig -2 // signer: address
@@ -267,7 +267,7 @@ abi_route_verify:
 verify:
 	proto 2 0
 
-	// ./contracts/master.algo.ts:92
+	// ./contracts/master.algo.ts:96
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
@@ -276,7 +276,7 @@ verify:
 	==
 	assert
 
-	// ./contracts/master.algo.ts:93
+	// ./contracts/master.algo.ts:97
 	// assert(mbrPayment.amount >= this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
@@ -286,7 +286,7 @@ verify:
 	assert
 
 	// if0_condition
-	// ./contracts/master.algo.ts:96
+	// ./contracts/master.algo.ts:100
 	// this.endTimes.exists(optIn.assetReceiver)
 	byte "e-"
 	frame_dig -2 // optIn: axfer
@@ -298,7 +298,7 @@ verify:
 	bz if0_end
 
 	// if0_consequent
-	// ./contracts/master.algo.ts:97
+	// ./contracts/master.algo.ts:101
 	// assert(this.endTimes.get(optIn.assetReceiver) > globals.latestTimestamp)
 	byte "e-"
 	frame_dig -2 // optIn: axfer
@@ -334,7 +334,7 @@ abi_route_setEndTime:
 setEndTime:
 	proto 1 0
 
-	// ./contracts/master.algo.ts:108
+	// ./contracts/master.algo.ts:112
 	// this.endTimes.put(this.txn.sender, timestamp)
 	byte "e-"
 	txn Sender
@@ -367,7 +367,7 @@ abi_route_verifySpecificAddress:
 verifySpecificAddress:
 	proto 3 0
 
-	// ./contracts/master.algo.ts:119
+	// ./contracts/master.algo.ts:123
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
@@ -376,7 +376,7 @@ verifySpecificAddress:
 	==
 	assert
 
-	// ./contracts/master.algo.ts:120
+	// ./contracts/master.algo.ts:124
 	// assert(mbrPayment.amount === this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
@@ -385,25 +385,20 @@ verifySpecificAddress:
 	==
 	assert
 
-	// ./contracts/master.algo.ts:122
-	// senderAndReceiver: SenderAndReceiver = {
-	byte 0x // initial head
-	byte 0x // initial tail
-	byte 0x0040 // initial head offset
-	txn Sender
-	callsub process_static_tuple_element
+	// ./contracts/master.algo.ts:126
+	// hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver)
+	// no dupn needed
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
-	callsub process_static_tuple_element
-	pop // pop head offset
-	concat // concat head and tail
-	frame_bury -3 // senderAndReceiver: SenderAndReceiver
+	txn Sender
+	callsub getSenderReceiverHash
+	frame_bury -3 // hash: bytes
 
 	// if1_condition
-	// ./contracts/master.algo.ts:128
-	// this.addressSpecificEndTimes.exists(senderAndReceiver)
+	// ./contracts/master.algo.ts:129
+	// this.addressSpecificEndTimes.exists(hash)
 	byte "e-"
-	frame_dig -3 // senderAndReceiver: SenderAndReceiver
+	frame_dig -3 // hash: bytes
 	concat
 	box_get
 	swap
@@ -411,10 +406,10 @@ verifySpecificAddress:
 	bz if1_end
 
 	// if1_consequent
-	// ./contracts/master.algo.ts:129
-	// assert(this.addressSpecificEndTimes.get(senderAndReceiver) > globals.latestTimestamp)
+	// ./contracts/master.algo.ts:130
+	// assert(this.addressSpecificEndTimes.get(hash) > globals.latestTimestamp)
 	byte "e-"
-	frame_dig -3 // senderAndReceiver: SenderAndReceiver
+	frame_dig -3 // hash: bytes
 	concat
 	box_get
 	assert
@@ -446,25 +441,18 @@ abi_route_setEndTimeForSpecificAddress:
 setEndTimeForSpecificAddress:
 	proto 3 0
 
-	// ./contracts/master.algo.ts:141
-	// senderAndReceiver: SenderAndReceiver = {
-	byte 0x // initial head
-	byte 0x // initial tail
-	byte 0x0040 // initial head offset
-	frame_dig -2 // allowedAddress: address
-	callsub process_static_tuple_element
+	// ./contracts/master.algo.ts:142
+	// hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender)
+	// no dupn needed
 	txn Sender
-	acct_params_get AcctAuthAddr
-	assert
-	callsub process_static_tuple_element
-	pop // pop head offset
-	concat // concat head and tail
-	frame_bury -3 // senderAndReceiver: SenderAndReceiver
+	frame_dig -2 // allowedAddress: address
+	callsub getSenderReceiverHash
+	frame_bury -3 // hash: bytes
 
-	// ./contracts/master.algo.ts:146
-	// this.addressSpecificEndTimes.put(senderAndReceiver, timestamp)
+	// ./contracts/master.algo.ts:144
+	// this.addressSpecificEndTimes.put(hash, timestamp)
 	byte "e-"
-	frame_dig -3 // senderAndReceiver: SenderAndReceiver
+	frame_dig -3 // hash: bytes
 	concat
 	frame_dig -1 // timestamp: uint64
 	itob
@@ -480,7 +468,7 @@ abi_route_setSignatureForSpecificAddress:
 	!=
 	&&
 	assert
-	byte 0x
+	byte 0x; dup
 	txna ApplicationArgs 2
 	txna ApplicationArgs 1
 	callsub setSignatureForSpecificAddress
@@ -488,36 +476,39 @@ abi_route_setSignatureForSpecificAddress:
 	return
 
 setSignatureForSpecificAddress:
-	proto 3 0
+	proto 4 0
 
-	// ./contracts/master.algo.ts:157
-	// senderAndReceiver: SenderAndReceiver = {
-	byte 0x // initial head
-	byte 0x // initial tail
-	byte 0x0040 // initial head offset
+	// ./contracts/master.algo.ts:155
+	// authAddr = this.txn.sender.authAddr === globals.zeroAddress
 	txn Sender
-	callsub process_static_tuple_element
-	frame_dig -2 // signer: address
-	callsub process_static_tuple_element
-	pop // pop head offset
-	concat // concat head and tail
-	frame_bury -3 // senderAndReceiver: SenderAndReceiver
+	acct_params_get AcctAuthAddr
+	assert
+	global ZeroAddress
+	==
+	bz ternary0_false
+	txn Sender
+	b ternary0_end
 
-	// ./contracts/master.algo.ts:162
-	// assert(!this.addressSpecificSigs.exists(senderAndReceiver))
-	byte "s-"
-	frame_dig -3 // senderAndReceiver: SenderAndReceiver
-	concat
-	box_get
-	swap
-	pop
-	!
+ternary0_false:
+	txn Sender
+	acct_params_get AcctAuthAddr
 	assert
 
-	// ./contracts/master.algo.ts:164
-	// this.addressSpecificSigs.put(senderAndReceiver, sig)
+ternary0_end:
+	frame_bury -3 // authAddr: address
+
+	// ./contracts/master.algo.ts:158
+	// hash = this.getSenderReceiverHash(allowedAddress, authAddr)
+	// no dupn needed
+	frame_dig -3 // authAddr: address
+	frame_dig -2 // allowedAddress: address
+	callsub getSenderReceiverHash
+	frame_bury -4 // hash: bytes
+
+	// ./contracts/master.algo.ts:160
+	// this.addressSpecificSigs.put(hash, sig)
 	byte "s-"
-	frame_dig -3 // senderAndReceiver: SenderAndReceiver
+	frame_dig -4 // hash: bytes
 	concat
 	frame_dig -1 // sig: byte[64]
 	box_put
@@ -543,12 +534,3 @@ route_abi:
 	txna ApplicationArgs 0
 	match abi_route_updateAssetMBR abi_route_setSigVerificationAddress abi_route_setSignature abi_route_verify abi_route_setEndTime abi_route_verifySpecificAddress abi_route_setEndTimeForSpecificAddress abi_route_setSignatureForSpecificAddress
 	err
-
-process_static_tuple_element:
-	proto 4 3
-	frame_dig -4 // tuple head
-	frame_dig -1 // element
-	concat
-	frame_dig -3 // tuple tail
-	frame_dig -2 // head offset
-	retsub

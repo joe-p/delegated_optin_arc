@@ -141,7 +141,7 @@
           "desc": ""
         },
         {
-          "name": "signer",
+          "name": "allowedAddress",
           "type": "address",
           "desc": ""
         }

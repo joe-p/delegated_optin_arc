@@ -4,13 +4,15 @@ import {
   describe, beforeEach, test, expect, beforeAll,
 } from '@jest/globals';
 import { readFileSync } from 'fs';
-import algosdk, { AtomicTransactionComposer } from 'algosdk';
+import algosdk from 'algosdk';
 import * as algokit from '@algorandfoundation/algokit-utils';
+import sha256 from 'sha256';
 import { MasterClient } from '../master_client';
 
 let master: MasterClient;
 let compiledVerifierTeal: {hash: string, result: string};
 let compiledOptInTeal: {hash: string, result: string};
+let compiledAddressSpecificOptInTeal: {hash: string, result: string};
 let receiver: algosdk.Account;
 
 const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
@@ -275,5 +277,45 @@ describe('Master Contract', () => {
 
     await setEndTime(0);
     await expect(delegatedOptIn(testAccount, asa, algod)).rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
+  });
+
+  test('setSignatureForSpecificAddress', async () => {
+    const { appId } = await master.appClient.getAppReference();
+    const { algod, testAccount } = fixture.context;
+
+    const addressSpecificOptInTeal = readFileSync('./contracts/optin_lsig.teal')
+      .toString()
+      .replace('TMPL_MASTER_APP', appId.toString())
+      .replace('TMPL_AUTHORIZED_ADDRESS', testAccount.addr);
+
+    compiledAddressSpecificOptInTeal = await algod.compile(addressSpecificOptInTeal).do();
+
+    const lsig = new algosdk.LogicSigAccount(Buffer.from(compiledAddressSpecificOptInTeal.result, 'base64'));
+
+    lsig.sign(receiver.sk);
+
+    const hash = sha256(Buffer.from(concatArrays(
+      algosdk.decodeAddress(testAccount.addr).publicKey,
+      algosdk.decodeAddress(receiver.addr).publicKey,
+    )), { asBytes: true });
+
+    const boxRef = concatArrays(Buffer.from('s-'), hash);
+
+    await master.appClient.fundAppAccount({ amount: algokit.microAlgos(22400), ...SUPPRESS_LOG });
+
+    await master.setSignatureForSpecificAddress(
+      {
+        sig: lsig.lsig.sig!,
+        allowedAddress: testAccount.addr,
+      },
+      {
+        sender: receiver,
+        boxes: [boxRef],
+      },
+    );
+
+    const boxValue = await master.appClient.getBoxValue(boxRef);
+
+    expect(boxValue).toEqual(lsig.lsig.sig);
   });
 });
