@@ -9,13 +9,13 @@ None of this code is tested. Right now it simply serves as a proof of concept.
 
 **DYANMO_DB** - A centralized server containing a mapping of addresses to signatures
 
-**OPT_IN_PROGRAM** - The logic for the logic signature that can opt into assets ([source](./contracts/optin_lsig.teal))
+**OPT_IN_PROGRAM** - The logic for the logic signature that can opt into assets ([source](./contracts/open_optin_lsig.teal))
 
 **OPT_IN_SIGNATURE** - The signature of **OPT_IN_PROGRAM** used for delegated opt-ins
 
 **MASTER_APP** - A single app deployed on an Algorand network used for storing signatures and verifying delegated opt-ins ([source](./contracts/master.algo.ts))
 
-**VERIFIER_LSIG** - An lsig whos sole purpose is to verify a given **OPT_IN_SIGNATURE** against the authorization address of a given account ([source](./contracts/verifier.teal))
+**VERIFIER_LSIG** - An lsig whos sole purpose is to verify a given **OPT_IN_SIGNATURE** against the authorization address of a given account ([source](./contracts/verifier_lsig.teal))
 
 ## Wallet Onboarding
 This is the process for onboarding new users in a wallet (ie. Defly, Pera).
@@ -35,7 +35,7 @@ This is the process for a user adding their **OPT_IN_SIGNATURE** to box strorage
 
 1. MBR Payment: Payent to **MASTER_APP** to cover cost of storing **OPT_IN_SIGNATURE** in a box 
 2. **VERIFIER_LSIG**: Any type of transaction from **VERIFIER_LSIG**
-3. **MASTER_APP**: `setSignature`
+3. **MASTER_APP**: `setOpenOptInSignature`
    1. *sig* - **OPT_IN_SIGNATURE**
    2. *acct* - The account for which we are adding the **OPT_IN_SIGNATURE**
    3. *authAddr* - The auth address of the aforementioned account
@@ -59,7 +59,7 @@ This is the process for an end user setting an end time for their delegated opt 
 
 ### Transaction Group
 
-1. **MASTER_APP**: `setEndTime`
+1. **MASTER_APP**: `setOpenOptInEndTime`
    1. *timestamp* - uint64 timestamp
 
 # Open Questions

@@ -54,9 +54,9 @@ async function createASA(algod: algosdk.Algodv2, sender: algosdk.Account): Promi
   return (await algod.pendingTransactionInformation(assetCreateTxn.txID()).do())['asset-index'];
 }
 
-const ADDR_SPECIFIC_TEAL = readFileSync('./contracts/addr_specific_lsig.teal').toString();
-const OPT_IN_TEAL = readFileSync('./contracts/optin_lsig.teal').toString();
-const VERIFIER_TEAL = readFileSync('./contracts/verifier.teal').toString();
+const ADDR_SPECIFIC_TEAL = readFileSync('./contracts/address_optin_lsig.teal').toString();
+const OPT_IN_TEAL = readFileSync('./contracts/open_optin_lsig.teal').toString();
+const VERIFIER_TEAL = readFileSync('./contracts/verifier_lsig.teal').toString();
 
 async function generateAddressSpecificOptInLsig(
   algod: algosdk.Algodv2,
@@ -132,7 +132,7 @@ async function delegatedOptIn(
   const key = algosdk.decodeAddress(receiver.addr).publicKey;
   const boxRef = concatArrays(prefix, key);
 
-  await master.verify(
+  await master.openOptIn(
     {
       mbrPayment: {
         txn: pay,
@@ -154,12 +154,12 @@ async function delegatedOptIn(
   );
 }
 
-async function setEndTime(time: number) {
+async function setOpenOptInEndTime(time: number) {
   const prefix = Buffer.from('e-');
   const key = algosdk.decodeAddress(receiver.addr).publicKey;
   const boxRef = concatArrays(prefix, key);
 
-  await master.setEndTime(
+  await master.setOpenOptInEndTime(
     {
       timestamp: BigInt(time),
     },
@@ -203,7 +203,7 @@ describe('Master Contract', () => {
     );
   });
 
-  test('setSignature', async () => {
+  test('setOpenOptInSignature', async () => {
     const { algod } = fixture.context;
 
     const optInLsig = await generateOptInLsig(algod);
@@ -225,7 +225,7 @@ describe('Master Contract', () => {
 
     await master.appClient.fundAppAccount({ amount: algokit.microAlgos(141700), ...SUPPRESS_LOG });
 
-    await master.setSignature(
+    await master.setOpenOptInSignature(
       {
         sig: optInLsig.lsig.sig!,
         signer: receiver.addr,
@@ -260,7 +260,7 @@ describe('Master Contract', () => {
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
 
-  test('setEndTime - 0xffffffff', async () => {
+  test('setOpenOptInEndTime - 0xffffffff', async () => {
     const { testAccount, algod } = fixture.context;
 
     await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
@@ -279,13 +279,13 @@ describe('Master Contract', () => {
       fixture.context.kmd,
     );
 
-    await setEndTime(0xffffffff);
+    await setOpenOptInEndTime(0xffffffff);
     await delegatedOptIn(testAccount, asa, algod);
 
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
 
-  test('setEndTime - 0', async () => {
+  test('setOpenOptInEndTime - 0', async () => {
     const { testAccount, algod } = fixture.context;
 
     await master.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
@@ -304,12 +304,12 @@ describe('Master Contract', () => {
       fixture.context.kmd,
     );
 
-    await setEndTime(0);
+    await setOpenOptInEndTime(0);
     await expect(delegatedOptIn(testAccount, asa, algod))
       .rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
   });
 
-  test('setSignatureForSpecificAddress', async () => {
+  test('setAddressOptInSignature', async () => {
     const { algod, testAccount } = fixture.context;
 
     const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr);
@@ -334,7 +334,7 @@ describe('Master Contract', () => {
       amount: 0,
     });
 
-    await master.setSignatureForSpecificAddress(
+    await master.setAddressOptInSignature(
       {
         sig: lsig.lsig.sig!,
         signer: receiver.addr,

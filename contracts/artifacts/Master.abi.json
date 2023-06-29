@@ -33,7 +33,7 @@
       }
     },
     {
-      "name": "setSignature",
+      "name": "setOpenOptInSignature",
       "args": [
         {
           "name": "sig",
@@ -58,7 +58,7 @@
       }
     },
     {
-      "name": "verify",
+      "name": "openOptIn",
       "args": [
         {
           "name": "mbrPayment",
@@ -78,7 +78,7 @@
       }
     },
     {
-      "name": "setEndTime",
+      "name": "setOpenOptInEndTime",
       "args": [
         {
           "name": "timestamp",
@@ -93,7 +93,7 @@
       }
     },
     {
-      "name": "setSignatureForSpecificAddress",
+      "name": "setAddressOptInSignature",
       "args": [
         {
           "name": "sig",
@@ -123,7 +123,7 @@
       }
     },
     {
-      "name": "verifySpecificAddress",
+      "name": "addressOptIn",
       "args": [
         {
           "name": "mbrPayment",
@@ -143,7 +143,7 @@
       }
     },
     {
-      "name": "setEndTimeForSpecificAddress",
+      "name": "setAddressOptInEndTime",
       "args": [
         {
           "name": "timestamp",

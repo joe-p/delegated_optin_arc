@@ -41,7 +41,7 @@ assert
 // Verify the correct method is being called
 MasterAppCall
 gtxnsa ApplicationArgs 0
-method "verifySpecificAddress(pay,axfer)void"
+method "addressOptIn(pay,axfer)void"
 ==
 assert
 

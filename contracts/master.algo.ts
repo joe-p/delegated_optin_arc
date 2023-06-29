@@ -10,22 +10,23 @@ class Master extends Contract {
   // The minimum balance requirement for ASAs
   assetMBR = new GlobalStateKey<uint64>();
 
-  // ************ Delegated Opt-In State ************ //
+  // ************ Open Opt-In State ************ //
 
-  // Mapping of public key to signed delegated opt-in lsig
-  sigs = new BoxMap<Address, StaticArray<byte, 64>>({ prefix: 's-' });
+  // Mapping of public key to signed open opt-in lsig
+  openOptInSignatures = new BoxMap<Address, StaticArray<byte, 64>>({ prefix: 's-' });
 
-  // Mapping of address to timestamp until which delegated opt-ins are allowed
-  endTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
+  // Mapping of address to timestamp until which open opt-ins are allowed
+  openOptInEndTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
 
   // ************ Address Opt-In State ************ //
 
-  // Mapping of hash(sender address + receiver public key) to signed opt-in lsig for sender address
-  addressSpecificSigs = new BoxMap<bytes, StaticArray<byte, 64>>({ prefix: 's-' });
+  // Mapping of hash(sender address + receiver public key) to
+  // signed address opt-in lsig for sender address
+  addressOptInSignatures = new BoxMap<bytes, StaticArray<byte, 64>>({ prefix: 's-' });
 
-  // Mapping of hash(sender address + receiver address ) to to timestamp until which
-  // opt-ins from the sender address are allowed
-  addressSpecificEndTimes = new BoxMap<bytes, uint64>({ prefix: 'e-' });
+  // Mapping of hash(sender address + receiver address ) to timestamp until which
+  // address pt-ins from the sender address are allowed
+  addressOptInEndTimes = new BoxMap<bytes, uint64>({ prefix: 'e-' });
 
   private getSenderReceiverHash(sender: Address, receiverOrSigner: Address): bytes {
     return sha256(concat(sender, receiverOrSigner));
@@ -52,7 +53,7 @@ class Master extends Contract {
 
   /**
    * Updates the asset MBR
-   *
+   * @param mbrPayment - Payment to the receiver that covers the ASA MBR
    * @param asset - The asset to opt into and opt out of to determine MBR
    *
    */
@@ -80,36 +81,36 @@ class Master extends Contract {
     });
   }
 
-  // ************ Delegated Opt-In Methods ************ //
+  // ************ Open Opt-In Methods ************ //
 
   /**
    * Set the signature of the lsig for the given account
    *
    * @param sig - The signature of the lsig
    * @param signer - The public key corresponding to the signature
-   * @param verifier - A txn from the verifier lsig to verify the signature
+   * @param verifier - A txn from the verifier lsig to openOptIn the signature
    *
    */
-  setSignature(sig: StaticArray<byte, 64>, signer: Address, verifier: Txn): void {
+  setOpenOptInSignature(sig: StaticArray<byte, 64>, signer: Address, verifier: Txn): void {
     assert(verifier.sender === this.sigVerificationAddress.get());
 
-    this.sigs.put(signer, sig);
+    this.openOptInSignatures.put(signer, sig);
   }
 
   /**
    * Verifies that the opt in is allowed
    *
-   * @param optIn - The opt in transaction, presumably from the delegated lsig
+   * @param optIn - The opt in transaction, presumably from the open opt-in lsig
    *
    */
-  verify(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
+  openOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
     assert(mbrPayment.amount >= this.assetMBR.get());
 
-    // If endTimes box exists, verify that the opt in is before the end time
-    if (this.endTimes.exists(optIn.assetReceiver)) {
-      assert(this.endTimes.get(optIn.assetReceiver) > globals.latestTimestamp);
+    // If endTimes box exists, openOptIn that the opt in is before the end time
+    if (this.openOptInEndTimes.exists(optIn.assetReceiver)) {
+      assert(this.openOptInEndTimes.get(optIn.assetReceiver) > globals.latestTimestamp);
     }
   }
 
@@ -119,8 +120,8 @@ class Master extends Contract {
    * @param timestamp - After this time, opt ins will no longer be allowed
    *
    */
-  setEndTime(timestamp: uint64): void {
-    this.endTimes.put(this.txn.sender, timestamp);
+  setOpenOptInEndTime(timestamp: uint64): void {
+    this.openOptInEndTimes.put(this.txn.sender, timestamp);
   }
 
   // ************ Address Opt-In Methods ************ //
@@ -132,7 +133,7 @@ class Master extends Contract {
    * @param signer - The public key corresponding to the signature
    *
    */
-  setSignatureForSpecificAddress(
+  setAddressOptInSignature(
     sig: StaticArray<byte, 64>,
     signer: Address,
     allowedAddress: Address,
@@ -142,26 +143,26 @@ class Master extends Contract {
 
     const hash = this.getSenderReceiverHash(allowedAddress, signer);
 
-    this.addressSpecificSigs.put(hash, sig);
+    this.addressOptInSignatures.put(hash, sig);
   }
 
   /**
    * Verifies that the opt in is allowed from the sender
    *
    * @param mbrPayment - Payment to the receiver that covers the ASA MBR
-   * @param optIn - The opt in transaction, presumably from the delegated lsig
+   * @param optIn - The opt in transaction, presumably from the address opt-in lsig
    *
    */
-  verifySpecificAddress(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
+  addressOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     // Verify mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
     assert(mbrPayment.amount >= this.assetMBR.get());
 
     const hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver);
 
-    // If endTimes box exists, verify that the opt in is before the end time
-    if (this.addressSpecificEndTimes.exists(hash)) {
-      assert(this.addressSpecificEndTimes.get(hash) > globals.latestTimestamp);
+    // If endTimes box exists, openOptIn that the opt in is before the end time
+    if (this.addressOptInEndTimes.exists(hash)) {
+      assert(this.addressOptInEndTimes.get(hash) > globals.latestTimestamp);
     }
   }
 
@@ -172,9 +173,9 @@ class Master extends Contract {
    * @param allowedAddress - The address to set the end time for
    *
    */
-  setEndTimeForSpecificAddress(timestamp: uint64, allowedAddress: Address): void {
+  setAddressOptInEndTime(timestamp: uint64, allowedAddress: Address): void {
     const hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender);
 
-    this.addressSpecificEndTimes.put(hash, timestamp);
+    this.addressOptInEndTimes.put(hash, timestamp);
   }
 }

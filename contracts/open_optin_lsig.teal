@@ -41,6 +41,6 @@ assert
 // Verify the correct method is being called
 MasterAppCall
 gtxnsa ApplicationArgs 0
-method "verify(pay,axfer)void"
+method "openOptIn(pay,axfer)void"
 ==
 
