@@ -3,7 +3,7 @@
   "dependencies": {
     "@algorandfoundation/algokit-client-generator": "^2.2.2",
     "@algorandfoundation/algokit-utils": "^2.2.1",
-    "@algorandfoundation/tealscript": "^0.15.0",
+    "@algorandfoundation/tealscript": "^0.16.0",
     "@jest/globals": "^29.5.0",
     "algosdk": "^2.3.0",
     "jest": "^29.5.0",

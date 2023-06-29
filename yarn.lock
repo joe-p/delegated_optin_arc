@@ -22,11 +22,12 @@
     algosdk2-2 "npm:algosdk@2.2.0"
     buffer "^6.0.3"
 
-"@algorandfoundation/tealscript@^0.15.0":
-  version "0.15.0"
-  resolved "https://registry.yarnpkg.com/@algorandfoundation/tealscript/-/tealscript-0.15.0.tgz#1589fa2566c8d466c8546c5cacdc11f04fb4cebc"
-  integrity sha512-wKwMIp8rpg684Kuu+O1umeclu6LRZxgH14QqtGtdjv0LhG5ME6Qq+AKA9/LOg1jiF4eXXi6BRu32TcDcRwS6jA==
+"@algorandfoundation/tealscript@^0.16.0":
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/@algorandfoundation/tealscript/-/tealscript-0.16.0.tgz#310f2fd6040f768586dcb613ad9883231826cf55"
+  integrity sha512-ReOfqFUxrgqqprELM2+UqpKXAfqz/eNuZ/KCKyNWpbc02F9ovW3s1JbFOAPZGEaDcB0GMfypwHIm+YXAkVuang==
   dependencies:
+    dotenv "^16.3.1"
     node-fetch "2"
     source-map "^0.7.4"
     typescript "^4.9.3"
@@ -1554,6 +1555,11 @@ dot-case@^3.0.4:
     no-case "^3.0.4"
     tslib "^2.0.3"
 
+dotenv@^16.3.1:
+  version "16.3.1"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.3.1.tgz#369034de7d7e5b120972693352a3bf112172cc3e"
+  integrity sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==
+
 electron-to-chromium@^1.4.431:
   version "1.4.442"
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.442.tgz#455f4c5bd6ae73afb634dcffee6f356c26c8e294"
@@ -3021,7 +3027,14 @@ no-case@^3.0.4:
     lower-case "^2.0.2"
     tslib "^2.0.3"
 
-node-fetch@2, node-fetch@^2.6.11:
+node-fetch@2:
+  version "2.6.12"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.12.tgz#02eb8e22074018e3d5a83016649d04df0e348fba"
+  integrity sha512-C/fGU2E8ToujUivIO0H+tpQ6HWo4eEmchoPIoXtxCrVghxdKq+QOHqEZW7tuP3KlV3bC8FRMO5nMCC7Zm1VP6g==
+  dependencies:
+    whatwg-url "^5.0.0"
+
+node-fetch@^2.6.11:
   version "2.6.11"
   resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.6.11.tgz"
   integrity sha512-4I6pdBY1EthSqDmJkiNk3JIT8cswwR9nfeW/cPdUagJYEQG7R95WRH74wpz7ma8Gh/9dI9FP+OU+0E4FvtA55w==
