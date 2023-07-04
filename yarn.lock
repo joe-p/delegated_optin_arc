@@ -22,10 +22,10 @@
     algosdk2-2 "npm:algosdk@2.2.0"
     buffer "^6.0.3"
 
-"@algorandfoundation/tealscript@^0.16.0":
-  version "0.16.0"
-  resolved "https://registry.yarnpkg.com/@algorandfoundation/tealscript/-/tealscript-0.16.0.tgz#310f2fd6040f768586dcb613ad9883231826cf55"
-  integrity sha512-ReOfqFUxrgqqprELM2+UqpKXAfqz/eNuZ/KCKyNWpbc02F9ovW3s1JbFOAPZGEaDcB0GMfypwHIm+YXAkVuang==
+"@algorandfoundation/tealscript@^0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@algorandfoundation/tealscript/-/tealscript-0.21.0.tgz#c7bf2e256c4918b0c090e3985de69a0088a57c20"
+  integrity sha512-2VNIg/j16/sUo7dKyCQ8G80Zw69GVeasyIyEkzC0U3s2P5TA8yOVokpPKxl37HNM5vicQD5B+RjpfWdpmgruKQ==
   dependencies:
     dotenv "^16.3.1"
     node-fetch "2"

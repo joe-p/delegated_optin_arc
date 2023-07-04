@@ -1,5 +1,8 @@
 import { Contract } from '@algorandfoundation/tealscript';
 
+type byte32 = StaticArray<byte, 32>;
+type byte64 = StaticArray<byte, 64>;
+
 // eslint-disable-next-line no-unused-vars
 class DelegatedOptIn extends Contract {
   // ************ Meta State ************ //
@@ -13,7 +16,7 @@ class DelegatedOptIn extends Contract {
   // ************ Open Opt-In State ************ //
 
   // Mapping of public key to signed open opt-in lsig
-  openOptInSignatures = new BoxMap<Address, StaticArray<byte, 64>>({ prefix: 's-' });
+  openOptInSignatures = new BoxMap<Address, byte64>({ prefix: 's-' });
 
   // Mapping of address to timestamp until which open opt-ins are allowed
   openOptInEndTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
@@ -22,19 +25,19 @@ class DelegatedOptIn extends Contract {
 
   // Mapping of hash(sender address + receiver public key) to
   // signed address opt-in lsig for sender address
-  addressOptInSignatures = new BoxMap<bytes, StaticArray<byte, 64>>({ prefix: 's-' });
+  addressOptInSignatures = new BoxMap<byte32, byte64>({ prefix: 's-' });
 
   // Mapping of hash(sender address + receiver address ) to timestamp until which
   // address pt-ins from the sender address are allowed
-  addressOptInEndTimes = new BoxMap<bytes, uint64>({ prefix: 'e-' });
+  addressOptInEndTimes = new BoxMap<byte32, uint64>({ prefix: 'e-' });
 
-  private getSenderReceiverHash(sender: Address, receiverOrSigner: Address): bytes {
+  private getSenderReceiverHash(sender: Address, receiverOrSigner: Address): byte32 {
     return sha256(concat(sender, receiverOrSigner));
   }
 
   @handle.createApplication
   create(): void {
-    this.assetMBR.put(100_000);
+    this.assetMBR.set(100_000);
   }
 
   // ************ Meta Methods ************ //
@@ -48,7 +51,7 @@ class DelegatedOptIn extends Contract {
   setSigVerificationAddress(lsig: Address): void {
     assert(this.txn.sender === this.app.creator);
     assert(!this.sigVerificationAddress.exists());
-    this.sigVerificationAddress.put(lsig);
+    this.sigVerificationAddress.set(lsig);
   }
 
   /**
@@ -70,7 +73,7 @@ class DelegatedOptIn extends Contract {
     const mbrDelta = preMbr - this.app.address.minBalance;
 
     assert(mbrDelta !== this.assetMBR.get());
-    this.assetMBR.put(mbrDelta);
+    this.assetMBR.set(mbrDelta);
 
     sendAssetTransfer({
       assetReceiver: this.app.address,
@@ -91,10 +94,10 @@ class DelegatedOptIn extends Contract {
    * @param verifier - A txn from the verifier lsig to openOptIn the signature
    *
    */
-  setOpenOptInSignature(sig: StaticArray<byte, 64>, signer: Address, verifier: Txn): void {
+  setOpenOptInSignature(sig: byte64, signer: Address, verifier: Txn): void {
     assert(verifier.sender === this.sigVerificationAddress.get());
 
-    this.openOptInSignatures.put(signer, sig);
+    this.openOptInSignatures.set(signer, sig);
   }
 
   /**
@@ -121,7 +124,7 @@ class DelegatedOptIn extends Contract {
    *
    */
   setOpenOptInEndTime(timestamp: uint64): void {
-    this.openOptInEndTimes.put(this.txn.sender, timestamp);
+    this.openOptInEndTimes.set(this.txn.sender, timestamp);
   }
 
   // ************ Address Opt-In Methods ************ //
@@ -134,7 +137,7 @@ class DelegatedOptIn extends Contract {
    *
    */
   setAddressOptInSignature(
-    sig: StaticArray<byte, 64>,
+    sig: byte64,
     signer: Address,
     allowedAddress: Address,
     verifier: Txn,
@@ -143,7 +146,7 @@ class DelegatedOptIn extends Contract {
 
     const hash = this.getSenderReceiverHash(allowedAddress, signer);
 
-    this.addressOptInSignatures.put(hash, sig);
+    this.addressOptInSignatures.set(hash, sig);
   }
 
   /**
@@ -176,6 +179,6 @@ class DelegatedOptIn extends Contract {
   setAddressOptInEndTime(timestamp: uint64, allowedAddress: Address): void {
     const hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender);
 
-    this.addressOptInEndTimes.put(hash, timestamp);
+    this.addressOptInEndTimes.set(hash, timestamp);
   }
 }
