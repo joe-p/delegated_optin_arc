@@ -2,6 +2,7 @@ import { Contract } from '@algorandfoundation/tealscript';
 
 type byte32 = StaticArray<byte, 32>;
 type byte64 = StaticArray<byte, 64>;
+type AuthAddr = Address;
 
 // eslint-disable-next-line no-unused-vars
 class DelegatedOptIn extends Contract {
@@ -15,15 +16,15 @@ class DelegatedOptIn extends Contract {
 
   // ************ Open Opt-In State ************ //
 
-  // Mapping of public key to signed open opt-in lsig
-  openOptInSignatures = new BoxMap<Address, byte64>({ prefix: 's-' });
+  // Mapping of auth address to signed open opt-in lsig
+  openOptInSignatures = new BoxMap<AuthAddr, byte64>({ prefix: 's-' });
 
   // Mapping of address to timestamp until which open opt-ins are allowed
   openOptInEndTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
 
   // ************ Address Opt-In State ************ //
 
-  // Mapping of hash(sender address + receiver public key) to
+  // Mapping of hash(sender address + receiver auth address) to
   // signed address opt-in lsig for sender address
   addressOptInSignatures = new BoxMap<byte32, byte64>({ prefix: 's-' });
 
@@ -94,7 +95,7 @@ class DelegatedOptIn extends Contract {
    * @param verifier - A txn from the verifier lsig to openOptIn the signature
    *
    */
-  setOpenOptInSignature(sig: byte64, signer: Address, verifier: Txn): void {
+  setOpenOptInSignature(sig: byte64, signer: AuthAddr, verifier: Txn): void {
     assert(verifier.sender === this.sigVerificationAddress.get());
 
     this.openOptInSignatures.set(signer, sig);
@@ -138,7 +139,7 @@ class DelegatedOptIn extends Contract {
    */
   setAddressOptInSignature(
     sig: byte64,
-    signer: Address,
+    signer: AuthAddr,
     allowedAddress: Address,
     verifier: Txn,
   ): void {
