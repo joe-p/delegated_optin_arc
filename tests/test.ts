@@ -182,21 +182,45 @@ async function delegatedOptIn(
   }
 }
 
-async function setOpenOptInEndTime(time: number) {
+async function setEndTime(time: number, type: 'open' | 'address', sender?: algosdk.Account) {
   const prefix = Buffer.from('e-');
-  const key = algosdk.decodeAddress(receiver.addr).publicKey;
+
+  let key: Uint8Array;
+
+  if (type === 'open') {
+    key = algosdk.decodeAddress(receiver.addr).publicKey;
+  } else if (type === 'address') {
+    if (sender === undefined) throw Error();
+
+    key = Buffer.from(sha256(Buffer.from(concatArrays(
+      algosdk.decodeAddress(sender.addr).publicKey,
+      algosdk.decodeAddress(receiver.addr).publicKey,
+    )), { asBytes: true }));
+  } else throw Error();
+
   const boxRef = concatArrays(prefix, key);
 
-  await app.setOpenOptInEndTime(
-    {
-      timestamp: BigInt(time),
-    },
-    {
-      boxes: [boxRef],
-      sender: receiver,
-      ...SUPPRESS_LOG,
-    },
-  );
+  const args = {
+    timestamp: BigInt(time),
+  };
+
+  const params = {
+    boxes: [boxRef],
+    sender: receiver,
+    ...SUPPRESS_LOG,
+  };
+
+  if (type === 'open') {
+    await app.setOpenOptInEndTime(
+      args,
+      params,
+    );
+  } else if (type === 'address') {
+    await app.setAddressOptInEndTime(
+      { ...args, allowedAddress: sender!.addr },
+      params,
+    );
+  }
 }
 
 describe('Delegated Opt In App', () => {
@@ -307,7 +331,7 @@ describe('Delegated Opt In App', () => {
       fixture.context.kmd,
     );
 
-    await setOpenOptInEndTime(0xffffffff);
+    await setEndTime(0xffffffff, 'open');
 
     await delegatedOptIn(testAccount, asa, algod, 'open');
 
@@ -333,7 +357,7 @@ describe('Delegated Opt In App', () => {
       fixture.context.kmd,
     );
 
-    await setOpenOptInEndTime(0);
+    await setEndTime(0, 'open');
     await expect(delegatedOptIn(testAccount, asa, algod, 'open'))
       .rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
   });
@@ -398,5 +422,55 @@ describe('Delegated Opt In App', () => {
     await delegatedOptIn(testAccount, asa, algod, 'address');
 
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
+  });
+
+  test('setAddressOptInEndtime - 0xffffffff', async () => {
+    const { testAccount, algod } = fixture.context;
+
+    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
+    const asa = await createASA(algod, fixture.context.testAccount);
+
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects.toThrowError('account asset info not found');
+
+    await algokit.ensureFunded(
+      {
+        accountToFund: receiver.addr,
+        minSpendingBalance: algokit.microAlgos(100_000),
+        suppressLog: true,
+      },
+      algod,
+      fixture.context.kmd,
+    );
+
+    await setEndTime(0xffffffff, 'address', testAccount);
+
+    await delegatedOptIn(testAccount, asa, algod, 'address');
+
+    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
+  });
+
+  test('setOpenOptInEndTime - 0', async () => {
+    const { testAccount, algod } = fixture.context;
+
+    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
+    const asa = await createASA(algod, fixture.context.testAccount);
+
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects.toThrowError('account asset info not found');
+
+    await algokit.ensureFunded(
+      {
+        accountToFund: receiver.addr,
+        minSpendingBalance: algokit.microAlgos(100_000),
+        suppressLog: true,
+      },
+      algod,
+      fixture.context.kmd,
+    );
+
+    await setEndTime(0, 'address', testAccount);
+    await expect(delegatedOptIn(testAccount, asa, algod, 'open'))
+      .rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
   });
 });
