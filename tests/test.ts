@@ -106,10 +106,17 @@ async function delegatedOptIn(
   testAccount: algosdk.Account,
   asa: number,
   algod: algosdk.Algodv2,
+  type: 'open' | 'address',
 ) {
-  const optInLsig = await generateOptInLsig(algod);
+  let lsig: algosdk.LogicSigAccount;
 
-  optInLsig.sign(receiver.sk);
+  if (type === 'open') {
+    lsig = await generateOptInLsig(algod);
+    lsig.sign(receiver.sk);
+  } else if (type === 'address') {
+    lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr);
+    lsig.sign(receiver.sk);
+  } else throw Error();
 
   const sp = await algod.getTransactionParams().do();
 
@@ -129,29 +136,50 @@ async function delegatedOptIn(
   });
 
   const prefix = Buffer.from('e-');
-  const key = algosdk.decodeAddress(receiver.addr).publicKey;
+
+  let key: Uint8Array;
+
+  if (type === 'open') {
+    key = algosdk.decodeAddress(receiver.addr).publicKey;
+  } else {
+    key = Buffer.from(sha256(Buffer.from(concatArrays(
+      algosdk.decodeAddress(testAccount.addr).publicKey,
+      algosdk.decodeAddress(receiver.addr).publicKey,
+    )), { asBytes: true }));
+  }
   const boxRef = concatArrays(prefix, key);
 
-  await app.openOptIn(
-    {
-      mbrPayment: {
-        txn: pay,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        signer: algosdk.makeBasicAccountTransactionSigner(testAccount),
-      },
-      optIn: {
-        txn: optIn,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        signer: algosdk.makeLogicSigAccountTransactionSigner(optInLsig),
-      },
+  const args = {
+    mbrPayment: {
+      txn: pay,
+      signer: algosdk.makeBasicAccountTransactionSigner(testAccount),
     },
-    {
-      boxes: [boxRef],
-      ...SUPPRESS_LOG,
+    optIn: {
+      txn: optIn,
+      signer: algosdk.makeLogicSigAccountTransactionSigner(lsig),
     },
-  );
+  };
+
+  const params = {
+    boxes: [{ appIndex: 0, name: boxRef }],
+    ...SUPPRESS_LOG,
+  };
+
+  if (type === 'open') {
+    await app.openOptIn(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      args,
+      params,
+    );
+  } else {
+    await app.addressOptIn(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      args,
+      { ...params, sender: testAccount },
+    );
+  }
 }
 
 async function setOpenOptInEndTime(time: number) {
@@ -247,7 +275,7 @@ describe('Delegated Opt In App', () => {
     expect(boxValue).toEqual(optInLsig.lsig.sig);
   });
 
-  test('verify', async () => {
+  test('openOptIn', async () => {
     const { testAccount, algod } = fixture.context;
 
     const asa = await createASA(algod, fixture.context.testAccount);
@@ -255,7 +283,7 @@ describe('Delegated Opt In App', () => {
     await expect(algod.accountAssetInformation(receiver.addr, asa).do())
       .rejects.toThrowError('account asset info not found');
 
-    await delegatedOptIn(testAccount, asa, algod);
+    await delegatedOptIn(testAccount, asa, algod, 'open');
 
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
@@ -280,7 +308,8 @@ describe('Delegated Opt In App', () => {
     );
 
     await setOpenOptInEndTime(0xffffffff);
-    await delegatedOptIn(testAccount, asa, algod);
+
+    await delegatedOptIn(testAccount, asa, algod, 'open');
 
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
@@ -305,7 +334,7 @@ describe('Delegated Opt In App', () => {
     );
 
     await setOpenOptInEndTime(0);
-    await expect(delegatedOptIn(testAccount, asa, algod))
+    await expect(delegatedOptIn(testAccount, asa, algod, 'open'))
       .rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
   });
 
@@ -356,5 +385,18 @@ describe('Delegated Opt In App', () => {
     const boxValue = await app.appClient.getBoxValue(boxRef);
 
     expect(boxValue).toEqual(lsig.lsig.sig);
+  });
+
+  test('addressoptOptIn', async () => {
+    const { testAccount, algod } = fixture.context;
+
+    const asa = await createASA(algod, fixture.context.testAccount);
+
+    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+      .rejects.toThrowError('account asset info not found');
+
+    await delegatedOptIn(testAccount, asa, algod, 'address');
+
+    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
 });
