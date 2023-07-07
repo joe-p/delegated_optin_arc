@@ -267,7 +267,7 @@ abi_route_openOptIn:
 openOptIn:
 	proto 2 0
 
-	// ./contracts/delegated_optin_app.algo.ts:112
+	// ./contracts/delegated_optin_app.algo.ts:113
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
@@ -276,7 +276,7 @@ openOptIn:
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:113
+	// ./contracts/delegated_optin_app.algo.ts:114
 	// assert(mbrPayment.amount >= this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
@@ -286,7 +286,7 @@ openOptIn:
 	assert
 
 	// if0_condition
-	// ./contracts/delegated_optin_app.algo.ts:116
+	// ./contracts/delegated_optin_app.algo.ts:117
 	// this.openOptInEndTimes.exists(optIn.assetReceiver)
 	byte "e-"
 	frame_dig -2 // optIn: axfer
@@ -298,7 +298,7 @@ openOptIn:
 	bz if0_end
 
 	// if0_consequent
-	// ./contracts/delegated_optin_app.algo.ts:117
+	// ./contracts/delegated_optin_app.algo.ts:118
 	// assert(this.openOptInEndTimes.get(optIn.assetReceiver) > globals.latestTimestamp)
 	byte "e-"
 	frame_dig -2 // optIn: axfer
@@ -334,7 +334,7 @@ abi_route_setOpenOptInEndTime:
 setOpenOptInEndTime:
 	proto 1 0
 
-	// ./contracts/delegated_optin_app.algo.ts:128
+	// ./contracts/delegated_optin_app.algo.ts:129
 	// this.openOptInEndTimes.set(this.txn.sender, timestamp)
 	byte "e-"
 	txn Sender
@@ -367,7 +367,7 @@ abi_route_setAddressOptInSignature:
 setAddressOptInSignature:
 	proto 5 0
 
-	// ./contracts/delegated_optin_app.algo.ts:146
+	// ./contracts/delegated_optin_app.algo.ts:147
 	// assert(verifier.sender === this.sigVerificationAddress.get())
 	frame_dig -4 // verifier: txn
 	gtxns Sender
@@ -376,7 +376,7 @@ setAddressOptInSignature:
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:148
+	// ./contracts/delegated_optin_app.algo.ts:149
 	// hash = this.getSenderReceiverHash(allowedAddress, signer)
 	// no dupn needed
 	frame_dig -2 // signer: address
@@ -384,7 +384,7 @@ setAddressOptInSignature:
 	callsub getSenderReceiverHash
 	frame_bury -5 // hash: byte[32]
 
-	// ./contracts/delegated_optin_app.algo.ts:150
+	// ./contracts/delegated_optin_app.algo.ts:151
 	// this.addressOptInSignatures.set(hash, sig)
 	byte "s-"
 	frame_dig -5 // hash: byte[32]
@@ -416,7 +416,7 @@ abi_route_addressOptIn:
 addressOptIn:
 	proto 3 0
 
-	// ./contracts/delegated_optin_app.algo.ts:162
+	// ./contracts/delegated_optin_app.algo.ts:163
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
@@ -425,7 +425,7 @@ addressOptIn:
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:163
+	// ./contracts/delegated_optin_app.algo.ts:164
 	// assert(mbrPayment.amount >= this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
@@ -434,7 +434,7 @@ addressOptIn:
 	>=
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:165
+	// ./contracts/delegated_optin_app.algo.ts:166
 	// hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver)
 	// no dupn needed
 	frame_dig -2 // optIn: axfer
@@ -444,7 +444,7 @@ addressOptIn:
 	frame_bury -3 // hash: byte[32]
 
 	// if1_condition
-	// ./contracts/delegated_optin_app.algo.ts:168
+	// ./contracts/delegated_optin_app.algo.ts:169
 	// this.addressOptInEndTimes.exists(hash)
 	byte "e-"
 	frame_dig -3 // hash: byte[32]
@@ -455,7 +455,7 @@ addressOptIn:
 	bz if1_end
 
 	// if1_consequent
-	// ./contracts/delegated_optin_app.algo.ts:169
+	// ./contracts/delegated_optin_app.algo.ts:170
 	// assert(this.addressOptInEndTimes.get(hash) > globals.latestTimestamp)
 	byte "e-"
 	frame_dig -3 // hash: byte[32]
@@ -490,7 +490,7 @@ abi_route_setAddressOptInEndTime:
 setAddressOptInEndTime:
 	proto 3 0
 
-	// ./contracts/delegated_optin_app.algo.ts:181
+	// ./contracts/delegated_optin_app.algo.ts:182
 	// hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender)
 	// no dupn needed
 	txn Sender
@@ -498,7 +498,7 @@ setAddressOptInEndTime:
 	callsub getSenderReceiverHash
 	frame_bury -3 // hash: byte[32]
 
-	// ./contracts/delegated_optin_app.algo.ts:183
+	// ./contracts/delegated_optin_app.algo.ts:184
 	// this.addressOptInEndTimes.set(hash, timestamp)
 	byte "e-"
 	frame_dig -3 // hash: byte[32]

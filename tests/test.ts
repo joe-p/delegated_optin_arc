@@ -1,7 +1,7 @@
 /* eslint-disable no-plusplus */
 import { algorandFixture } from '@algorandfoundation/algokit-utils/testing';
 import {
-  describe, beforeEach, test, expect, beforeAll,
+  describe, beforeEach, it, expect, beforeAll,
 } from '@jest/globals';
 import { readFileSync } from 'fs';
 import algosdk from 'algosdk';
@@ -293,177 +293,193 @@ describe('Delegated Opt In App', () => {
 
   beforeEach(fixture.beforeEach, 10_000);
 
-  test('Create', async () => {
-    app = new DelegatedOptInClient({
-      sender: fixture.context.testAccount,
-      resolveBy: 'id',
-      id: 0,
-    }, fixture.context.algod);
+  describe('create', () => {
+    it('creates the app', async () => {
+      app = new DelegatedOptInClient({
+        sender: fixture.context.testAccount,
+        resolveBy: 'id',
+        id: 0,
+      }, fixture.context.algod);
 
-    await app.create.bare(SUPPRESS_LOG);
+      await app.create.bare(SUPPRESS_LOG);
 
-    appId = Number((await app.appClient.getAppReference()).appId);
-  });
-
-  test('setSigVerificationAddress', async () => {
-    const verifierLsig = await generateVerifierLsig(fixture.context.algod, appId, receiver.addr);
-
-    await app.setSigVerificationAddress(
-      {
-        lsig: verifierLsig.address(),
-      },
-      SUPPRESS_LOG,
-    );
-  });
-
-  test('setOpenOptInSignature', async () => {
-    const { algod } = fixture.context;
-
-    const optInLsig = await generateOptInLsig(algod, appId);
-
-    optInLsig.sign(receiver.sk);
-
-    const verifierLsig = await generateVerifierLsig(algod, appId, receiver.addr);
-
-    const verifierTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-      suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 0, flatFee: true },
-      from: verifierLsig.address(),
-      to: verifierLsig.address(),
-      amount: 0,
+      appId = Number((await app.appClient.getAppReference()).appId);
     });
+  });
 
-    const prefix = Buffer.from('s-');
-    const key = algosdk.decodeAddress(receiver.addr).publicKey;
-    const boxRef = concatArrays(prefix, key);
+  describe('setSigVerificationAddress', () => {
+    it('works with valid address', async () => {
+      const verifierLsig = await generateVerifierLsig(fixture.context.algod, appId, receiver.addr);
 
-    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(141700), ...SUPPRESS_LOG });
-
-    await app.setOpenOptInSignature(
-      {
-        sig: optInLsig.lsig.sig!,
-        signer: receiver.addr,
-        verifier: {
-          txn: verifierTxn,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          signer: algosdk.makeLogicSigAccountTransactionSigner(verifierLsig),
+      await app.setSigVerificationAddress(
+        {
+          lsig: verifierLsig.address(),
         },
-      },
-      {
-        boxes: [boxRef],
-        sendParams: { suppressLog: true, fee: algokit.microAlgos(2_000) },
-      },
-    );
-
-    const boxValue = await app.appClient.getBoxValue(boxRef);
-
-    expect(boxValue).toEqual(optInLsig.lsig.sig);
+        SUPPRESS_LOG,
+      );
+    });
   });
 
-  test('openOptIn', async () => {
-    const { testAccount, algod } = fixture.context;
+  describe('setOpenOptInSignature', () => {
+    it('works with valid signature and lsig', async () => {
+      const { algod } = fixture.context;
 
-    const asa = await createASA(algod, fixture.context.testAccount);
+      const optInLsig = await generateOptInLsig(algod, appId);
 
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects.toThrowError('account asset info not found');
+      optInLsig.sign(receiver.sk);
 
-    const lsig = await generateOptInLsig(algod, appId);
-    lsig.sign(receiver.sk);
+      const verifierLsig = await generateVerifierLsig(algod, appId, receiver.addr);
 
-    await delegatedOptIn({
-      senderAddr: testAccount.addr,
-      senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
-      asa,
-      algod,
-      type: 'open',
-      receiverAddr: receiver.addr,
-      app,
-      lsig,
-    });
+      const verifierTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 0, flatFee: true },
+        from: verifierLsig.address(),
+        to: verifierLsig.address(),
+        amount: 0,
+      });
 
-    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
-  });
+      const prefix = Buffer.from('s-');
+      const key = algosdk.decodeAddress(receiver.addr).publicKey;
+      const boxRef = concatArrays(prefix, key);
 
-  test('setOpenOptInEndTime - 0xffffffff', async () => endTimeTest(fixture, receiver, app, appId, 'open', 0xffffffff, false));
+      await app.appClient.fundAppAccount({ amount: algokit.microAlgos(141700), ...SUPPRESS_LOG });
 
-  test('setOpenOptInEndTime - 0', async () => endTimeTest(fixture, receiver, app, appId, 'open', 0, true));
-
-  test('setAddressOptInSignature', async () => {
-    const { algod, testAccount } = fixture.context;
-
-    const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr, appId);
-
-    lsig.sign(receiver.sk);
-
-    const hash = sha256(Buffer.from(concatArrays(
-      algosdk.decodeAddress(testAccount.addr).publicKey,
-      algosdk.decodeAddress(receiver.addr).publicKey,
-    )), { asBytes: true });
-
-    const boxRef = concatArrays(Buffer.from('s-'), hash);
-
-    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(22400), ...SUPPRESS_LOG });
-
-    const verifierLsig = await generateVerifierLsig(algod, appId, receiver.addr);
-
-    const verifierTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-      suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 0, flatFee: true },
-      from: verifierLsig.address(),
-      to: verifierLsig.address(),
-      amount: 0,
-    });
-
-    await app.setAddressOptInSignature(
-      {
-        sig: lsig.lsig.sig!,
-        signer: receiver.addr,
-        allowedAddress: testAccount.addr,
-        verifier: {
-          txn: verifierTxn,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          signer: algosdk.makeLogicSigAccountTransactionSigner(verifierLsig),
+      await app.setOpenOptInSignature(
+        {
+          sig: optInLsig.lsig.sig!,
+          signer: receiver.addr,
+          verifier: {
+            txn: verifierTxn,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            signer: algosdk.makeLogicSigAccountTransactionSigner(verifierLsig),
+          },
         },
-      },
-      {
-        sender: receiver,
-        boxes: [boxRef],
-        sendParams: { fee: algokit.microAlgos(2_000), suppressLog: true },
-      },
-    );
+        {
+          boxes: [boxRef],
+          sendParams: { suppressLog: true, fee: algokit.microAlgos(2_000) },
+        },
+      );
 
-    const boxValue = await app.appClient.getBoxValue(boxRef);
+      const boxValue = await app.appClient.getBoxValue(boxRef);
 
-    expect(boxValue).toEqual(lsig.lsig.sig);
-  });
-
-  test('addressoptOptIn', async () => {
-    const { testAccount, algod } = fixture.context;
-
-    const asa = await createASA(algod, fixture.context.testAccount);
-
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects.toThrowError('account asset info not found');
-
-    const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr, appId);
-    lsig.sign(receiver.sk);
-
-    await delegatedOptIn({
-      senderAddr: testAccount.addr,
-      senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
-      asa,
-      algod,
-      type: 'address',
-      receiverAddr: receiver.addr,
-      app,
-      lsig,
+      expect(boxValue).toEqual(optInLsig.lsig.sig);
     });
-
-    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
 
-  test('setAddressOptInEndtime - 0xffffffff', async () => endTimeTest(fixture, receiver, app, appId, 'address', 0xffffffff, false));
+  describe('openOptIn', () => {
+    it('works with valid lsig and method call', async () => {
+      const { testAccount, algod } = fixture.context;
 
-  test('setAddressOptInEndtime - 0', async () => endTimeTest(fixture, receiver, app, appId, 'address', 0, true));
+      const asa = await createASA(algod, fixture.context.testAccount);
+
+      await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+        .rejects.toThrowError('account asset info not found');
+
+      const lsig = await generateOptInLsig(algod, appId);
+      lsig.sign(receiver.sk);
+
+      await delegatedOptIn({
+        senderAddr: testAccount.addr,
+        senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
+        asa,
+        algod,
+        type: 'open',
+        receiverAddr: receiver.addr,
+        app,
+        lsig,
+      });
+
+      expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
+    });
+  });
+
+  describe('setOpenOptInEndTime', () => {
+    it('works with 0xffffffff as the end time', async () => endTimeTest(fixture, receiver, app, appId, 'open', 0xffffffff, false));
+
+    it('works with 0 as the end time', async () => endTimeTest(fixture, receiver, app, appId, 'open', 0, true));
+  });
+
+  describe('setAddressOptInSignature', () => {
+    it('works with valid signature and lsig', async () => {
+      const { algod, testAccount } = fixture.context;
+
+      const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr, appId);
+
+      lsig.sign(receiver.sk);
+
+      const hash = sha256(Buffer.from(concatArrays(
+        algosdk.decodeAddress(testAccount.addr).publicKey,
+        algosdk.decodeAddress(receiver.addr).publicKey,
+      )), { asBytes: true });
+
+      const boxRef = concatArrays(Buffer.from('s-'), hash);
+
+      await app.appClient.fundAppAccount({ amount: algokit.microAlgos(22400), ...SUPPRESS_LOG });
+
+      const verifierLsig = await generateVerifierLsig(algod, appId, receiver.addr);
+
+      const verifierTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        suggestedParams: { ...(await algod.getTransactionParams().do()), fee: 0, flatFee: true },
+        from: verifierLsig.address(),
+        to: verifierLsig.address(),
+        amount: 0,
+      });
+
+      await app.setAddressOptInSignature(
+        {
+          sig: lsig.lsig.sig!,
+          signer: receiver.addr,
+          allowedAddress: testAccount.addr,
+          verifier: {
+            txn: verifierTxn,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            signer: algosdk.makeLogicSigAccountTransactionSigner(verifierLsig),
+          },
+        },
+        {
+          sender: receiver,
+          boxes: [boxRef],
+          sendParams: { fee: algokit.microAlgos(2_000), suppressLog: true },
+        },
+      );
+
+      const boxValue = await app.appClient.getBoxValue(boxRef);
+
+      expect(boxValue).toEqual(lsig.lsig.sig);
+    });
+  });
+
+  describe('addressoptOptIn', () => {
+    it('works with valid lsig and method call', async () => {
+      const { testAccount, algod } = fixture.context;
+
+      const asa = await createASA(algod, fixture.context.testAccount);
+
+      await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+        .rejects.toThrowError('account asset info not found');
+
+      const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr, appId);
+      lsig.sign(receiver.sk);
+
+      await delegatedOptIn({
+        senderAddr: testAccount.addr,
+        senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
+        asa,
+        algod,
+        type: 'address',
+        receiverAddr: receiver.addr,
+        app,
+        lsig,
+      });
+
+      expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
+    });
+  });
+
+  describe('setAddressOptInEndtime', () => {
+    it('works with 0xffffffff as the end time', async () => endTimeTest(fixture, receiver, app, appId, 'address', 0xffffffff, false));
+
+    it('works with 0 as the end time', async () => endTimeTest(fixture, receiver, app, appId, 'address', 0, true));
+  });
 });
