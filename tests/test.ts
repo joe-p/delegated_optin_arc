@@ -451,7 +451,7 @@ describe('Delegated Opt In App', () => {
   });
 
   describe('addressoptOptIn', () => {
-    it('works with valid lsig and method call', async () => {
+    it('works with valid lsig, method call, and sender', async () => {
       const { testAccount, algod } = fixture.context;
 
       const asa = await createASA(algod, fixture.context.testAccount);
