@@ -7,6 +7,7 @@ import { readFileSync } from 'fs';
 import algosdk from 'algosdk';
 import * as algokit from '@algorandfoundation/algokit-utils';
 import sha256 from 'sha256';
+import { AlgorandFixture } from '@algorandfoundation/algokit-utils/types/testing';
 import { DelegatedOptInClient } from '../delegated_optin_client';
 
 const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
@@ -215,6 +216,71 @@ async function setEndTime({
   }
 }
 
+async function endTimeTest(
+  fixture: AlgorandFixture,
+  receiver: algosdk.Account,
+  app: DelegatedOptInClient,
+  appId: number,
+  type: 'open' | 'address',
+  time: number,
+  expectedToFail: boolean,
+) {
+  const { testAccount, algod } = fixture.context;
+
+  await app.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
+  const asa = await createASA(algod, fixture.context.testAccount);
+
+  await expect(algod.accountAssetInformation(receiver.addr, asa).do())
+    .rejects.toThrowError('account asset info not found');
+
+  await algokit.ensureFunded(
+    {
+      accountToFund: receiver.addr,
+      minSpendingBalance: algokit.microAlgos(100_000),
+      suppressLog: true,
+    },
+    algod,
+    fixture.context.kmd,
+  );
+
+  await setEndTime({
+    time,
+    type,
+    receiverAddr: receiver.addr,
+    receiverSigner: algosdk.makeBasicAccountTransactionSigner(receiver),
+    senderAddr: testAccount.addr,
+    app,
+  });
+
+  let lsig: algosdk.LogicSigAccount;
+
+  if (type === 'open') {
+    lsig = await generateOptInLsig(algod, appId);
+  } else {
+    lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr, appId);
+  }
+
+  lsig.sign(receiver.sk);
+
+  const args = {
+    senderAddr: testAccount.addr,
+    senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
+    asa,
+    algod,
+    type,
+    receiverAddr: receiver.addr,
+    app,
+    lsig,
+  };
+
+  if (expectedToFail) {
+    await expect(delegatedOptIn(args)).rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
+  } else {
+    await delegatedOptIn(args);
+    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
+  }
+}
+
 describe('Delegated Opt In App', () => {
   const fixture = algorandFixture();
   let app: DelegatedOptInClient;
@@ -319,91 +385,9 @@ describe('Delegated Opt In App', () => {
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
 
-  test('setOpenOptInEndTime - 0xffffffff', async () => {
-    const { testAccount, algod } = fixture.context;
+  test('setOpenOptInEndTime - 0xffffffff', async () => endTimeTest(fixture, receiver, app, appId, 'open', 0xffffffff, false));
 
-    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
-    const asa = await createASA(algod, fixture.context.testAccount);
-
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects.toThrowError('account asset info not found');
-
-    await algokit.ensureFunded(
-      {
-        accountToFund: receiver.addr,
-        minSpendingBalance: algokit.microAlgos(100_000),
-        suppressLog: true,
-      },
-      algod,
-      fixture.context.kmd,
-    );
-
-    await setEndTime({
-      time: 0xffffffff,
-      type: 'open',
-      receiverAddr: receiver.addr,
-      receiverSigner: algosdk.makeBasicAccountTransactionSigner(receiver),
-      app,
-    });
-
-    const lsig = await generateOptInLsig(algod, appId);
-    lsig.sign(receiver.sk);
-
-    await delegatedOptIn({
-      senderAddr: testAccount.addr,
-      senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
-      asa,
-      algod,
-      type: 'open',
-      receiverAddr: receiver.addr,
-      app,
-      lsig,
-    });
-
-    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
-  });
-
-  test('setOpenOptInEndTime - 0', async () => {
-    const { testAccount, algod } = fixture.context;
-
-    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
-    const asa = await createASA(algod, fixture.context.testAccount);
-
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects.toThrowError('account asset info not found');
-
-    await algokit.ensureFunded(
-      {
-        accountToFund: receiver.addr,
-        minSpendingBalance: algokit.microAlgos(100_000),
-        suppressLog: true,
-      },
-      algod,
-      fixture.context.kmd,
-    );
-
-    await setEndTime({
-      time: 0,
-      type: 'open',
-      receiverAddr: receiver.addr,
-      receiverSigner: algosdk.makeBasicAccountTransactionSigner(receiver),
-      app,
-    });
-
-    const lsig = await generateOptInLsig(algod, appId);
-    lsig.sign(receiver.sk);
-
-    await expect(delegatedOptIn({
-      senderAddr: testAccount.addr,
-      senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
-      asa,
-      algod,
-      type: 'open',
-      receiverAddr: receiver.addr,
-      app,
-      lsig,
-    })).rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
-  });
+  test('setOpenOptInEndTime - 0', async () => endTimeTest(fixture, receiver, app, appId, 'open', 0, true));
 
   test('setAddressOptInSignature', async () => {
     const { algod, testAccount } = fixture.context;
@@ -479,91 +463,7 @@ describe('Delegated Opt In App', () => {
     expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
   });
 
-  test('setAddressOptInEndtime - 0xffffffff', async () => {
-    const { testAccount, algod } = fixture.context;
+  test('setAddressOptInEndtime - 0xffffffff', async () => endTimeTest(fixture, receiver, app, appId, 'address', 0xffffffff, false));
 
-    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
-    const asa = await createASA(algod, fixture.context.testAccount);
-
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects.toThrowError('account asset info not found');
-
-    await algokit.ensureFunded(
-      {
-        accountToFund: receiver.addr,
-        minSpendingBalance: algokit.microAlgos(100_000),
-        suppressLog: true,
-      },
-      algod,
-      fixture.context.kmd,
-    );
-
-    await setEndTime({
-      time: 0xffffffff,
-      type: 'address',
-      receiverAddr: receiver.addr,
-      receiverSigner: algosdk.makeBasicAccountTransactionSigner(receiver),
-      app,
-      senderAddr: testAccount.addr,
-    });
-
-    const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr, appId);
-    lsig.sign(receiver.sk);
-
-    await delegatedOptIn({
-      senderAddr: testAccount.addr,
-      senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
-      asa,
-      algod,
-      type: 'address',
-      receiverAddr: receiver.addr,
-      app,
-      lsig,
-    });
-
-    expect((await algod.accountAssetInformation(receiver.addr, asa).do())['asset-holding'].amount).toBe(0);
-  });
-
-  test('setAddressOptInEndTime - 0', async () => {
-    const { testAccount, algod } = fixture.context;
-
-    await app.appClient.fundAppAccount({ amount: algokit.microAlgos(19300), ...SUPPRESS_LOG });
-    const asa = await createASA(algod, fixture.context.testAccount);
-
-    await expect(algod.accountAssetInformation(receiver.addr, asa).do())
-      .rejects.toThrowError('account asset info not found');
-
-    await algokit.ensureFunded(
-      {
-        accountToFund: receiver.addr,
-        minSpendingBalance: algokit.microAlgos(100_000),
-        suppressLog: true,
-      },
-      algod,
-      fixture.context.kmd,
-    );
-
-    await setEndTime({
-      time: 0,
-      type: 'address',
-      receiverAddr: receiver.addr,
-      receiverSigner: algosdk.makeBasicAccountTransactionSigner(receiver),
-      app,
-      senderAddr: testAccount.addr,
-    });
-
-    const lsig = await generateAddressSpecificOptInLsig(algod, testAccount.addr, appId);
-    lsig.sign(receiver.sk);
-
-    await expect(delegatedOptIn({
-      senderAddr: testAccount.addr,
-      senderSigner: algosdk.makeBasicAccountTransactionSigner(testAccount),
-      asa,
-      algod,
-      type: 'address',
-      receiverAddr: receiver.addr,
-      app,
-      lsig,
-    })).rejects.toThrowError('opcodes=global LatestTimestamp; >; assert;');
-  });
+  test('setAddressOptInEndtime - 0', async () => endTimeTest(fixture, receiver, app, appId, 'address', 0, true));
 });
