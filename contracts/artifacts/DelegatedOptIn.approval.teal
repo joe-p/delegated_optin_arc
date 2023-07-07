@@ -353,8 +353,7 @@ abi_route_setAddressOptInSignature:
 	!=
 	&&
 	assert
-
-	// no dupn needed
+	byte 0x
 	txn GroupIndex
 	int 1
 	-
@@ -366,7 +365,7 @@ abi_route_setAddressOptInSignature:
 	return
 
 setAddressOptInSignature:
-	proto 4 0
+	proto 5 0
 
 	// ./contracts/delegated_optin_app.algo.ts:146
 	// assert(verifier.sender === this.sigVerificationAddress.get())
@@ -377,16 +376,18 @@ setAddressOptInSignature:
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:150
-	// this.addressOptInSignatures.set(hash, sig)
-	byte "s-"
-
 	// ./contracts/delegated_optin_app.algo.ts:148
-	// this.getSenderReceiverHash(allowedAddress, signer)
+	// hash = this.getSenderReceiverHash(allowedAddress, signer)
 	// no dupn needed
 	frame_dig -2 // signer: address
 	frame_dig -3 // allowedAddress: address
 	callsub getSenderReceiverHash
+	frame_bury -5 // hash: byte[32]
+
+	// ./contracts/delegated_optin_app.algo.ts:150
+	// this.addressOptInSignatures.set(hash, sig)
+	byte "s-"
+	frame_dig -5 // hash: byte[32]
 	concat
 	frame_dig -1 // sig: byte[64]
 	box_put
@@ -401,8 +402,7 @@ abi_route_addressOptIn:
 	!=
 	&&
 	assert
-
-	// no dupn needed
+	byte 0x
 	txn GroupIndex
 	int 1
 	-
@@ -414,7 +414,7 @@ abi_route_addressOptIn:
 	return
 
 addressOptIn:
-	proto 2 0
+	proto 3 0
 
 	// ./contracts/delegated_optin_app.algo.ts:162
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
@@ -434,18 +434,20 @@ addressOptIn:
 	>=
 	assert
 
-	// if1_condition
-	// ./contracts/delegated_optin_app.algo.ts:168
-	// this.addressOptInEndTimes.exists(hash)
-	byte "e-"
-
 	// ./contracts/delegated_optin_app.algo.ts:165
-	// this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver)
+	// hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver)
 	// no dupn needed
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
 	txn Sender
 	callsub getSenderReceiverHash
+	frame_bury -3 // hash: byte[32]
+
+	// if1_condition
+	// ./contracts/delegated_optin_app.algo.ts:168
+	// this.addressOptInEndTimes.exists(hash)
+	byte "e-"
+	frame_dig -3 // hash: byte[32]
 	concat
 	box_len
 	swap
@@ -456,14 +458,7 @@ addressOptIn:
 	// ./contracts/delegated_optin_app.algo.ts:169
 	// assert(this.addressOptInEndTimes.get(hash) > globals.latestTimestamp)
 	byte "e-"
-
-	// ./contracts/delegated_optin_app.algo.ts:165
-	// this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver)
-	// no dupn needed
-	frame_dig -2 // optIn: axfer
-	gtxns AssetReceiver
-	txn Sender
-	callsub getSenderReceiverHash
+	frame_dig -3 // hash: byte[32]
 	concat
 	box_get
 	assert
@@ -484,8 +479,7 @@ abi_route_setAddressOptInEndTime:
 	!=
 	&&
 	assert
-
-	// no dupn needed
+	byte 0x
 	txna ApplicationArgs 2
 	txna ApplicationArgs 1
 	btoi
@@ -494,18 +488,20 @@ abi_route_setAddressOptInEndTime:
 	return
 
 setAddressOptInEndTime:
-	proto 2 0
-
-	// ./contracts/delegated_optin_app.algo.ts:183
-	// this.addressOptInEndTimes.set(hash, timestamp)
-	byte "e-"
+	proto 3 0
 
 	// ./contracts/delegated_optin_app.algo.ts:181
-	// this.getSenderReceiverHash(allowedAddress, this.txn.sender)
+	// hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender)
 	// no dupn needed
 	txn Sender
 	frame_dig -2 // allowedAddress: address
 	callsub getSenderReceiverHash
+	frame_bury -3 // hash: byte[32]
+
+	// ./contracts/delegated_optin_app.algo.ts:183
+	// this.addressOptInEndTimes.set(hash, timestamp)
+	byte "e-"
+	frame_dig -3 // hash: byte[32]
 	concat
 	frame_dig -1 // timestamp: uint64
 	itob
