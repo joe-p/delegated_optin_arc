@@ -57,7 +57,7 @@ class DelegatedOptIn extends Contract {
 
   /**
    * Updates the asset MBR
-   * @param mbrPayment - Payment to the receiver that covers the ASA MBR
+   *
    * @param asset - The asset to opt into and opt out of to determine MBR
    *
    */
@@ -104,6 +104,7 @@ class DelegatedOptIn extends Contract {
   /**
    * Verifies that the opt in is allowed
    *
+   * @param mbrPayment - Payment to the receiver that covers the ASA MBR
    * @param optIn - The opt in transaction, presumably from the open opt-in lsig
    *
    */
