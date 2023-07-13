@@ -92,7 +92,7 @@ class DelegatedOptIn extends Contract {
    *
    * @param sig - The signature of the lsig
    * @param signer - The public key corresponding to the signature
-   * @param verifier - A txn from the verifier lsig to openOptIn the signature
+   * @param verifier - A txn from the verifier lsig to verify the signature
    *
    */
   setOpenOptInSignature(sig: byte64, signer: AuthAddr, verifier: Txn): void {
@@ -165,7 +165,7 @@ class DelegatedOptIn extends Contract {
 
     const hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver);
 
-    // If endTimes box exists, openOptIn that the opt in is before the end time
+    // If endTimes box exists, verify that the opt in is before the end time
     if (this.addressOptInEndTimes.exists(hash)) {
       assert(this.addressOptInEndTimes.get(hash) > globals.latestTimestamp);
     }
