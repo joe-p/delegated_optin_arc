@@ -113,10 +113,10 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "lsig",
             "type": "address",
-            "desc": ""
+            "desc": "The address of the verifier lsig"
           }
         ],
-        "desc": "",
+        "desc": "Set the address of the verifier lsig. This will only be called once after creation.",
         "returns": {
           "type": "void",
           "desc": ""
@@ -128,10 +128,10 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "asset",
             "type": "asset",
-            "desc": ""
+            "desc": "The asset to opt into and opt out of to determine MBR"
           }
         ],
-        "desc": "",
+        "desc": "Updates the asset MBR",
         "returns": {
           "type": "void",
           "desc": ""
@@ -143,20 +143,20 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "sig",
             "type": "byte[64]",
-            "desc": ""
+            "desc": "The signature of the lsig"
           },
           {
             "name": "signer",
             "type": "address",
-            "desc": ""
+            "desc": "The public key corresponding to the signature"
           },
           {
             "name": "verifier",
             "type": "txn",
-            "desc": ""
+            "desc": "A txn from the verifier lsig to verify the signature"
           }
         ],
-        "desc": "",
+        "desc": "Set the signature of the lsig for the given account",
         "returns": {
           "type": "void",
           "desc": ""
@@ -168,15 +168,15 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "mbrPayment",
             "type": "pay",
-            "desc": ""
+            "desc": "Payment to the receiver that covers the ASA MBR"
           },
           {
             "name": "optIn",
             "type": "axfer",
-            "desc": ""
+            "desc": "The opt in transaction, presumably from the open opt-in lsig"
           }
         ],
-        "desc": "",
+        "desc": "Verifies that the opt in is allowed",
         "returns": {
           "type": "void",
           "desc": ""
@@ -188,10 +188,10 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "timestamp",
             "type": "uint64",
-            "desc": ""
+            "desc": "After this time, opt ins will no longer be allowed"
           }
         ],
-        "desc": "",
+        "desc": "Set the timestamp until which the account allows opt ins",
         "returns": {
           "type": "void",
           "desc": ""
@@ -203,12 +203,12 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "sig",
             "type": "byte[64]",
-            "desc": ""
+            "desc": "The signature of the lsig"
           },
           {
             "name": "signer",
             "type": "address",
-            "desc": ""
+            "desc": "The public key corresponding to the signature"
           },
           {
             "name": "allowedAddress",
@@ -221,7 +221,7 @@ export const APP_SPEC: AppSpec = {
             "desc": ""
           }
         ],
-        "desc": "",
+        "desc": "Set the signature of the lsig for the given account",
         "returns": {
           "type": "void",
           "desc": ""
@@ -233,15 +233,15 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "mbrPayment",
             "type": "pay",
-            "desc": ""
+            "desc": "Payment to the receiver that covers the ASA MBR"
           },
           {
             "name": "optIn",
             "type": "axfer",
-            "desc": ""
+            "desc": "The opt in transaction, presumably from the address opt-in lsig"
           }
         ],
-        "desc": "",
+        "desc": "Verifies that the opt in is allowed from the sender",
         "returns": {
           "type": "void",
           "desc": ""
@@ -253,15 +253,15 @@ export const APP_SPEC: AppSpec = {
           {
             "name": "timestamp",
             "type": "uint64",
-            "desc": ""
+            "desc": "After this time, opt ins will no longer be allowed"
           },
           {
             "name": "allowedAddress",
             "type": "address",
-            "desc": ""
+            "desc": "The address to set the end time for"
           }
         ],
-        "desc": "",
+        "desc": "Set the timestamp until which the account allows opt ins for a specific address",
         "returns": {
           "type": "void",
           "desc": ""
@@ -328,6 +328,9 @@ export type DelegatedOptIn = {
   methods:
     & Record<'setSigVerificationAddress(address)void' | 'setSigVerificationAddress', {
       argsObj: {
+        /**
+         * The address of the verifier lsig
+         */
         lsig: string
       }
       argsTuple: [lsig: string]
@@ -335,6 +338,9 @@ export type DelegatedOptIn = {
     }>
     & Record<'updateAssetMBR(asset)void' | 'updateAssetMBR', {
       argsObj: {
+        /**
+         * The asset to opt into and opt out of to determine MBR
+         */
         asset: number | bigint
       }
       argsTuple: [asset: number | bigint]
@@ -342,8 +348,17 @@ export type DelegatedOptIn = {
     }>
     & Record<'setOpenOptInSignature(byte[64],address,txn)void' | 'setOpenOptInSignature', {
       argsObj: {
+        /**
+         * The signature of the lsig
+         */
         sig: Uint8Array
+        /**
+         * The public key corresponding to the signature
+         */
         signer: string
+        /**
+         * A txn from the verifier lsig to verify the signature
+         */
         verifier: TransactionToSign | Transaction | Promise<SendTransactionResult>
       }
       argsTuple: [sig: Uint8Array, signer: string, verifier: TransactionToSign | Transaction | Promise<SendTransactionResult>]
@@ -351,7 +366,13 @@ export type DelegatedOptIn = {
     }>
     & Record<'openOptIn(pay,axfer)void' | 'openOptIn', {
       argsObj: {
+        /**
+         * Payment to the receiver that covers the ASA MBR
+         */
         mbrPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>
+        /**
+         * The opt in transaction, presumably from the open opt-in lsig
+         */
         optIn: TransactionToSign | Transaction | Promise<SendTransactionResult>
       }
       argsTuple: [mbrPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>, optIn: TransactionToSign | Transaction | Promise<SendTransactionResult>]
@@ -359,6 +380,9 @@ export type DelegatedOptIn = {
     }>
     & Record<'setOpenOptInEndTime(uint64)void' | 'setOpenOptInEndTime', {
       argsObj: {
+        /**
+         * After this time, opt ins will no longer be allowed
+         */
         timestamp: bigint | number
       }
       argsTuple: [timestamp: bigint | number]
@@ -366,7 +390,13 @@ export type DelegatedOptIn = {
     }>
     & Record<'setAddressOptInSignature(byte[64],address,address,txn)void' | 'setAddressOptInSignature', {
       argsObj: {
+        /**
+         * The signature of the lsig
+         */
         sig: Uint8Array
+        /**
+         * The public key corresponding to the signature
+         */
         signer: string
         allowedAddress: string
         verifier: TransactionToSign | Transaction | Promise<SendTransactionResult>
@@ -376,7 +406,13 @@ export type DelegatedOptIn = {
     }>
     & Record<'addressOptIn(pay,axfer)void' | 'addressOptIn', {
       argsObj: {
+        /**
+         * Payment to the receiver that covers the ASA MBR
+         */
         mbrPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>
+        /**
+         * The opt in transaction, presumably from the address opt-in lsig
+         */
         optIn: TransactionToSign | Transaction | Promise<SendTransactionResult>
       }
       argsTuple: [mbrPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>, optIn: TransactionToSign | Transaction | Promise<SendTransactionResult>]
@@ -384,7 +420,13 @@ export type DelegatedOptIn = {
     }>
     & Record<'setAddressOptInEndTime(uint64,address)void' | 'setAddressOptInEndTime', {
       argsObj: {
+        /**
+         * After this time, opt ins will no longer be allowed
+         */
         timestamp: bigint | number
+        /**
+         * The address to set the end time for
+         */
         allowedAddress: string
       }
       argsTuple: [timestamp: bigint | number, allowedAddress: string]
@@ -473,6 +515,8 @@ export abstract class DelegatedOptInCallFactory {
   /**
    * Constructs a no op call for the setSigVerificationAddress(address)void ABI method
    *
+   * Set the address of the verifier lsig. This will only be called once after creation.
+   *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
    * @returns A TypedCallParams object for the call
@@ -486,6 +530,8 @@ export abstract class DelegatedOptInCallFactory {
   }
   /**
    * Constructs a no op call for the updateAssetMBR(asset)void ABI method
+   *
+   * Updates the asset MBR
    *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
@@ -501,6 +547,8 @@ export abstract class DelegatedOptInCallFactory {
   /**
    * Constructs a no op call for the setOpenOptInSignature(byte[64],address,txn)void ABI method
    *
+   * Set the signature of the lsig for the given account
+   *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
    * @returns A TypedCallParams object for the call
@@ -514,6 +562,8 @@ export abstract class DelegatedOptInCallFactory {
   }
   /**
    * Constructs a no op call for the openOptIn(pay,axfer)void ABI method
+   *
+   * Verifies that the opt in is allowed
    *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
@@ -529,6 +579,8 @@ export abstract class DelegatedOptInCallFactory {
   /**
    * Constructs a no op call for the setOpenOptInEndTime(uint64)void ABI method
    *
+   * Set the timestamp until which the account allows opt ins
+   *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
    * @returns A TypedCallParams object for the call
@@ -542,6 +594,8 @@ export abstract class DelegatedOptInCallFactory {
   }
   /**
    * Constructs a no op call for the setAddressOptInSignature(byte[64],address,address,txn)void ABI method
+   *
+   * Set the signature of the lsig for the given account
    *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
@@ -557,6 +611,8 @@ export abstract class DelegatedOptInCallFactory {
   /**
    * Constructs a no op call for the addressOptIn(pay,axfer)void ABI method
    *
+   * Verifies that the opt in is allowed from the sender
+   *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
    * @returns A TypedCallParams object for the call
@@ -570,6 +626,8 @@ export abstract class DelegatedOptInCallFactory {
   }
   /**
    * Constructs a no op call for the setAddressOptInEndTime(uint64,address)void ABI method
+   *
+   * Set the timestamp until which the account allows opt ins for a specific address
    *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
@@ -683,6 +741,8 @@ export class DelegatedOptInClient {
   /**
    * Calls the setSigVerificationAddress(address)void ABI method.
    *
+   * Set the address of the verifier lsig. This will only be called once after creation.
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The result of the call
@@ -693,6 +753,8 @@ export class DelegatedOptInClient {
 
   /**
    * Calls the updateAssetMBR(asset)void ABI method.
+   *
+   * Updates the asset MBR
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
@@ -705,6 +767,8 @@ export class DelegatedOptInClient {
   /**
    * Calls the setOpenOptInSignature(byte[64],address,txn)void ABI method.
    *
+   * Set the signature of the lsig for the given account
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The result of the call
@@ -715,6 +779,8 @@ export class DelegatedOptInClient {
 
   /**
    * Calls the openOptIn(pay,axfer)void ABI method.
+   *
+   * Verifies that the opt in is allowed
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
@@ -727,6 +793,8 @@ export class DelegatedOptInClient {
   /**
    * Calls the setOpenOptInEndTime(uint64)void ABI method.
    *
+   * Set the timestamp until which the account allows opt ins
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The result of the call
@@ -737,6 +805,8 @@ export class DelegatedOptInClient {
 
   /**
    * Calls the setAddressOptInSignature(byte[64],address,address,txn)void ABI method.
+   *
+   * Set the signature of the lsig for the given account
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
@@ -749,6 +819,8 @@ export class DelegatedOptInClient {
   /**
    * Calls the addressOptIn(pay,axfer)void ABI method.
    *
+   * Verifies that the opt in is allowed from the sender
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The result of the call
@@ -759,6 +831,8 @@ export class DelegatedOptInClient {
 
   /**
    * Calls the setAddressOptInEndTime(uint64,address)void ABI method.
+   *
+   * Set the timestamp until which the account allows opt ins for a specific address
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
@@ -901,6 +975,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
   /**
    * Calls the setSigVerificationAddress(address)void ABI method.
    *
+   * Set the address of the verifier lsig. This will only be called once after creation.
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
@@ -909,6 +985,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
 
   /**
    * Calls the updateAssetMBR(asset)void ABI method.
+   *
+   * Updates the asset MBR
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
@@ -919,6 +997,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
   /**
    * Calls the setOpenOptInSignature(byte[64],address,txn)void ABI method.
    *
+   * Set the signature of the lsig for the given account
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
@@ -927,6 +1007,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
 
   /**
    * Calls the openOptIn(pay,axfer)void ABI method.
+   *
+   * Verifies that the opt in is allowed
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
@@ -937,6 +1019,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
   /**
    * Calls the setOpenOptInEndTime(uint64)void ABI method.
    *
+   * Set the timestamp until which the account allows opt ins
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
@@ -945,6 +1029,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
 
   /**
    * Calls the setAddressOptInSignature(byte[64],address,address,txn)void ABI method.
+   *
+   * Set the signature of the lsig for the given account
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
@@ -955,6 +1041,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
   /**
    * Calls the addressOptIn(pay,axfer)void ABI method.
    *
+   * Verifies that the opt in is allowed from the sender
+   *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
@@ -963,6 +1051,8 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
 
   /**
    * Calls the setAddressOptInEndTime(uint64,address)void ABI method.
+   *
+   * Set the timestamp until which the account allows opt ins for a specific address
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call

@@ -8,10 +8,10 @@
         {
           "name": "lsig",
           "type": "address",
-          "desc": ""
+          "desc": "The address of the verifier lsig"
         }
       ],
-      "desc": "",
+      "desc": "Set the address of the verifier lsig. This will only be called once after creation.",
       "returns": {
         "type": "void",
         "desc": ""
@@ -23,10 +23,10 @@
         {
           "name": "asset",
           "type": "asset",
-          "desc": ""
+          "desc": "The asset to opt into and opt out of to determine MBR"
         }
       ],
-      "desc": "",
+      "desc": "Updates the asset MBR",
       "returns": {
         "type": "void",
         "desc": ""
@@ -38,20 +38,20 @@
         {
           "name": "sig",
           "type": "byte[64]",
-          "desc": ""
+          "desc": "The signature of the lsig"
         },
         {
           "name": "signer",
           "type": "address",
-          "desc": ""
+          "desc": "The public key corresponding to the signature"
         },
         {
           "name": "verifier",
           "type": "txn",
-          "desc": ""
+          "desc": "A txn from the verifier lsig to verify the signature"
         }
       ],
-      "desc": "",
+      "desc": "Set the signature of the lsig for the given account",
       "returns": {
         "type": "void",
         "desc": ""
@@ -63,15 +63,15 @@
         {
           "name": "mbrPayment",
           "type": "pay",
-          "desc": ""
+          "desc": "Payment to the receiver that covers the ASA MBR"
         },
         {
           "name": "optIn",
           "type": "axfer",
-          "desc": ""
+          "desc": "The opt in transaction, presumably from the open opt-in lsig"
         }
       ],
-      "desc": "",
+      "desc": "Verifies that the opt in is allowed",
       "returns": {
         "type": "void",
         "desc": ""
@@ -83,10 +83,10 @@
         {
           "name": "timestamp",
           "type": "uint64",
-          "desc": ""
+          "desc": "After this time, opt ins will no longer be allowed"
         }
       ],
-      "desc": "",
+      "desc": "Set the timestamp until which the account allows opt ins",
       "returns": {
         "type": "void",
         "desc": ""
@@ -98,12 +98,12 @@
         {
           "name": "sig",
           "type": "byte[64]",
-          "desc": ""
+          "desc": "The signature of the lsig"
         },
         {
           "name": "signer",
           "type": "address",
-          "desc": ""
+          "desc": "The public key corresponding to the signature"
         },
         {
           "name": "allowedAddress",
@@ -116,7 +116,7 @@
           "desc": ""
         }
       ],
-      "desc": "",
+      "desc": "Set the signature of the lsig for the given account",
       "returns": {
         "type": "void",
         "desc": ""
@@ -128,15 +128,15 @@
         {
           "name": "mbrPayment",
           "type": "pay",
-          "desc": ""
+          "desc": "Payment to the receiver that covers the ASA MBR"
         },
         {
           "name": "optIn",
           "type": "axfer",
-          "desc": ""
+          "desc": "The opt in transaction, presumably from the address opt-in lsig"
         }
       ],
-      "desc": "",
+      "desc": "Verifies that the opt in is allowed from the sender",
       "returns": {
         "type": "void",
         "desc": ""
@@ -148,15 +148,15 @@
         {
           "name": "timestamp",
           "type": "uint64",
-          "desc": ""
+          "desc": "After this time, opt ins will no longer be allowed"
         },
         {
           "name": "allowedAddress",
           "type": "address",
-          "desc": ""
+          "desc": "The address to set the end time for"
         }
       ],
-      "desc": "",
+      "desc": "Set the timestamp until which the account allows opt ins for a specific address",
       "returns": {
         "type": "void",
         "desc": ""
