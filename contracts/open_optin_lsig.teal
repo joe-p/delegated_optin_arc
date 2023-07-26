@@ -1,0 +1,46 @@
+#pragma version 8
+#define AppCall load 0
+
+// Save AppCall
+txn GroupIndex
+int 1
++
+store 0
+
+// Verify amount is 0
+txn AssetAmount
+int 0
+==
+assert
+
+// Verify sender == receiver
+txn AssetReceiver
+txn Sender
+==
+assert
+
+// Verify fee is 0 (covered by sender)
+txn Fee
+int 0
+==
+assert
+
+// Verify assetCloseTo is not set
+txn AssetCloseTo
+global ZeroAddress
+==
+assert
+
+// Verify called atomically with master app
+AppCall
+gtxns ApplicationID
+int TMPL_DELEGATED_OPTIN_APP_ID
+==
+assert
+
+// Verify the correct method is being called
+AppCall
+gtxnsa ApplicationArgs 0
+method "openOptIn(pay,axfer)void"
+==
+

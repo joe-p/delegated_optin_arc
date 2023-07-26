@@ -1,0 +1,47 @@
+#pragma version 8
+
+// Verify not rekeyed
+txn RekeyTo
+global ZeroAddress
+==
+assert
+
+// Determine if the signature is for an address opt-in lsig or open opt-in lsig
+txn GroupIndex
+int 1
++
+gtxns NumAppArgs
+switch _ _ _ open_optin_data addr_optin_data
+
+addr_optin_data:
+    byte TMPL_ADDRESS_OPTIN_DATA
+    txn GroupIndex
+    int 1
+    +
+    gtxnsa ApplicationArgs 3
+    replace2 69 
+    b verify
+
+open_optin_data:
+    // data
+    byte TMPL_OPEN_OPTIN_DATA
+
+verify:
+    // signature
+    txn GroupIndex
+    int 1
+    +
+    gtxnsa ApplicationArgs 1
+
+    // public key
+    txn GroupIndex
+    int 1
+    +
+    gtxnsa ApplicationArgs 2
+
+    ed25519verify_bare
+
+    return
+
+_:
+    err
