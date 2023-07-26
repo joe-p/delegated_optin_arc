@@ -4,7 +4,6 @@ This ARC contains is implementation of [ARCX](https://github.com/algorandfoundat
 ## Motivation
 [ARCX](https://github.com/algorandfoundation/ARCs/pull/229) provides a standard for delegated asset opt-ins, but there are some UX problems that need to be addressed. First, there needs to be a way to control how long the signature is valid for. Without an application to control this, signing the logic signature program would be irriversible. There also needs to be a standardized way to store and read signatures for a given account so dApps and other users can take advantaged of delegated opt ins.
 
-
 ## Specification
 This is an implementation of [ARCX](https://github.com/algorandfoundation/ARCs/pull/229). There is additional functionality provided by the applicaiton in this ARC in the methods of the application.
 
