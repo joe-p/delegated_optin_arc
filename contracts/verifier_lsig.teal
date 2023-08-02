@@ -11,7 +11,10 @@ txn GroupIndex
 int 1
 +
 gtxns NumAppArgs
-switch _ _ _ open_optin_data addr_optin_data
+switch invalid_arg_count invalid_arg_count invalid_arg_count open_optin_data addr_optin_data
+
+invalid_arg_count:
+    err
 
 addr_optin_data:
     byte TMPL_ADDRESS_OPTIN_DATA
@@ -42,6 +45,3 @@ verify:
     ed25519verify_bare
 
     return
-
-_:
-    err
