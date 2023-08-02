@@ -19,7 +19,7 @@ addr_optin_data:
     int 1
     +
     gtxnsa ApplicationArgs 3
-    replace2 69 
+    replace2 68
     b verify
 
 open_optin_data:
