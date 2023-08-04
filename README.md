@@ -29,9 +29,9 @@ Both methods utilize [the verifier lsig](./contracts/verifier_lsig.teal) to veri
 | ---- | --- | ----------- |
 | Global | "sigVerificationAddress" | Stores the address of [the verifier lsig](./contracts/verifier_lsig.teal) |
 | Global | "assetMBR" | Stores the ASA MBR |
-| Box | "s-" + `auth-addr` | Mapping of signer to open opt-in signature |
+| Box | `auth-addr` | Mapping of signer to open opt-in signature |
 | Box |  "e-" + `auth-addr` | Mapping of signer to open opt-in end time |
-| Box | "s-" + `sha256(signer,sender)` | Mapping of the hash of the signer address plus sender address to address opt-in signature |
+| Box | `(signer,sender)` | Mapping of the hash of the signer address plus sender address to address opt-in signature |
 | Box |  "e-" + `sha256(signer,sender)` | Mapping of the hash of the signer address plus sender address to address opt-in end time |
 
 ## Rationale

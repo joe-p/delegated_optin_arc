@@ -3,6 +3,7 @@ import { Contract } from '@algorandfoundation/tealscript';
 type byte32 = StaticArray<byte, 32>;
 type byte64 = StaticArray<byte, 64>;
 type AuthAddr = Address;
+type SignerAndSender = { signer: AuthAddr, sender: Address };
 
 // eslint-disable-next-line no-unused-vars
 class DelegatedOptIn extends Contract {
@@ -17,7 +18,7 @@ class DelegatedOptIn extends Contract {
   // ************ Open Opt-In State ************ //
 
   // Mapping of auth address to signed open opt-in lsig
-  openOptInSignatures = new BoxMap<AuthAddr, byte64>({ prefix: 's-' });
+  openOptInSignatures = new BoxMap<AuthAddr, byte64>();
 
   // Mapping of address to timestamp until which open opt-ins are allowed
   openOptInEndTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
@@ -26,7 +27,7 @@ class DelegatedOptIn extends Contract {
 
   // Mapping of hash(sender address + receiver auth address) to
   // signed address opt-in lsig for sender address
-  addressOptInSignatures = new BoxMap<byte32, byte64>({ prefix: 's-' });
+  addressOptInSignatures = new BoxMap<SignerAndSender, byte64>();
 
   // Mapping of hash(sender address + receiver address ) to timestamp until which
   // address pt-ins from the sender address are allowed
@@ -146,9 +147,10 @@ class DelegatedOptIn extends Contract {
   ): void {
     assert(verifier.sender === this.sigVerificationAddress.get());
 
-    const hash = this.getSenderReceiverHash(allowedAddress, signer);
-
-    this.addressOptInSignatures.set(hash, sig);
+    this.addressOptInSignatures.set(
+      { signer: signer, sender: allowedAddress } as SignerAndSender,
+      sig,
+    );
   }
 
   /**
