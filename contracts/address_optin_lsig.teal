@@ -1,6 +1,18 @@
 #pragma version 8
 #define MasterAppCall load 0
 
+// Verify not rekeyed
+txn RekeyTo
+global ZeroAddress
+==
+assert
+
+// Assert this is an axfer
+txn TypeEnum
+int axfer
+==
+assert
+
 // Save MasterAppCall
 txn GroupIndex
 int 1

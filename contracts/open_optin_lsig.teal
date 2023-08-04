@@ -1,6 +1,18 @@
 #pragma version 8
 #define AppCall load 0
 
+// Verify not rekeyed
+txn RekeyTo
+global ZeroAddress
+==
+assert
+
+// Assert this is an axfer
+txn TypeEnum
+int axfer
+==
+assert
+
 // Save AppCall
 txn GroupIndex
 int 1

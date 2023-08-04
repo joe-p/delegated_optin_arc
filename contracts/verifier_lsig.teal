@@ -1,8 +1,15 @@
 #pragma version 8
+#define REPLACE_ADDR replace2 80
 
 // Verify not rekeyed
 txn RekeyTo
 global ZeroAddress
+==
+assert
+
+// Assert this is a pay
+txn TypeEnum
+int pay
 ==
 assert
 
@@ -22,7 +29,7 @@ addr_optin_data:
     int 1
     +
     gtxnsa ApplicationArgs 3
-    replace2 68
+    REPLACE_ADDR
     b verify
 
 open_optin_data:

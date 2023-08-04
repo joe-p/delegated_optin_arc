@@ -8,6 +8,7 @@ import algosdk from 'algosdk';
 import * as algokit from '@algorandfoundation/algokit-utils';
 import sha256 from 'sha256';
 import { AlgorandFixture } from '@algorandfoundation/algokit-utils/types/testing';
+import { test } from 'node:test';
 import { DelegatedOptInClient } from '../delegated_optin_client';
 
 const SUPPRESS_LOG = { sendParams: { suppressLog: true } };
@@ -337,9 +338,7 @@ describe('Delegated Opt In App', () => {
         amount: 0,
       });
 
-      const prefix = Buffer.from('s-');
-      const key = algosdk.decodeAddress(receiver.addr).publicKey;
-      const boxRef = concatArrays(prefix, key);
+      const boxRef = algosdk.decodeAddress(receiver.addr).publicKey;
 
       await app.appClient.fundAppAccount({ amount: algokit.microAlgos(141700), ...SUPPRESS_LOG });
 
@@ -407,14 +406,17 @@ describe('Delegated Opt In App', () => {
 
       lsig.sign(receiver.sk);
 
-      const hash = sha256(Buffer.from(concatArrays(
-        algosdk.decodeAddress(testAccount.addr).publicKey,
+      const toBeSigned = Buffer.from(concatArrays(lsig.lsig.tag, lsig.lsig.logic));
+      const addrOffset = toBeSigned.toString('hex').indexOf(Buffer.from(algosdk.decodeAddress(testAccount.addr).publicKey).toString('hex'));
+
+      expect(addrOffset / 2).toBe(80);
+
+      const boxRef = concatArrays(
         algosdk.decodeAddress(receiver.addr).publicKey,
-      )), { asBytes: true });
+        algosdk.decodeAddress(testAccount.addr).publicKey,
+      );
 
-      const boxRef = concatArrays(Buffer.from('s-'), hash);
-
-      await app.appClient.fundAppAccount({ amount: algokit.microAlgos(22400), ...SUPPRESS_LOG });
+      await app.appClient.fundAppAccount({ amount: algokit.microAlgos(33600), ...SUPPRESS_LOG });
 
       const verifierLsig = await generateVerifierLsig(algod, appId, receiver.addr);
 
