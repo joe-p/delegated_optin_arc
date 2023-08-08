@@ -1,59 +1,21 @@
+/* eslint-disable prefer-destructuring */
 import { Contract } from '@algorandfoundation/tealscript';
 
-type byte32 = StaticArray<byte, 32>;
 type byte64 = StaticArray<byte, 64>;
-type AuthAddr = Address;
-type SignerAndSender = { signer: AuthAddr, sender: Address };
 
 // eslint-disable-next-line no-unused-vars
 class DelegatedOptIn extends Contract {
-  // ************ Meta State ************ //
-
-  // The address of the lsig that verifies signatures before being added to box storage
-  sigVerificationAddress = new GlobalStateKey<Address>();
-
   // The minimum balance requirement for ASAs
+  // TODO: Delete this once we have global field for asset MBR
   assetMBR = new GlobalStateKey<uint64>();
 
-  // ************ Open Opt-In State ************ //
-
   // Mapping of auth address to signed open opt-in lsig
-  openOptInSignatures = new BoxMap<AuthAddr, byte64>();
-
-  // Mapping of address to timestamp until which open opt-ins are allowed
-  openOptInEndTimes = new BoxMap<Address, uint64>({ prefix: 'e-' });
-
-  // ************ Address Opt-In State ************ //
-
-  // Mapping of hash(sender address + receiver auth address) to
-  // signed address opt-in lsig for sender address
-  addressOptInSignatures = new BoxMap<SignerAndSender, byte64>();
-
-  // Mapping of hash(sender address + receiver address ) to timestamp until which
-  // address pt-ins from the sender address are allowed
-  addressOptInEndTimes = new BoxMap<byte32, uint64>({ prefix: 'e-' });
-
-  private getSenderReceiverHash(sender: Address, receiverOrSigner: Address): byte32 {
-    return sha256(concat(sender, receiverOrSigner));
-  }
+  signatures = new BoxMap<Address, byte64>();
 
   @handle.createApplication
   create(): void {
+    /// TODO: Once we have global field for asset MBR, this can be removed
     this.assetMBR.set(100_000);
-  }
-
-  // ************ Meta Methods ************ //
-
-  /**
-   * Set the address of the verifier lsig. This will only be called once after creation.
-   *
-   * @param lsig - The address of the verifier lsig
-   *
-   */
-  setSigVerificationAddress(lsig: Address): void {
-    assert(this.txn.sender === this.app.creator);
-    assert(!this.sigVerificationAddress.exists());
-    this.sigVerificationAddress.set(lsig);
   }
 
   /**
@@ -63,6 +25,7 @@ class DelegatedOptIn extends Contract {
    *
    */
   updateAssetMBR(asset: Asset): void {
+    /// TODO: Replace with global field for getting asset MBR
     const preMbr = this.app.address.minBalance;
 
     sendAssetTransfer({
@@ -86,20 +49,25 @@ class DelegatedOptIn extends Contract {
     });
   }
 
-  // ************ Open Opt-In Methods ************ //
-
   /**
    * Set the signature of the lsig for the given account
    *
    * @param sig - The signature of the lsig
-   * @param signer - The public key corresponding to the signature
-   * @param verifier - A txn from the verifier lsig to verify the signature
+   * @param boxMBRPayment - Payment to cover the contract MBR for box creation
    *
    */
-  setOpenOptInSignature(sig: byte64, signer: AuthAddr, verifier: Txn): void {
-    assert(verifier.sender === this.sigVerificationAddress.get());
+  setSignature(sig: byte64, boxMBRPayment: PayTxn): void {
+    /// Calculate the auth address for the sender
+    let authAddr = this.txn.sender.authAddr;
+    if (authAddr === globals.zeroAddress) authAddr = this.txn.sender;
 
-    this.openOptInSignatures.set(signer, sig);
+    /// Record MBR before box_put to later determine the MBR delta
+    const preMBR = this.app.address.minBalance;
+    this.signatures.set(authAddr, sig);
+
+    /// Verify box MBR payment
+    assert(boxMBRPayment.receiver === this.app.address);
+    assert(boxMBRPayment.amount >= this.app.address.minBalance - preMBR);
   }
 
   /**
@@ -109,80 +77,33 @@ class DelegatedOptIn extends Contract {
    * @param optIn - The opt in transaction, presumably from the open opt-in lsig
    *
    */
-  openOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
-    // Verify mbr payment
+  delegatedOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
+    /// Verify asset mbr payment
     assert(optIn.assetReceiver === mbrPayment.receiver);
     assert(mbrPayment.amount >= this.assetMBR.get());
 
-    // If endTimes box exists, openOptIn that the opt in is before the end time
-    if (this.openOptInEndTimes.exists(optIn.assetReceiver)) {
-      assert(this.openOptInEndTimes.get(optIn.assetReceiver) > globals.latestTimestamp);
-    }
+    /// Verify that the signature is present
+    assert(this.signatures.exists(optIn.sender));
   }
 
   /**
-   * Set the timestamp until which the account allows opt ins
-   *
-   * @param timestamp - After this time, opt ins will no longer be allowed
-   *
+   * Delete the signature from box storage.
+   * This will disable delegated opt-ins and return the box MBR balance
    */
-  setOpenOptInEndTime(timestamp: uint64): void {
-    this.openOptInEndTimes.set(this.txn.sender, timestamp);
-  }
+  unsetSignature(): void {
+    /// Calculate the auth address for the sender
+    let authAddr = this.txn.sender.authAddr;
+    if (authAddr === globals.zeroAddress) authAddr = this.txn.sender;
 
-  // ************ Address Opt-In Methods ************ //
+    /// Record MBR before box_del to later determine the MBR delta
+    const preMBR = this.app.address.minBalance;
+    this.signatures.delete(authAddr);
 
-  /**
-   * Set the signature of the lsig for the given account
-   *
-   * @param sig - The signature of the lsig
-   * @param signer - The public key corresponding to the signature
-   *
-   */
-  setAddressOptInSignature(
-    sig: byte64,
-    signer: AuthAddr,
-    allowedAddress: Address,
-    verifier: Txn,
-  ): void {
-    assert(verifier.sender === this.sigVerificationAddress.get());
-
-    this.addressOptInSignatures.set(
-      { signer: signer, sender: allowedAddress } as SignerAndSender,
-      sig,
-    );
-  }
-
-  /**
-   * Verifies that the opt in is allowed from the sender
-   *
-   * @param mbrPayment - Payment to the receiver that covers the ASA MBR
-   * @param optIn - The opt in transaction, presumably from the address opt-in lsig
-   *
-   */
-  addressOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
-    // Verify mbr payment
-    assert(optIn.assetReceiver === mbrPayment.receiver);
-    assert(mbrPayment.amount >= this.assetMBR.get());
-
-    const hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver);
-
-    // If endTimes box exists, verify that the opt in is before the end time
-    if (this.addressOptInEndTimes.exists(hash)) {
-      assert(this.addressOptInEndTimes.get(hash) > globals.latestTimestamp);
-    }
-  }
-
-  /**
-   * Set the timestamp until which the account allows opt ins for a specific address
-   *
-   * @param timestamp - After this time, opt ins will no longer be allowed
-   * @param allowedAddress - The address to set the end time for
-   *
-   */
-  setAddressOptInEndTime(timestamp: uint64, allowedAddress: Address): void {
-    const hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender);
-
-    this.addressOptInEndTimes.set(hash, timestamp);
+    /// Return the box MBR
+    sendPayment({
+      fee: 0,
+      amount: preMBR - this.app.address.minBalance,
+      receiver: this.txn.sender,
+    });
   }
 }

@@ -3,21 +3,6 @@
   "desc": "",
   "methods": [
     {
-      "name": "setSigVerificationAddress",
-      "args": [
-        {
-          "name": "lsig",
-          "type": "address",
-          "desc": "The address of the verifier lsig"
-        }
-      ],
-      "desc": "Set the address of the verifier lsig. This will only be called once after creation.",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
       "name": "updateAssetMBR",
       "args": [
         {
@@ -33,7 +18,7 @@
       }
     },
     {
-      "name": "setOpenOptInSignature",
+      "name": "setSignature",
       "args": [
         {
           "name": "sig",
@@ -41,14 +26,9 @@
           "desc": "The signature of the lsig"
         },
         {
-          "name": "signer",
-          "type": "address",
-          "desc": "The public key corresponding to the signature"
-        },
-        {
-          "name": "verifier",
-          "type": "txn",
-          "desc": "A txn from the verifier lsig to verify the signature"
+          "name": "boxMBRPayment",
+          "type": "pay",
+          "desc": "Payment to cover the contract MBR for box creation"
         }
       ],
       "desc": "Set the signature of the lsig for the given account",
@@ -58,7 +38,7 @@
       }
     },
     {
-      "name": "openOptIn",
+      "name": "delegatedOptIn",
       "args": [
         {
           "name": "mbrPayment",
@@ -78,85 +58,9 @@
       }
     },
     {
-      "name": "setOpenOptInEndTime",
-      "args": [
-        {
-          "name": "timestamp",
-          "type": "uint64",
-          "desc": "After this time, opt ins will no longer be allowed"
-        }
-      ],
-      "desc": "Set the timestamp until which the account allows opt ins",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
-      "name": "setAddressOptInSignature",
-      "args": [
-        {
-          "name": "sig",
-          "type": "byte[64]",
-          "desc": "The signature of the lsig"
-        },
-        {
-          "name": "signer",
-          "type": "address",
-          "desc": "The public key corresponding to the signature"
-        },
-        {
-          "name": "allowedAddress",
-          "type": "address",
-          "desc": ""
-        },
-        {
-          "name": "verifier",
-          "type": "txn",
-          "desc": ""
-        }
-      ],
-      "desc": "Set the signature of the lsig for the given account",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
-      "name": "addressOptIn",
-      "args": [
-        {
-          "name": "mbrPayment",
-          "type": "pay",
-          "desc": "Payment to the receiver that covers the ASA MBR"
-        },
-        {
-          "name": "optIn",
-          "type": "axfer",
-          "desc": "The opt in transaction, presumably from the address opt-in lsig"
-        }
-      ],
-      "desc": "Verifies that the opt in is allowed from the sender",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
-      "name": "setAddressOptInEndTime",
-      "args": [
-        {
-          "name": "timestamp",
-          "type": "uint64",
-          "desc": "After this time, opt ins will no longer be allowed"
-        },
-        {
-          "name": "allowedAddress",
-          "type": "address",
-          "desc": "The address to set the end time for"
-        }
-      ],
-      "desc": "Set the timestamp until which the account allows opt ins for a specific address",
+      "name": "unsetSignature",
+      "args": [],
+      "desc": "Delete the signature from box storage.This will disable delegated opt-ins and return the box MBR balance",
       "returns": {
         "type": "void",
         "desc": ""

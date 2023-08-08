@@ -26,42 +26,22 @@ import { SendTransactionResult, TransactionToSign, SendTransactionFrom } from '@
 import { Algodv2, OnApplicationComplete, Transaction, TransactionWithSigner, AtomicTransactionComposer } from 'algosdk'
 export const APP_SPEC: AppSpec = {
   "hints": {
-    "setSigVerificationAddress(address)void": {
-      "call_config": {
-        "no_op": "CALL"
-      }
-    },
     "updateAssetMBR(asset)void": {
       "call_config": {
         "no_op": "CALL"
       }
     },
-    "setOpenOptInSignature(byte[64],address,txn)void": {
+    "setSignature(byte[64],pay)void": {
       "call_config": {
         "no_op": "CALL"
       }
     },
-    "openOptIn(pay,axfer)void": {
+    "delegatedOptIn(pay,axfer)void": {
       "call_config": {
         "no_op": "CALL"
       }
     },
-    "setOpenOptInEndTime(uint64)void": {
-      "call_config": {
-        "no_op": "CALL"
-      }
-    },
-    "setAddressOptInSignature(byte[64],address,address,txn)void": {
-      "call_config": {
-        "no_op": "CALL"
-      }
-    },
-    "addressOptIn(pay,axfer)void": {
-      "call_config": {
-        "no_op": "CALL"
-      }
-    },
-    "setAddressOptInEndTime(uint64,address)void": {
+    "unsetSignature()void": {
       "call_config": {
         "no_op": "CALL"
       }
@@ -77,10 +57,6 @@ export const APP_SPEC: AppSpec = {
     },
     "global": {
       "declared": {
-        "sigVerificationAddress": {
-          "type": "bytes",
-          "key": "sigVerificationAddress"
-        },
         "assetMBR": {
           "type": "uint64",
           "key": "assetMBR"
@@ -91,7 +67,7 @@ export const APP_SPEC: AppSpec = {
   },
   "state": {
     "global": {
-      "num_byte_slices": 1,
+      "num_byte_slices": 0,
       "num_uints": 1
     },
     "local": {
@@ -100,28 +76,13 @@ export const APP_SPEC: AppSpec = {
     }
   },
   "source": {
-    "approval": "I3ByYWdtYSB2ZXJzaW9uIDgKCWIgbWFpbgoKZ2V0U2VuZGVyUmVjZWl2ZXJIYXNoOgoJcHJvdG8gMiAxCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjM3CgkvLyByZXR1cm4gc2hhMjU2KGNvbmNhdChzZW5kZXIsIHJlY2VpdmVyT3JTaWduZXIpKTsKCWZyYW1lX2RpZyAtMSAvLyBzZW5kZXI6IGFkZHJlc3MKCWZyYW1lX2RpZyAtMiAvLyByZWNlaXZlck9yU2lnbmVyOiBhZGRyZXNzCgljb25jYXQKCXNoYTI1NgoJcmV0c3ViCgpiYXJlX3JvdXRlX2NyZWF0ZToKCXR4biBPbkNvbXBsZXRpb24KCWludCBOb09wCgk9PQoJdHhuIEFwcGxpY2F0aW9uSUQKCWludCAwCgk9PQoJJiYKCWFzc2VydAoKCS8vIG5vIGR1cG4gbmVlZGVkCgljYWxsc3ViIGNyZWF0ZQoJaW50IDEKCXJldHVybgoKY3JlYXRlOgoJcHJvdG8gMCAwCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjQyCgkvLyB0aGlzLmFzc2V0TUJSLnNldCgxMDBfMDAwKQoJYnl0ZSAiYXNzZXRNQlIiCglpbnQgMTAwXzAwMAoJYXBwX2dsb2JhbF9wdXQKCXJldHN1YgoKYWJpX3JvdXRlX3NldFNpZ1ZlcmlmaWNhdGlvbkFkZHJlc3M6Cgl0eG4gT25Db21wbGV0aW9uCglpbnQgTm9PcAoJPT0KCXR4biBBcHBsaWNhdGlvbklECglpbnQgMAoJIT0KCSYmCglhc3NlcnQKCgkvLyBubyBkdXBuIG5lZWRlZAoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQoJY2FsbHN1YiBzZXRTaWdWZXJpZmljYXRpb25BZGRyZXNzCglpbnQgMQoJcmV0dXJuCgpzZXRTaWdWZXJpZmljYXRpb25BZGRyZXNzOgoJcHJvdG8gMSAwCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjU0CgkvLyBhc3NlcnQodGhpcy50eG4uc2VuZGVyID09PSB0aGlzLmFwcC5jcmVhdG9yKQoJdHhuIFNlbmRlcgoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQ3JlYXRvcgoJYXNzZXJ0Cgk9PQoJYXNzZXJ0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjU1CgkvLyBhc3NlcnQoIXRoaXMuc2lnVmVyaWZpY2F0aW9uQWRkcmVzcy5leGlzdHMoKSkKCXR4bmEgQXBwbGljYXRpb25zIDAKCWJ5dGUgInNpZ1ZlcmlmaWNhdGlvbkFkZHJlc3MiCglhcHBfZ2xvYmFsX2dldF9leAoJc3dhcAoJcG9wCgkhCglhc3NlcnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NTYKCS8vIHRoaXMuc2lnVmVyaWZpY2F0aW9uQWRkcmVzcy5zZXQobHNpZykKCWJ5dGUgInNpZ1ZlcmlmaWNhdGlvbkFkZHJlc3MiCglmcmFtZV9kaWcgLTEgLy8gbHNpZzogYWRkcmVzcwoJYXBwX2dsb2JhbF9wdXQKCXJldHN1YgoKYWJpX3JvdXRlX3VwZGF0ZUFzc2V0TUJSOgoJdHhuIE9uQ29tcGxldGlvbgoJaW50IE5vT3AKCT09Cgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCSE9CgkmJgoJYXNzZXJ0CglieXRlIDB4OyBkdXAKCXR4bmEgQXBwbGljYXRpb25BcmdzIDEKCWJ0b2kKCXR4bmFzIEFzc2V0cwoJY2FsbHN1YiB1cGRhdGVBc3NldE1CUgoJaW50IDEKCXJldHVybgoKdXBkYXRlQXNzZXRNQlI6Cglwcm90byAzIDAKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NjYKCS8vIHByZU1iciA9IHRoaXMuYXBwLmFkZHJlc3MubWluQmFsYW5jZQoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJZnJhbWVfYnVyeSAtMiAvLyBwcmVNYnI6IHVpbnQ2NAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo2OAoJLy8gc2VuZEFzc2V0VHJhbnNmZXIoewoJaXR4bl9iZWdpbgoJaW50IGF4ZmVyCglpdHhuX2ZpZWxkIFR5cGVFbnVtCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjY5CgkvLyBhc3NldFJlY2VpdmVyOiB0aGlzLmFwcC5hZGRyZXNzCgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCWl0eG5fZmllbGQgQXNzZXRSZWNlaXZlcgoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo3MAoJLy8geGZlckFzc2V0OiBhc3NldAoJZnJhbWVfZGlnIC0xIC8vIGFzc2V0OiBhc3NldAoJaXR4bl9maWVsZCBYZmVyQXNzZXQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NzEKCS8vIGFzc2V0QW1vdW50OiAwCglpbnQgMAoJaXR4bl9maWVsZCBBc3NldEFtb3VudAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo3MgoJLy8gZmVlOiAwCglpbnQgMAoJaXR4bl9maWVsZCBGZWUKCWl0eG5fc3VibWl0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjc1CgkvLyBtYnJEZWx0YSA9IHByZU1iciAtIHRoaXMuYXBwLmFkZHJlc3MubWluQmFsYW5jZQoJZnJhbWVfZGlnIC0yIC8vIHByZU1icjogdWludDY0Cgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCWFjY3RfcGFyYW1zX2dldCBBY2N0TWluQmFsYW5jZQoJYXNzZXJ0CgktCglmcmFtZV9idXJ5IC0zIC8vIG1ickRlbHRhOiB1aW50NjQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NzcKCS8vIGFzc2VydChtYnJEZWx0YSAhPT0gdGhpcy5hc3NldE1CUi5nZXQoKSkKCWZyYW1lX2RpZyAtMyAvLyBtYnJEZWx0YTogdWludDY0CglieXRlICJhc3NldE1CUiIKCWFwcF9nbG9iYWxfZ2V0CgkhPQoJYXNzZXJ0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjc4CgkvLyB0aGlzLmFzc2V0TUJSLnNldChtYnJEZWx0YSkKCWJ5dGUgImFzc2V0TUJSIgoJZnJhbWVfZGlnIC0zIC8vIG1ickRlbHRhOiB1aW50NjQKCWFwcF9nbG9iYWxfcHV0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjgwCgkvLyBzZW5kQXNzZXRUcmFuc2Zlcih7CglpdHhuX2JlZ2luCglpbnQgYXhmZXIKCWl0eG5fZmllbGQgVHlwZUVudW0KCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6ODEKCS8vIGFzc2V0UmVjZWl2ZXI6IHRoaXMuYXBwLmFkZHJlc3MKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJaXR4bl9maWVsZCBBc3NldFJlY2VpdmVyCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjgyCgkvLyB4ZmVyQXNzZXQ6IGFzc2V0CglmcmFtZV9kaWcgLTEgLy8gYXNzZXQ6IGFzc2V0CglpdHhuX2ZpZWxkIFhmZXJBc3NldAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo4MwoJLy8gYXNzZXRBbW91bnQ6IDAKCWludCAwCglpdHhuX2ZpZWxkIEFzc2V0QW1vdW50CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjg0CgkvLyBmZWU6IDAKCWludCAwCglpdHhuX2ZpZWxkIEZlZQoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo4NQoJLy8gYXNzZXRDbG9zZVRvOiB0aGlzLmFwcC5hZGRyZXNzCgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCWl0eG5fZmllbGQgQXNzZXRDbG9zZVRvCglpdHhuX3N1Ym1pdAoJcmV0c3ViCgphYmlfcm91dGVfc2V0T3Blbk9wdEluU2lnbmF0dXJlOgoJdHhuIE9uQ29tcGxldGlvbgoJaW50IE5vT3AKCT09Cgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCSE9CgkmJgoJYXNzZXJ0CgoJLy8gbm8gZHVwbiBuZWVkZWQKCXR4biBHcm91cEluZGV4CglpbnQgMQoJLQoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQoJY2FsbHN1YiBzZXRPcGVuT3B0SW5TaWduYXR1cmUKCWludCAxCglyZXR1cm4KCnNldE9wZW5PcHRJblNpZ25hdHVyZToKCXByb3RvIDMgMAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxMDAKCS8vIGFzc2VydCh2ZXJpZmllci5zZW5kZXIgPT09IHRoaXMuc2lnVmVyaWZpY2F0aW9uQWRkcmVzcy5nZXQoKSkKCWZyYW1lX2RpZyAtMyAvLyB2ZXJpZmllcjogdHhuCglndHhucyBTZW5kZXIKCWJ5dGUgInNpZ1ZlcmlmaWNhdGlvbkFkZHJlc3MiCglhcHBfZ2xvYmFsX2dldAoJPT0KCWFzc2VydAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxMDIKCS8vIHRoaXMub3Blbk9wdEluU2lnbmF0dXJlcy5zZXQoc2lnbmVyLCBzaWcpCglmcmFtZV9kaWcgLTIgLy8gc2lnbmVyOiBhZGRyZXNzCglmcmFtZV9kaWcgLTEgLy8gc2lnOiBieXRlWzY0XQoJYm94X3B1dAoJcmV0c3ViCgphYmlfcm91dGVfb3Blbk9wdEluOgoJdHhuIE9uQ29tcGxldGlvbgoJaW50IE5vT3AKCT09Cgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCSE9CgkmJgoJYXNzZXJ0CgoJLy8gbm8gZHVwbiBuZWVkZWQKCXR4biBHcm91cEluZGV4CglpbnQgMQoJLQoJdHhuIEdyb3VwSW5kZXgKCWludCAyCgktCgljYWxsc3ViIG9wZW5PcHRJbgoJaW50IDEKCXJldHVybgoKb3Blbk9wdEluOgoJcHJvdG8gMiAwCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjExNAoJLy8gYXNzZXJ0KG9wdEluLmFzc2V0UmVjZWl2ZXIgPT09IG1iclBheW1lbnQucmVjZWl2ZXIpCglmcmFtZV9kaWcgLTIgLy8gb3B0SW46IGF4ZmVyCglndHhucyBBc3NldFJlY2VpdmVyCglmcmFtZV9kaWcgLTEgLy8gbWJyUGF5bWVudDogcGF5CglndHhucyBSZWNlaXZlcgoJPT0KCWFzc2VydAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxMTUKCS8vIGFzc2VydChtYnJQYXltZW50LmFtb3VudCA+PSB0aGlzLmFzc2V0TUJSLmdldCgpKQoJZnJhbWVfZGlnIC0xIC8vIG1iclBheW1lbnQ6IHBheQoJZ3R4bnMgQW1vdW50CglieXRlICJhc3NldE1CUiIKCWFwcF9nbG9iYWxfZ2V0Cgk+PQoJYXNzZXJ0CgoJLy8gaWYwX2NvbmRpdGlvbgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjExOAoJLy8gdGhpcy5vcGVuT3B0SW5FbmRUaW1lcy5leGlzdHMob3B0SW4uYXNzZXRSZWNlaXZlcikKCWJ5dGUgImUtIgoJZnJhbWVfZGlnIC0yIC8vIG9wdEluOiBheGZlcgoJZ3R4bnMgQXNzZXRSZWNlaXZlcgoJY29uY2F0Cglib3hfbGVuCglzd2FwCglwb3AKCWJ6IGlmMF9lbmQKCgkvLyBpZjBfY29uc2VxdWVudAoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjExOQoJLy8gYXNzZXJ0KHRoaXMub3Blbk9wdEluRW5kVGltZXMuZ2V0KG9wdEluLmFzc2V0UmVjZWl2ZXIpID4gZ2xvYmFscy5sYXRlc3RUaW1lc3RhbXApCglieXRlICJlLSIKCWZyYW1lX2RpZyAtMiAvLyBvcHRJbjogYXhmZXIKCWd0eG5zIEFzc2V0UmVjZWl2ZXIKCWNvbmNhdAoJYm94X2dldAoJYXNzZXJ0CglidG9pCglnbG9iYWwgTGF0ZXN0VGltZXN0YW1wCgk+Cglhc3NlcnQKCmlmMF9lbmQ6CglyZXRzdWIKCmFiaV9yb3V0ZV9zZXRPcGVuT3B0SW5FbmRUaW1lOgoJdHhuIE9uQ29tcGxldGlvbgoJaW50IE5vT3AKCT09Cgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCSE9CgkmJgoJYXNzZXJ0CgoJLy8gbm8gZHVwbiBuZWVkZWQKCXR4bmEgQXBwbGljYXRpb25BcmdzIDEKCWJ0b2kKCWNhbGxzdWIgc2V0T3Blbk9wdEluRW5kVGltZQoJaW50IDEKCXJldHVybgoKc2V0T3Blbk9wdEluRW5kVGltZToKCXByb3RvIDEgMAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxMzAKCS8vIHRoaXMub3Blbk9wdEluRW5kVGltZXMuc2V0KHRoaXMudHhuLnNlbmRlciwgdGltZXN0YW1wKQoJYnl0ZSAiZS0iCgl0eG4gU2VuZGVyCgljb25jYXQKCWZyYW1lX2RpZyAtMSAvLyB0aW1lc3RhbXA6IHVpbnQ2NAoJaXRvYgoJYm94X3B1dAoJcmV0c3ViCgphYmlfcm91dGVfc2V0QWRkcmVzc09wdEluU2lnbmF0dXJlOgoJdHhuIE9uQ29tcGxldGlvbgoJaW50IE5vT3AKCT09Cgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCSE9CgkmJgoJYXNzZXJ0CgoJLy8gbm8gZHVwbiBuZWVkZWQKCXR4biBHcm91cEluZGV4CglpbnQgMQoJLQoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQoJY2FsbHN1YiBzZXRBZGRyZXNzT3B0SW5TaWduYXR1cmUKCWludCAxCglyZXR1cm4KCnNldEFkZHJlc3NPcHRJblNpZ25hdHVyZToKCXByb3RvIDQgMAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxNDgKCS8vIGFzc2VydCh2ZXJpZmllci5zZW5kZXIgPT09IHRoaXMuc2lnVmVyaWZpY2F0aW9uQWRkcmVzcy5nZXQoKSkKCWZyYW1lX2RpZyAtNCAvLyB2ZXJpZmllcjogdHhuCglndHhucyBTZW5kZXIKCWJ5dGUgInNpZ1ZlcmlmaWNhdGlvbkFkZHJlc3MiCglhcHBfZ2xvYmFsX2dldAoJPT0KCWFzc2VydAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxNTAKCS8vIHRoaXMuYWRkcmVzc09wdEluU2lnbmF0dXJlcy5zZXQoCglmcmFtZV9kaWcgLTIgLy8gc2lnbmVyOiBhZGRyZXNzCglmcmFtZV9kaWcgLTMgLy8gYWxsb3dlZEFkZHJlc3M6IGFkZHJlc3MKCWNvbmNhdAoJZnJhbWVfZGlnIC0xIC8vIHNpZzogYnl0ZVs2NF0KCWJveF9wdXQKCXJldHN1YgoKYWJpX3JvdXRlX2FkZHJlc3NPcHRJbjoKCXR4biBPbkNvbXBsZXRpb24KCWludCBOb09wCgk9PQoJdHhuIEFwcGxpY2F0aW9uSUQKCWludCAwCgkhPQoJJiYKCWFzc2VydAoJYnl0ZSAweAoJdHhuIEdyb3VwSW5kZXgKCWludCAxCgktCgl0eG4gR3JvdXBJbmRleAoJaW50IDIKCS0KCWNhbGxzdWIgYWRkcmVzc09wdEluCglpbnQgMQoJcmV0dXJuCgphZGRyZXNzT3B0SW46Cglwcm90byAzIDAKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MTY1CgkvLyBhc3NlcnQob3B0SW4uYXNzZXRSZWNlaXZlciA9PT0gbWJyUGF5bWVudC5yZWNlaXZlcikKCWZyYW1lX2RpZyAtMiAvLyBvcHRJbjogYXhmZXIKCWd0eG5zIEFzc2V0UmVjZWl2ZXIKCWZyYW1lX2RpZyAtMSAvLyBtYnJQYXltZW50OiBwYXkKCWd0eG5zIFJlY2VpdmVyCgk9PQoJYXNzZXJ0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjE2NgoJLy8gYXNzZXJ0KG1iclBheW1lbnQuYW1vdW50ID49IHRoaXMuYXNzZXRNQlIuZ2V0KCkpCglmcmFtZV9kaWcgLTEgLy8gbWJyUGF5bWVudDogcGF5CglndHhucyBBbW91bnQKCWJ5dGUgImFzc2V0TUJSIgoJYXBwX2dsb2JhbF9nZXQKCT49Cglhc3NlcnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MTY4CgkvLyBoYXNoID0gdGhpcy5nZXRTZW5kZXJSZWNlaXZlckhhc2godGhpcy50eG4uc2VuZGVyLCBvcHRJbi5hc3NldFJlY2VpdmVyKQoJLy8gbm8gZHVwbiBuZWVkZWQKCWZyYW1lX2RpZyAtMiAvLyBvcHRJbjogYXhmZXIKCWd0eG5zIEFzc2V0UmVjZWl2ZXIKCXR4biBTZW5kZXIKCWNhbGxzdWIgZ2V0U2VuZGVyUmVjZWl2ZXJIYXNoCglmcmFtZV9idXJ5IC0zIC8vIGhhc2g6IGJ5dGVbMzJdCgoJLy8gaWYxX2NvbmRpdGlvbgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjE3MQoJLy8gdGhpcy5hZGRyZXNzT3B0SW5FbmRUaW1lcy5leGlzdHMoaGFzaCkKCWJ5dGUgImUtIgoJZnJhbWVfZGlnIC0zIC8vIGhhc2g6IGJ5dGVbMzJdCgljb25jYXQKCWJveF9sZW4KCXN3YXAKCXBvcAoJYnogaWYxX2VuZAoKCS8vIGlmMV9jb25zZXF1ZW50CgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MTcyCgkvLyBhc3NlcnQodGhpcy5hZGRyZXNzT3B0SW5FbmRUaW1lcy5nZXQoaGFzaCkgPiBnbG9iYWxzLmxhdGVzdFRpbWVzdGFtcCkKCWJ5dGUgImUtIgoJZnJhbWVfZGlnIC0zIC8vIGhhc2g6IGJ5dGVbMzJdCgljb25jYXQKCWJveF9nZXQKCWFzc2VydAoJYnRvaQoJZ2xvYmFsIExhdGVzdFRpbWVzdGFtcAoJPgoJYXNzZXJ0CgppZjFfZW5kOgoJcmV0c3ViCgphYmlfcm91dGVfc2V0QWRkcmVzc09wdEluRW5kVGltZToKCXR4biBPbkNvbXBsZXRpb24KCWludCBOb09wCgk9PQoJdHhuIEFwcGxpY2F0aW9uSUQKCWludCAwCgkhPQoJJiYKCWFzc2VydAoJYnl0ZSAweAoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQoJYnRvaQoJY2FsbHN1YiBzZXRBZGRyZXNzT3B0SW5FbmRUaW1lCglpbnQgMQoJcmV0dXJuCgpzZXRBZGRyZXNzT3B0SW5FbmRUaW1lOgoJcHJvdG8gMyAwCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjE4NAoJLy8gaGFzaCA9IHRoaXMuZ2V0U2VuZGVyUmVjZWl2ZXJIYXNoKGFsbG93ZWRBZGRyZXNzLCB0aGlzLnR4bi5zZW5kZXIpCgkvLyBubyBkdXBuIG5lZWRlZAoJdHhuIFNlbmRlcgoJZnJhbWVfZGlnIC0yIC8vIGFsbG93ZWRBZGRyZXNzOiBhZGRyZXNzCgljYWxsc3ViIGdldFNlbmRlclJlY2VpdmVySGFzaAoJZnJhbWVfYnVyeSAtMyAvLyBoYXNoOiBieXRlWzMyXQoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxODYKCS8vIHRoaXMuYWRkcmVzc09wdEluRW5kVGltZXMuc2V0KGhhc2gsIHRpbWVzdGFtcCkKCWJ5dGUgImUtIgoJZnJhbWVfZGlnIC0zIC8vIGhhc2g6IGJ5dGVbMzJdCgljb25jYXQKCWZyYW1lX2RpZyAtMSAvLyB0aW1lc3RhbXA6IHVpbnQ2NAoJaXRvYgoJYm94X3B1dAoJcmV0c3ViCgptYWluOgoJdHhuIE51bUFwcEFyZ3MKCWJueiByb3V0ZV9hYmkKCXR4biBBcHBsaWNhdGlvbklECglpbnQgMAoJPT0KCWJueiBiYXJlX3JvdXRlX2NyZWF0ZQoKcm91dGVfYWJpOgoJbWV0aG9kICJzZXRTaWdWZXJpZmljYXRpb25BZGRyZXNzKGFkZHJlc3Mpdm9pZCIKCW1ldGhvZCAidXBkYXRlQXNzZXRNQlIoYXNzZXQpdm9pZCIKCW1ldGhvZCAic2V0T3Blbk9wdEluU2lnbmF0dXJlKGJ5dGVbNjRdLGFkZHJlc3MsdHhuKXZvaWQiCgltZXRob2QgIm9wZW5PcHRJbihwYXksYXhmZXIpdm9pZCIKCW1ldGhvZCAic2V0T3Blbk9wdEluRW5kVGltZSh1aW50NjQpdm9pZCIKCW1ldGhvZCAic2V0QWRkcmVzc09wdEluU2lnbmF0dXJlKGJ5dGVbNjRdLGFkZHJlc3MsYWRkcmVzcyx0eG4pdm9pZCIKCW1ldGhvZCAiYWRkcmVzc09wdEluKHBheSxheGZlcil2b2lkIgoJbWV0aG9kICJzZXRBZGRyZXNzT3B0SW5FbmRUaW1lKHVpbnQ2NCxhZGRyZXNzKXZvaWQiCgl0eG5hIEFwcGxpY2F0aW9uQXJncyAwCgltYXRjaCBhYmlfcm91dGVfc2V0U2lnVmVyaWZpY2F0aW9uQWRkcmVzcyBhYmlfcm91dGVfdXBkYXRlQXNzZXRNQlIgYWJpX3JvdXRlX3NldE9wZW5PcHRJblNpZ25hdHVyZSBhYmlfcm91dGVfb3Blbk9wdEluIGFiaV9yb3V0ZV9zZXRPcGVuT3B0SW5FbmRUaW1lIGFiaV9yb3V0ZV9zZXRBZGRyZXNzT3B0SW5TaWduYXR1cmUgYWJpX3JvdXRlX2FkZHJlc3NPcHRJbiBhYmlfcm91dGVfc2V0QWRkcmVzc09wdEluRW5kVGltZQoJZXJy",
+    "approval": "I3ByYWdtYSB2ZXJzaW9uIDgKCWIgbWFpbgoKYmFyZV9yb3V0ZV9jcmVhdGU6Cgl0eG4gT25Db21wbGV0aW9uCglpbnQgTm9PcAoJPT0KCXR4biBBcHBsaWNhdGlvbklECglpbnQgMAoJPT0KCSYmCglhc3NlcnQKCgkvLyBubyBkdXBuIG5lZWRlZAoJY2FsbHN1YiBjcmVhdGUKCWludCAxCglyZXR1cm4KCmNyZWF0ZToKCXByb3RvIDAgMAoKCS8vIFRPRE86IE9uY2Ugd2UgaGF2ZSBnbG9iYWwgZmllbGQgZm9yIGFzc2V0IE1CUiwgdGhpcyBjYW4gYmUgcmVtb3ZlZAoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjE4CgkvLyB0aGlzLmFzc2V0TUJSLnNldCgxMDBfMDAwKQoJYnl0ZSAiYXNzZXRNQlIiCglpbnQgMTAwXzAwMAoJYXBwX2dsb2JhbF9wdXQKCXJldHN1YgoKYWJpX3JvdXRlX3VwZGF0ZUFzc2V0TUJSOgoJdHhuIE9uQ29tcGxldGlvbgoJaW50IE5vT3AKCT09Cgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCSE9CgkmJgoJYXNzZXJ0CglieXRlIDB4OyBkdXAKCXR4bmEgQXBwbGljYXRpb25BcmdzIDEKCWJ0b2kKCXR4bmFzIEFzc2V0cwoJY2FsbHN1YiB1cGRhdGVBc3NldE1CUgoJaW50IDEKCXJldHVybgoKdXBkYXRlQXNzZXRNQlI6Cglwcm90byAzIDAKCgkvLyBUT0RPOiBSZXBsYWNlIHdpdGggZ2xvYmFsIGZpZWxkIGZvciBnZXR0aW5nIGFzc2V0IE1CUgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjI5CgkvLyBwcmVNYnIgPSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RNaW5CYWxhbmNlCglhc3NlcnQKCWZyYW1lX2J1cnkgLTIgLy8gcHJlTWJyOiB1aW50NjQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MzEKCS8vIHNlbmRBc3NldFRyYW5zZmVyKHsKCWl0eG5fYmVnaW4KCWludCBheGZlcgoJaXR4bl9maWVsZCBUeXBlRW51bQoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czozMgoJLy8gYXNzZXRSZWNlaXZlcjogdGhpcy5hcHAuYWRkcmVzcwoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglpdHhuX2ZpZWxkIEFzc2V0UmVjZWl2ZXIKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MzMKCS8vIHhmZXJBc3NldDogYXNzZXQKCWZyYW1lX2RpZyAtMSAvLyBhc3NldDogYXNzZXQKCWl0eG5fZmllbGQgWGZlckFzc2V0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjM0CgkvLyBhc3NldEFtb3VudDogMAoJaW50IDAKCWl0eG5fZmllbGQgQXNzZXRBbW91bnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MzUKCS8vIGZlZTogMAoJaW50IDAKCWl0eG5fZmllbGQgRmVlCglpdHhuX3N1Ym1pdAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czozOAoJLy8gbWJyRGVsdGEgPSBwcmVNYnIgLSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UKCWZyYW1lX2RpZyAtMiAvLyBwcmVNYnI6IHVpbnQ2NAoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJLQoJZnJhbWVfYnVyeSAtMyAvLyBtYnJEZWx0YTogdWludDY0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjQwCgkvLyBhc3NlcnQobWJyRGVsdGEgIT09IHRoaXMuYXNzZXRNQlIuZ2V0KCkpCglmcmFtZV9kaWcgLTMgLy8gbWJyRGVsdGE6IHVpbnQ2NAoJYnl0ZSAiYXNzZXRNQlIiCglhcHBfZ2xvYmFsX2dldAoJIT0KCWFzc2VydAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo0MQoJLy8gdGhpcy5hc3NldE1CUi5zZXQobWJyRGVsdGEpCglieXRlICJhc3NldE1CUiIKCWZyYW1lX2RpZyAtMyAvLyBtYnJEZWx0YTogdWludDY0CglhcHBfZ2xvYmFsX3B1dAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo0MwoJLy8gc2VuZEFzc2V0VHJhbnNmZXIoewoJaXR4bl9iZWdpbgoJaW50IGF4ZmVyCglpdHhuX2ZpZWxkIFR5cGVFbnVtCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjQ0CgkvLyBhc3NldFJlY2VpdmVyOiB0aGlzLmFwcC5hZGRyZXNzCgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCWl0eG5fZmllbGQgQXNzZXRSZWNlaXZlcgoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo0NQoJLy8geGZlckFzc2V0OiBhc3NldAoJZnJhbWVfZGlnIC0xIC8vIGFzc2V0OiBhc3NldAoJaXR4bl9maWVsZCBYZmVyQXNzZXQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NDYKCS8vIGFzc2V0QW1vdW50OiAwCglpbnQgMAoJaXR4bl9maWVsZCBBc3NldEFtb3VudAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo0NwoJLy8gZmVlOiAwCglpbnQgMAoJaXR4bl9maWVsZCBGZWUKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NDgKCS8vIGFzc2V0Q2xvc2VUbzogdGhpcy5hcHAuYWRkcmVzcwoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglpdHhuX2ZpZWxkIEFzc2V0Q2xvc2VUbwoJaXR4bl9zdWJtaXQKCXJldHN1YgoKYWJpX3JvdXRlX3NldFNpZ25hdHVyZToKCXR4biBPbkNvbXBsZXRpb24KCWludCBOb09wCgk9PQoJdHhuIEFwcGxpY2F0aW9uSUQKCWludCAwCgkhPQoJJiYKCWFzc2VydAoJYnl0ZSAweDsgZHVwCgl0eG4gR3JvdXBJbmRleAoJaW50IDEKCS0KCXR4bmEgQXBwbGljYXRpb25BcmdzIDEKCWNhbGxzdWIgc2V0U2lnbmF0dXJlCglpbnQgMQoJcmV0dXJuCgpzZXRTaWduYXR1cmU6Cglwcm90byA0IDAKCgkvLyBDYWxjdWxhdGUgdGhlIGF1dGggYWRkcmVzcyBmb3IgdGhlIHNlbmRlcgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjYxCgkvLyBhdXRoQWRkciA9IHRoaXMudHhuLnNlbmRlci5hdXRoQWRkcgoJdHhuIFNlbmRlcgoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RBdXRoQWRkcgoJYXNzZXJ0CglmcmFtZV9idXJ5IC0zIC8vIGF1dGhBZGRyOiBhZGRyZXNzCgoJLy8gaWYwX2NvbmRpdGlvbgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjYyCgkvLyBhdXRoQWRkciA9PT0gZ2xvYmFscy56ZXJvQWRkcmVzcwoJZnJhbWVfZGlnIC0zIC8vIGF1dGhBZGRyOiBhZGRyZXNzCglnbG9iYWwgWmVyb0FkZHJlc3MKCT09CglieiBpZjBfZW5kCgoJLy8gaWYwX2NvbnNlcXVlbnQKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo2MgoJLy8gYXV0aEFkZHIgPSB0aGlzLnR4bi5zZW5kZXIKCXR4biBTZW5kZXIKCWZyYW1lX2J1cnkgLTMgLy8gYXV0aEFkZHI6IGFkZHJlc3MKCmlmMF9lbmQ6CgkvLyBSZWNvcmQgTUJSIGJlZm9yZSBib3hfcHV0IHRvIGxhdGVyIGRldGVybWluZSB0aGUgTUJSIGRlbHRhCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NjUKCS8vIHByZU1CUiA9IHRoaXMuYXBwLmFkZHJlc3MubWluQmFsYW5jZQoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJZnJhbWVfYnVyeSAtNCAvLyBwcmVNQlI6IHVpbnQ2NAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo2NgoJLy8gdGhpcy5zaWduYXR1cmVzLnNldChhdXRoQWRkciwgc2lnKQoJZnJhbWVfZGlnIC0zIC8vIGF1dGhBZGRyOiBhZGRyZXNzCglmcmFtZV9kaWcgLTEgLy8gc2lnOiBieXRlWzY0XQoJYm94X3B1dAoKCS8vIFZlcmlmeSBib3ggTUJSIHBheW1lbnQKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo2OQoJLy8gYXNzZXJ0KGJveE1CUlBheW1lbnQucmVjZWl2ZXIgPT09IHRoaXMuYXBwLmFkZHJlc3MpCglmcmFtZV9kaWcgLTIgLy8gYm94TUJSUGF5bWVudDogcGF5CglndHhucyBSZWNlaXZlcgoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0Cgk9PQoJYXNzZXJ0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjcwCgkvLyBhc3NlcnQoYm94TUJSUGF5bWVudC5hbW91bnQgPj0gdGhpcy5hcHAuYWRkcmVzcy5taW5CYWxhbmNlIC0gcHJlTUJSKQoJZnJhbWVfZGlnIC0yIC8vIGJveE1CUlBheW1lbnQ6IHBheQoJZ3R4bnMgQW1vdW50Cgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCWFjY3RfcGFyYW1zX2dldCBBY2N0TWluQmFsYW5jZQoJYXNzZXJ0CglmcmFtZV9kaWcgLTQgLy8gcHJlTUJSOiB1aW50NjQKCS0KCT49Cglhc3NlcnQKCXJldHN1YgoKYWJpX3JvdXRlX2RlbGVnYXRlZE9wdEluOgoJdHhuIE9uQ29tcGxldGlvbgoJaW50IE5vT3AKCT09Cgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCSE9CgkmJgoJYXNzZXJ0CgoJLy8gbm8gZHVwbiBuZWVkZWQKCXR4biBHcm91cEluZGV4CglpbnQgMQoJLQoJdHhuIEdyb3VwSW5kZXgKCWludCAyCgktCgljYWxsc3ViIGRlbGVnYXRlZE9wdEluCglpbnQgMQoJcmV0dXJuCgpkZWxlZ2F0ZWRPcHRJbjoKCXByb3RvIDIgMAoKCS8vIFZlcmlmeSBhc3NldCBtYnIgcGF5bWVudAoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjgyCgkvLyBhc3NlcnQob3B0SW4uYXNzZXRSZWNlaXZlciA9PT0gbWJyUGF5bWVudC5yZWNlaXZlcikKCWZyYW1lX2RpZyAtMiAvLyBvcHRJbjogYXhmZXIKCWd0eG5zIEFzc2V0UmVjZWl2ZXIKCWZyYW1lX2RpZyAtMSAvLyBtYnJQYXltZW50OiBwYXkKCWd0eG5zIFJlY2VpdmVyCgk9PQoJYXNzZXJ0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjgzCgkvLyBhc3NlcnQobWJyUGF5bWVudC5hbW91bnQgPj0gdGhpcy5hc3NldE1CUi5nZXQoKSkKCWZyYW1lX2RpZyAtMSAvLyBtYnJQYXltZW50OiBwYXkKCWd0eG5zIEFtb3VudAoJYnl0ZSAiYXNzZXRNQlIiCglhcHBfZ2xvYmFsX2dldAoJPj0KCWFzc2VydAoKCS8vIFZlcmlmeSB0aGF0IHRoZSBzaWduYXR1cmUgaXMgcHJlc2VudAoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjg2CgkvLyBhc3NlcnQodGhpcy5zaWduYXR1cmVzLmV4aXN0cyhvcHRJbi5zZW5kZXIpKQoJZnJhbWVfZGlnIC0yIC8vIG9wdEluOiBheGZlcgoJZ3R4bnMgU2VuZGVyCglib3hfbGVuCglzd2FwCglwb3AKCWFzc2VydAoJcmV0c3ViCgphYmlfcm91dGVfdW5zZXRTaWduYXR1cmU6Cgl0eG4gT25Db21wbGV0aW9uCglpbnQgTm9PcAoJPT0KCXR4biBBcHBsaWNhdGlvbklECglpbnQgMAoJIT0KCSYmCglhc3NlcnQKCWJ5dGUgMHg7IGR1cAoJY2FsbHN1YiB1bnNldFNpZ25hdHVyZQoJaW50IDEKCXJldHVybgoKdW5zZXRTaWduYXR1cmU6Cglwcm90byAyIDAKCgkvLyBDYWxjdWxhdGUgdGhlIGF1dGggYWRkcmVzcyBmb3IgdGhlIHNlbmRlcgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjk1CgkvLyBhdXRoQWRkciA9IHRoaXMudHhuLnNlbmRlci5hdXRoQWRkcgoJdHhuIFNlbmRlcgoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RBdXRoQWRkcgoJYXNzZXJ0CglmcmFtZV9idXJ5IC0xIC8vIGF1dGhBZGRyOiBhZGRyZXNzCgoJLy8gaWYxX2NvbmRpdGlvbgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjk2CgkvLyBhdXRoQWRkciA9PT0gZ2xvYmFscy56ZXJvQWRkcmVzcwoJZnJhbWVfZGlnIC0xIC8vIGF1dGhBZGRyOiBhZGRyZXNzCglnbG9iYWwgWmVyb0FkZHJlc3MKCT09CglieiBpZjFfZW5kCgoJLy8gaWYxX2NvbnNlcXVlbnQKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo5NgoJLy8gYXV0aEFkZHIgPSB0aGlzLnR4bi5zZW5kZXIKCXR4biBTZW5kZXIKCWZyYW1lX2J1cnkgLTEgLy8gYXV0aEFkZHI6IGFkZHJlc3MKCmlmMV9lbmQ6CgkvLyBSZWNvcmQgTUJSIGJlZm9yZSBib3hfZGVsIHRvIGxhdGVyIGRldGVybWluZSB0aGUgTUJSIGRlbHRhCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6OTkKCS8vIHByZU1CUiA9IHRoaXMuYXBwLmFkZHJlc3MubWluQmFsYW5jZQoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJZnJhbWVfYnVyeSAtMiAvLyBwcmVNQlI6IHVpbnQ2NAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxMDAKCS8vIHRoaXMuc2lnbmF0dXJlcy5kZWxldGUoYXV0aEFkZHIpCglmcmFtZV9kaWcgLTEgLy8gYXV0aEFkZHI6IGFkZHJlc3MKCWJveF9kZWwKCgkvLyBSZXR1cm4gdGhlIGJveCBNQlIKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxMDMKCS8vIHNlbmRQYXltZW50KHsKCWl0eG5fYmVnaW4KCWludCBwYXkKCWl0eG5fZmllbGQgVHlwZUVudW0KCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MTA0CgkvLyBmZWU6IDAKCWludCAwCglpdHhuX2ZpZWxkIEZlZQoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoxMDUKCS8vIGFtb3VudDogcHJlTUJSIC0gdGhpcy5hcHAuYWRkcmVzcy5taW5CYWxhbmNlCglmcmFtZV9kaWcgLTIgLy8gcHJlTUJSOiB1aW50NjQKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RNaW5CYWxhbmNlCglhc3NlcnQKCS0KCWl0eG5fZmllbGQgQW1vdW50CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjEwNgoJLy8gcmVjZWl2ZXI6IHRoaXMudHhuLnNlbmRlcgoJdHhuIFNlbmRlcgoJaXR4bl9maWVsZCBSZWNlaXZlcgoJaXR4bl9zdWJtaXQKCXJldHN1YgoKbWFpbjoKCXR4biBOdW1BcHBBcmdzCglibnogcm91dGVfYWJpCgl0eG4gQXBwbGljYXRpb25JRAoJaW50IDAKCT09CglibnogYmFyZV9yb3V0ZV9jcmVhdGUKCnJvdXRlX2FiaToKCW1ldGhvZCAidXBkYXRlQXNzZXRNQlIoYXNzZXQpdm9pZCIKCW1ldGhvZCAic2V0U2lnbmF0dXJlKGJ5dGVbNjRdLHBheSl2b2lkIgoJbWV0aG9kICJkZWxlZ2F0ZWRPcHRJbihwYXksYXhmZXIpdm9pZCIKCW1ldGhvZCAidW5zZXRTaWduYXR1cmUoKXZvaWQiCgl0eG5hIEFwcGxpY2F0aW9uQXJncyAwCgltYXRjaCBhYmlfcm91dGVfdXBkYXRlQXNzZXRNQlIgYWJpX3JvdXRlX3NldFNpZ25hdHVyZSBhYmlfcm91dGVfZGVsZWdhdGVkT3B0SW4gYWJpX3JvdXRlX3Vuc2V0U2lnbmF0dXJlCgllcnI=",
     "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50IDEKcmV0dXJu"
   },
   "contract": {
     "name": "DelegatedOptIn",
     "desc": "",
     "methods": [
-      {
-        "name": "setSigVerificationAddress",
-        "args": [
-          {
-            "name": "lsig",
-            "type": "address",
-            "desc": "The address of the verifier lsig"
-          }
-        ],
-        "desc": "Set the address of the verifier lsig. This will only be called once after creation.",
-        "returns": {
-          "type": "void",
-          "desc": ""
-        }
-      },
       {
         "name": "updateAssetMBR",
         "args": [
@@ -138,7 +99,7 @@ export const APP_SPEC: AppSpec = {
         }
       },
       {
-        "name": "setOpenOptInSignature",
+        "name": "setSignature",
         "args": [
           {
             "name": "sig",
@@ -146,14 +107,9 @@ export const APP_SPEC: AppSpec = {
             "desc": "The signature of the lsig"
           },
           {
-            "name": "signer",
-            "type": "address",
-            "desc": "The public key corresponding to the signature"
-          },
-          {
-            "name": "verifier",
-            "type": "txn",
-            "desc": "A txn from the verifier lsig to verify the signature"
+            "name": "boxMBRPayment",
+            "type": "pay",
+            "desc": "Payment to cover the contract MBR for box creation"
           }
         ],
         "desc": "Set the signature of the lsig for the given account",
@@ -163,7 +119,7 @@ export const APP_SPEC: AppSpec = {
         }
       },
       {
-        "name": "openOptIn",
+        "name": "delegatedOptIn",
         "args": [
           {
             "name": "mbrPayment",
@@ -183,85 +139,9 @@ export const APP_SPEC: AppSpec = {
         }
       },
       {
-        "name": "setOpenOptInEndTime",
-        "args": [
-          {
-            "name": "timestamp",
-            "type": "uint64",
-            "desc": "After this time, opt ins will no longer be allowed"
-          }
-        ],
-        "desc": "Set the timestamp until which the account allows opt ins",
-        "returns": {
-          "type": "void",
-          "desc": ""
-        }
-      },
-      {
-        "name": "setAddressOptInSignature",
-        "args": [
-          {
-            "name": "sig",
-            "type": "byte[64]",
-            "desc": "The signature of the lsig"
-          },
-          {
-            "name": "signer",
-            "type": "address",
-            "desc": "The public key corresponding to the signature"
-          },
-          {
-            "name": "allowedAddress",
-            "type": "address",
-            "desc": ""
-          },
-          {
-            "name": "verifier",
-            "type": "txn",
-            "desc": ""
-          }
-        ],
-        "desc": "Set the signature of the lsig for the given account",
-        "returns": {
-          "type": "void",
-          "desc": ""
-        }
-      },
-      {
-        "name": "addressOptIn",
-        "args": [
-          {
-            "name": "mbrPayment",
-            "type": "pay",
-            "desc": "Payment to the receiver that covers the ASA MBR"
-          },
-          {
-            "name": "optIn",
-            "type": "axfer",
-            "desc": "The opt in transaction, presumably from the address opt-in lsig"
-          }
-        ],
-        "desc": "Verifies that the opt in is allowed from the sender",
-        "returns": {
-          "type": "void",
-          "desc": ""
-        }
-      },
-      {
-        "name": "setAddressOptInEndTime",
-        "args": [
-          {
-            "name": "timestamp",
-            "type": "uint64",
-            "desc": "After this time, opt ins will no longer be allowed"
-          },
-          {
-            "name": "allowedAddress",
-            "type": "address",
-            "desc": "The address to set the end time for"
-          }
-        ],
-        "desc": "Set the timestamp until which the account allows opt ins for a specific address",
+        "name": "unsetSignature",
+        "args": [],
+        "desc": "Delete the signature from box storage.This will disable delegated opt-ins and return the box MBR balance",
         "returns": {
           "type": "void",
           "desc": ""
@@ -326,16 +206,6 @@ export type DelegatedOptIn = {
    * Maps method signatures / names to their argument and return types.
    */
   methods:
-    & Record<'setSigVerificationAddress(address)void' | 'setSigVerificationAddress', {
-      argsObj: {
-        /**
-         * The address of the verifier lsig
-         */
-        lsig: string
-      }
-      argsTuple: [lsig: string]
-      returns: void
-    }>
     & Record<'updateAssetMBR(asset)void' | 'updateAssetMBR', {
       argsObj: {
         /**
@@ -346,25 +216,21 @@ export type DelegatedOptIn = {
       argsTuple: [asset: number | bigint]
       returns: void
     }>
-    & Record<'setOpenOptInSignature(byte[64],address,txn)void' | 'setOpenOptInSignature', {
+    & Record<'setSignature(byte[64],pay)void' | 'setSignature', {
       argsObj: {
         /**
          * The signature of the lsig
          */
         sig: Uint8Array
         /**
-         * The public key corresponding to the signature
+         * Payment to cover the contract MBR for box creation
          */
-        signer: string
-        /**
-         * A txn from the verifier lsig to verify the signature
-         */
-        verifier: TransactionToSign | Transaction | Promise<SendTransactionResult>
+        boxMBRPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>
       }
-      argsTuple: [sig: Uint8Array, signer: string, verifier: TransactionToSign | Transaction | Promise<SendTransactionResult>]
+      argsTuple: [sig: Uint8Array, boxMBRPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>]
       returns: void
     }>
-    & Record<'openOptIn(pay,axfer)void' | 'openOptIn', {
+    & Record<'delegatedOptIn(pay,axfer)void' | 'delegatedOptIn', {
       argsObj: {
         /**
          * Payment to the receiver that covers the ASA MBR
@@ -378,58 +244,10 @@ export type DelegatedOptIn = {
       argsTuple: [mbrPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>, optIn: TransactionToSign | Transaction | Promise<SendTransactionResult>]
       returns: void
     }>
-    & Record<'setOpenOptInEndTime(uint64)void' | 'setOpenOptInEndTime', {
+    & Record<'unsetSignature()void' | 'unsetSignature', {
       argsObj: {
-        /**
-         * After this time, opt ins will no longer be allowed
-         */
-        timestamp: bigint | number
       }
-      argsTuple: [timestamp: bigint | number]
-      returns: void
-    }>
-    & Record<'setAddressOptInSignature(byte[64],address,address,txn)void' | 'setAddressOptInSignature', {
-      argsObj: {
-        /**
-         * The signature of the lsig
-         */
-        sig: Uint8Array
-        /**
-         * The public key corresponding to the signature
-         */
-        signer: string
-        allowedAddress: string
-        verifier: TransactionToSign | Transaction | Promise<SendTransactionResult>
-      }
-      argsTuple: [sig: Uint8Array, signer: string, allowedAddress: string, verifier: TransactionToSign | Transaction | Promise<SendTransactionResult>]
-      returns: void
-    }>
-    & Record<'addressOptIn(pay,axfer)void' | 'addressOptIn', {
-      argsObj: {
-        /**
-         * Payment to the receiver that covers the ASA MBR
-         */
-        mbrPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>
-        /**
-         * The opt in transaction, presumably from the address opt-in lsig
-         */
-        optIn: TransactionToSign | Transaction | Promise<SendTransactionResult>
-      }
-      argsTuple: [mbrPayment: TransactionToSign | Transaction | Promise<SendTransactionResult>, optIn: TransactionToSign | Transaction | Promise<SendTransactionResult>]
-      returns: void
-    }>
-    & Record<'setAddressOptInEndTime(uint64,address)void' | 'setAddressOptInEndTime', {
-      argsObj: {
-        /**
-         * After this time, opt ins will no longer be allowed
-         */
-        timestamp: bigint | number
-        /**
-         * The address to set the end time for
-         */
-        allowedAddress: string
-      }
-      argsTuple: [timestamp: bigint | number, allowedAddress: string]
+      argsTuple: []
       returns: void
     }>
   /**
@@ -437,7 +255,6 @@ export type DelegatedOptIn = {
    */
   state: {
     global: {
-      'sigVerificationAddress'?: BinaryState
       'assetMBR'?: IntegerState
     }
   }
@@ -513,22 +330,6 @@ export abstract class DelegatedOptInCallFactory {
   }
 
   /**
-   * Constructs a no op call for the setSigVerificationAddress(address)void ABI method
-   *
-   * Set the address of the verifier lsig. This will only be called once after creation.
-   *
-   * @param args Any args for the contract call
-   * @param params Any additional parameters for the call
-   * @returns A TypedCallParams object for the call
-   */
-  static setSigVerificationAddress(args: MethodArgs<'setSigVerificationAddress(address)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
-    return {
-      method: 'setSigVerificationAddress(address)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.lsig],
-      ...params,
-    }
-  }
-  /**
    * Constructs a no op call for the updateAssetMBR(asset)void ABI method
    *
    * Updates the asset MBR
@@ -545,7 +346,7 @@ export abstract class DelegatedOptInCallFactory {
     }
   }
   /**
-   * Constructs a no op call for the setOpenOptInSignature(byte[64],address,txn)void ABI method
+   * Constructs a no op call for the setSignature(byte[64],pay)void ABI method
    *
    * Set the signature of the lsig for the given account
    *
@@ -553,15 +354,15 @@ export abstract class DelegatedOptInCallFactory {
    * @param params Any additional parameters for the call
    * @returns A TypedCallParams object for the call
    */
-  static setOpenOptInSignature(args: MethodArgs<'setOpenOptInSignature(byte[64],address,txn)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
+  static setSignature(args: MethodArgs<'setSignature(byte[64],pay)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
     return {
-      method: 'setOpenOptInSignature(byte[64],address,txn)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.sig, args.signer, args.verifier],
+      method: 'setSignature(byte[64],pay)void' as const,
+      methodArgs: Array.isArray(args) ? args : [args.sig, args.boxMBRPayment],
       ...params,
     }
   }
   /**
-   * Constructs a no op call for the openOptIn(pay,axfer)void ABI method
+   * Constructs a no op call for the delegatedOptIn(pay,axfer)void ABI method
    *
    * Verifies that the opt in is allowed
    *
@@ -569,74 +370,26 @@ export abstract class DelegatedOptInCallFactory {
    * @param params Any additional parameters for the call
    * @returns A TypedCallParams object for the call
    */
-  static openOptIn(args: MethodArgs<'openOptIn(pay,axfer)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
+  static delegatedOptIn(args: MethodArgs<'delegatedOptIn(pay,axfer)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
     return {
-      method: 'openOptIn(pay,axfer)void' as const,
+      method: 'delegatedOptIn(pay,axfer)void' as const,
       methodArgs: Array.isArray(args) ? args : [args.mbrPayment, args.optIn],
       ...params,
     }
   }
   /**
-   * Constructs a no op call for the setOpenOptInEndTime(uint64)void ABI method
+   * Constructs a no op call for the unsetSignature()void ABI method
    *
-   * Set the timestamp until which the account allows opt ins
-   *
-   * @param args Any args for the contract call
-   * @param params Any additional parameters for the call
-   * @returns A TypedCallParams object for the call
-   */
-  static setOpenOptInEndTime(args: MethodArgs<'setOpenOptInEndTime(uint64)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
-    return {
-      method: 'setOpenOptInEndTime(uint64)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.timestamp],
-      ...params,
-    }
-  }
-  /**
-   * Constructs a no op call for the setAddressOptInSignature(byte[64],address,address,txn)void ABI method
-   *
-   * Set the signature of the lsig for the given account
+   * Delete the signature from box storage.This will disable delegated opt-ins and return the box MBR balance
    *
    * @param args Any args for the contract call
    * @param params Any additional parameters for the call
    * @returns A TypedCallParams object for the call
    */
-  static setAddressOptInSignature(args: MethodArgs<'setAddressOptInSignature(byte[64],address,address,txn)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
+  static unsetSignature(args: MethodArgs<'unsetSignature()void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
     return {
-      method: 'setAddressOptInSignature(byte[64],address,address,txn)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.sig, args.signer, args.allowedAddress, args.verifier],
-      ...params,
-    }
-  }
-  /**
-   * Constructs a no op call for the addressOptIn(pay,axfer)void ABI method
-   *
-   * Verifies that the opt in is allowed from the sender
-   *
-   * @param args Any args for the contract call
-   * @param params Any additional parameters for the call
-   * @returns A TypedCallParams object for the call
-   */
-  static addressOptIn(args: MethodArgs<'addressOptIn(pay,axfer)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
-    return {
-      method: 'addressOptIn(pay,axfer)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.mbrPayment, args.optIn],
-      ...params,
-    }
-  }
-  /**
-   * Constructs a no op call for the setAddressOptInEndTime(uint64,address)void ABI method
-   *
-   * Set the timestamp until which the account allows opt ins for a specific address
-   *
-   * @param args Any args for the contract call
-   * @param params Any additional parameters for the call
-   * @returns A TypedCallParams object for the call
-   */
-  static setAddressOptInEndTime(args: MethodArgs<'setAddressOptInEndTime(uint64,address)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
-    return {
-      method: 'setAddressOptInEndTime(uint64,address)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.timestamp, args.allowedAddress],
+      method: 'unsetSignature()void' as const,
+      methodArgs: Array.isArray(args) ? args : [],
       ...params,
     }
   }
@@ -739,19 +492,6 @@ export class DelegatedOptInClient {
   }
 
   /**
-   * Calls the setSigVerificationAddress(address)void ABI method.
-   *
-   * Set the address of the verifier lsig. This will only be called once after creation.
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The result of the call
-   */
-  public setSigVerificationAddress(args: MethodArgs<'setSigVerificationAddress(address)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.setSigVerificationAddress(args, params))
-  }
-
-  /**
    * Calls the updateAssetMBR(asset)void ABI method.
    *
    * Updates the asset MBR
@@ -765,7 +505,7 @@ export class DelegatedOptInClient {
   }
 
   /**
-   * Calls the setOpenOptInSignature(byte[64],address,txn)void ABI method.
+   * Calls the setSignature(byte[64],pay)void ABI method.
    *
    * Set the signature of the lsig for the given account
    *
@@ -773,12 +513,12 @@ export class DelegatedOptInClient {
    * @param params Any additional parameters for the call
    * @returns The result of the call
    */
-  public setOpenOptInSignature(args: MethodArgs<'setOpenOptInSignature(byte[64],address,txn)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.setOpenOptInSignature(args, params))
+  public setSignature(args: MethodArgs<'setSignature(byte[64],pay)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
+    return this.call(DelegatedOptInCallFactory.setSignature(args, params))
   }
 
   /**
-   * Calls the openOptIn(pay,axfer)void ABI method.
+   * Calls the delegatedOptIn(pay,axfer)void ABI method.
    *
    * Verifies that the opt in is allowed
    *
@@ -786,60 +526,21 @@ export class DelegatedOptInClient {
    * @param params Any additional parameters for the call
    * @returns The result of the call
    */
-  public openOptIn(args: MethodArgs<'openOptIn(pay,axfer)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.openOptIn(args, params))
+  public delegatedOptIn(args: MethodArgs<'delegatedOptIn(pay,axfer)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
+    return this.call(DelegatedOptInCallFactory.delegatedOptIn(args, params))
   }
 
   /**
-   * Calls the setOpenOptInEndTime(uint64)void ABI method.
+   * Calls the unsetSignature()void ABI method.
    *
-   * Set the timestamp until which the account allows opt ins
+   * Delete the signature from box storage.This will disable delegated opt-ins and return the box MBR balance
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The result of the call
    */
-  public setOpenOptInEndTime(args: MethodArgs<'setOpenOptInEndTime(uint64)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.setOpenOptInEndTime(args, params))
-  }
-
-  /**
-   * Calls the setAddressOptInSignature(byte[64],address,address,txn)void ABI method.
-   *
-   * Set the signature of the lsig for the given account
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The result of the call
-   */
-  public setAddressOptInSignature(args: MethodArgs<'setAddressOptInSignature(byte[64],address,address,txn)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.setAddressOptInSignature(args, params))
-  }
-
-  /**
-   * Calls the addressOptIn(pay,axfer)void ABI method.
-   *
-   * Verifies that the opt in is allowed from the sender
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The result of the call
-   */
-  public addressOptIn(args: MethodArgs<'addressOptIn(pay,axfer)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.addressOptIn(args, params))
-  }
-
-  /**
-   * Calls the setAddressOptInEndTime(uint64,address)void ABI method.
-   *
-   * Set the timestamp until which the account allows opt ins for a specific address
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The result of the call
-   */
-  public setAddressOptInEndTime(args: MethodArgs<'setAddressOptInEndTime(uint64,address)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.setAddressOptInEndTime(args, params))
+  public unsetSignature(args: MethodArgs<'unsetSignature()void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
+    return this.call(DelegatedOptInCallFactory.unsetSignature(args, params))
   }
 
   /**
@@ -892,9 +593,6 @@ export class DelegatedOptInClient {
   public async getGlobalState(): Promise<DelegatedOptIn['state']['global']> {
     const state = await this.appClient.getGlobalState()
     return {
-      get sigVerificationAddress() {
-        return DelegatedOptInClient.getBinaryState(state, 'sigVerificationAddress')
-      },
       get assetMBR() {
         return DelegatedOptInClient.getIntegerState(state, 'assetMBR')
       },
@@ -907,43 +605,23 @@ export class DelegatedOptInClient {
     let promiseChain:Promise<unknown> = Promise.resolve()
     const resultMappers: Array<undefined | ((x: any) => any)> = []
     return {
-      setSigVerificationAddress(args: MethodArgs<'setSigVerificationAddress(address)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.setSigVerificationAddress(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
-        resultMappers.push(undefined)
-        return this
-      },
       updateAssetMbr(args: MethodArgs<'updateAssetMBR(asset)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
         promiseChain = promiseChain.then(() => client.updateAssetMbr(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
         resultMappers.push(undefined)
         return this
       },
-      setOpenOptInSignature(args: MethodArgs<'setOpenOptInSignature(byte[64],address,txn)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.setOpenOptInSignature(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
+      setSignature(args: MethodArgs<'setSignature(byte[64],pay)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
+        promiseChain = promiseChain.then(() => client.setSignature(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
         resultMappers.push(undefined)
         return this
       },
-      openOptIn(args: MethodArgs<'openOptIn(pay,axfer)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.openOptIn(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
+      delegatedOptIn(args: MethodArgs<'delegatedOptIn(pay,axfer)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
+        promiseChain = promiseChain.then(() => client.delegatedOptIn(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
         resultMappers.push(undefined)
         return this
       },
-      setOpenOptInEndTime(args: MethodArgs<'setOpenOptInEndTime(uint64)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.setOpenOptInEndTime(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
-        resultMappers.push(undefined)
-        return this
-      },
-      setAddressOptInSignature(args: MethodArgs<'setAddressOptInSignature(byte[64],address,address,txn)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.setAddressOptInSignature(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
-        resultMappers.push(undefined)
-        return this
-      },
-      addressOptIn(args: MethodArgs<'addressOptIn(pay,axfer)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.addressOptIn(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
-        resultMappers.push(undefined)
-        return this
-      },
-      setAddressOptInEndTime(args: MethodArgs<'setAddressOptInEndTime(uint64,address)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.setAddressOptInEndTime(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
+      unsetSignature(args: MethodArgs<'unsetSignature()void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
+        promiseChain = promiseChain.then(() => client.unsetSignature(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
         resultMappers.push(undefined)
         return this
       },
@@ -973,17 +651,6 @@ export class DelegatedOptInClient {
 }
 export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
   /**
-   * Calls the setSigVerificationAddress(address)void ABI method.
-   *
-   * Set the address of the verifier lsig. This will only be called once after creation.
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
-   */
-  setSigVerificationAddress(args: MethodArgs<'setSigVerificationAddress(address)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'setSigVerificationAddress(address)void'>]>
-
-  /**
    * Calls the updateAssetMBR(asset)void ABI method.
    *
    * Updates the asset MBR
@@ -995,7 +662,7 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
   updateAssetMbr(args: MethodArgs<'updateAssetMBR(asset)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'updateAssetMBR(asset)void'>]>
 
   /**
-   * Calls the setOpenOptInSignature(byte[64],address,txn)void ABI method.
+   * Calls the setSignature(byte[64],pay)void ABI method.
    *
    * Set the signature of the lsig for the given account
    *
@@ -1003,10 +670,10 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
    */
-  setOpenOptInSignature(args: MethodArgs<'setOpenOptInSignature(byte[64],address,txn)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'setOpenOptInSignature(byte[64],address,txn)void'>]>
+  setSignature(args: MethodArgs<'setSignature(byte[64],pay)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'setSignature(byte[64],pay)void'>]>
 
   /**
-   * Calls the openOptIn(pay,axfer)void ABI method.
+   * Calls the delegatedOptIn(pay,axfer)void ABI method.
    *
    * Verifies that the opt in is allowed
    *
@@ -1014,51 +681,18 @@ export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
    */
-  openOptIn(args: MethodArgs<'openOptIn(pay,axfer)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'openOptIn(pay,axfer)void'>]>
+  delegatedOptIn(args: MethodArgs<'delegatedOptIn(pay,axfer)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'delegatedOptIn(pay,axfer)void'>]>
 
   /**
-   * Calls the setOpenOptInEndTime(uint64)void ABI method.
+   * Calls the unsetSignature()void ABI method.
    *
-   * Set the timestamp until which the account allows opt ins
+   * Delete the signature from box storage.This will disable delegated opt-ins and return the box MBR balance
    *
    * @param args The arguments for the contract call
    * @param params Any additional parameters for the call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
    */
-  setOpenOptInEndTime(args: MethodArgs<'setOpenOptInEndTime(uint64)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'setOpenOptInEndTime(uint64)void'>]>
-
-  /**
-   * Calls the setAddressOptInSignature(byte[64],address,address,txn)void ABI method.
-   *
-   * Set the signature of the lsig for the given account
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
-   */
-  setAddressOptInSignature(args: MethodArgs<'setAddressOptInSignature(byte[64],address,address,txn)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'setAddressOptInSignature(byte[64],address,address,txn)void'>]>
-
-  /**
-   * Calls the addressOptIn(pay,axfer)void ABI method.
-   *
-   * Verifies that the opt in is allowed from the sender
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
-   */
-  addressOptIn(args: MethodArgs<'addressOptIn(pay,axfer)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'addressOptIn(pay,axfer)void'>]>
-
-  /**
-   * Calls the setAddressOptInEndTime(uint64,address)void ABI method.
-   *
-   * Set the timestamp until which the account allows opt ins for a specific address
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
-   */
-  setAddressOptInEndTime(args: MethodArgs<'setAddressOptInEndTime(uint64,address)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'setAddressOptInEndTime(uint64,address)void'>]>
+  unsetSignature(args: MethodArgs<'unsetSignature()void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'unsetSignature()void'>]>
 
   /**
    * Makes a clear_state call to an existing instance of the DelegatedOptIn smart contract.

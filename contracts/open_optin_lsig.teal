@@ -53,6 +53,6 @@ assert
 // Verify the correct method is being called
 AppCall
 gtxnsa ApplicationArgs 0
-method "openOptIn(pay,axfer)void"
+method "delegatedOptIn(pay,axfer)void"
 ==
 

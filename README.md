@@ -2,7 +2,7 @@
 This ARC contains is an implementation of [ARCX](https://github.com/algorandfoundation/ARCs/pull/229). The goal is to provide users a way to delegate asset opt-ins while having a high degree of control compared to a standalone logic signature without an application. The expectation is that a single instance of this ARC will be deployed on Algorand networks. 
 
 ## Motivation
-[ARCX](https://github.com/algorandfoundation/ARCs/pull/229) provides a standard for delegated asset opt-ins, but there are some UX problems that need to be addressed. First, there needs to be a way to control how long the signature is valid for. Without an application to control this, signing the logic signature program would be irreversible. There also needs to be a standardized way to store and read signatures for a given account so dApps and other users can take advantaged of delegated opt-ins.
+[ARCX](https://github.com/algorandfoundation/ARCs/pull/229) provides a standard for delegated asset opt-ins, but there are some UX problems that need to be addressed. First, there needs to be a way to control whether the lsig is still functionality or not. Without an application to control this, signing the logic signature program would be irreversible without rekeying. There also needs to be a standardized way to store and read signatures for a given account so dApps and other users can take advantaged of delegated opt-ins.
 
 ## Specification
 This is an implementation of [ARCX](https://github.com/algorandfoundation/ARCs/pull/229). There is additional functionality provided by the application in this ARC in the methods of the application.
@@ -11,28 +11,19 @@ For all methods, refer to the [ABI JSON description](./contracts/artifacts/Deleg
 
 ### Signature Storage
 
-`setOpenOptInSignature(byte[64],address,txn)void` and `setAddressOptInSignature(byte[64],address,address,txn)void` are methods for adding signatures to box storage for open opt-ins and address opt-ins, respectively.
+`setSignature(byte[64],address,txn)void` is a method that allows a user to upload their signature to box storage
 
-Both methods utilize [the verifier lsig](./contracts/verifier_lsig.teal) to verify the address being added to box storage matches the address(es) used as the key. This means anyone can query the applications boxes to get the signature for the given address(es) and be certain that it is correct.
-
-### End Times
-
-`setOpenOptInEndTime(uint64)void` and `setAddressOptInEndTime(uint64,address)void` are methods for setting the end time of a signature for open opt-ins and address opt-ins, respectively. An endtime signifies when the delegated logic signature will no longer work. The time corresponds to the epoch time (seconds) returned by `global LatestTimestamp`. End times can be updated at any time to any value.
 
 ### Opt-Ins
 
-`openOptIn(pay,axfer)void` and `addressOptIn(pay,axfer)void` are implementations of the [ARCX](https://github.com/algorandfoundation/ARCs/pull/229) interfaces. They both verify the MBR payment is sent to the account opting in and that it covers the ASA minimum balance requirement, which is stored in global storage. It also verifies the value of `global LatestTimestamp` is less than the set end time for the account opting in.
+`delegatedOptIn(pay,axfer)void` is an implementation of the [ARCX](https://github.com/algorandfoundation/ARCs/pull/229) interfaces. It verifies the MBR payment is sent to the account opting in and that it covers the ASA minimum balance requirement.
 
 ### Storage
 
 | Type | Key | Description |
 | ---- | --- | ----------- |
-| Global | "sigVerificationAddress" | Stores the address of [the verifier lsig](./contracts/verifier_lsig.teal) |
-| Global | "assetMBR" | Stores the ASA MBR |
-| Box | `auth-addr` | Mapping of signer to open opt-in signature |
-| Box |  "e-" + `auth-addr` | Mapping of signer to open opt-in end time |
-| Box | `(signer,sender)` | Mapping of the hash of the signer address plus sender address to address opt-in signature |
-| Box |  "e-" + `sha256(signer,sender)` | Mapping of the hash of the signer address plus sender address to address opt-in end time |
+| Global | "assetMBR" | Stores the ASA MBR. TODO: To be replaced with global field once implemented |
+| Box | `auth-addr` | Mapping of signer to open in signature |
 
 ## Rationale
 Box storage is used to store signatures indefinitely and [the verifier lsig](./contracts/verifier_lsig.teal) ensures the signature is always correct.
@@ -48,25 +39,16 @@ N/A
 Tests written with Jest and algokit for the contract and logic signatures can be seen in [test.ts](./tests/test.ts).
 
 ```
-Delegated Opt In App
+  Delegated Opt In App
     create
-      ✓ creates the app (1427 ms)
-    setSigVerificationAddress
-      ✓ works with valid address (939 ms)
-    setOpenOptInSignature
-      ✓ works with valid signature and lsig (1031 ms)
-    openOptIn
-      ✓ works with valid lsig and method call (973 ms)
-    setOpenOptInEndTime
-      ✓ works with 0xffffffff as the end time (2091 ms)
-      ✓ works with 0 as the end time (1137 ms)
-    setAddressOptInSignature
-      ✓ works with valid signature and lsig (926 ms)
-    addressoptOptIn
-      ✓ works with valid lsig, method call, and sender (914 ms)
-    setAddressOptInEndtime
-      ✓ works with 0xffffffff as the end time (1001 ms)
-      ✓ works with 0 as the end time (1611 ms)
+      ✓ creates the app (884 ms)
+    setSignature
+      ✓ works with valid signature and lsig (785 ms)
+    delegatedOptIn
+      ✓ works with valid lsig and method call (1537 ms)
+    unsetSignature
+      ✓ sends back MBR (813 ms)
+      ○ skipped TODO: doesn't allow opt-ins
 ```
 
 ## Reference Implementation

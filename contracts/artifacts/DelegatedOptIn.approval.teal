@@ -1,17 +1,6 @@
 #pragma version 8
 	b main
 
-getSenderReceiverHash:
-	proto 2 1
-
-	// ./contracts/delegated_optin_app.algo.ts:37
-	// return sha256(concat(sender, receiverOrSigner));
-	frame_dig -1 // sender: address
-	frame_dig -2 // receiverOrSigner: address
-	concat
-	sha256
-	retsub
-
 bare_route_create:
 	txn OnCompletion
 	int NoOp
@@ -30,55 +19,11 @@ bare_route_create:
 create:
 	proto 0 0
 
-	// ./contracts/delegated_optin_app.algo.ts:42
+	// TODO: Once we have global field for asset MBR, this can be removed
+	// ./contracts/delegated_optin_app.algo.ts:18
 	// this.assetMBR.set(100_000)
 	byte "assetMBR"
 	int 100_000
-	app_global_put
-	retsub
-
-abi_route_setSigVerificationAddress:
-	txn OnCompletion
-	int NoOp
-	==
-	txn ApplicationID
-	int 0
-	!=
-	&&
-	assert
-
-	// no dupn needed
-	txna ApplicationArgs 1
-	callsub setSigVerificationAddress
-	int 1
-	return
-
-setSigVerificationAddress:
-	proto 1 0
-
-	// ./contracts/delegated_optin_app.algo.ts:54
-	// assert(this.txn.sender === this.app.creator)
-	txn Sender
-	txna Applications 0
-	app_params_get AppCreator
-	assert
-	==
-	assert
-
-	// ./contracts/delegated_optin_app.algo.ts:55
-	// assert(!this.sigVerificationAddress.exists())
-	txna Applications 0
-	byte "sigVerificationAddress"
-	app_global_get_ex
-	swap
-	pop
-	!
-	assert
-
-	// ./contracts/delegated_optin_app.algo.ts:56
-	// this.sigVerificationAddress.set(lsig)
-	byte "sigVerificationAddress"
-	frame_dig -1 // lsig: address
 	app_global_put
 	retsub
 
@@ -102,7 +47,8 @@ abi_route_updateAssetMBR:
 updateAssetMBR:
 	proto 3 0
 
-	// ./contracts/delegated_optin_app.algo.ts:66
+	// TODO: Replace with global field for getting asset MBR
+	// ./contracts/delegated_optin_app.algo.ts:29
 	// preMbr = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
@@ -111,36 +57,36 @@ updateAssetMBR:
 	assert
 	frame_bury -2 // preMbr: uint64
 
-	// ./contracts/delegated_optin_app.algo.ts:68
+	// ./contracts/delegated_optin_app.algo.ts:31
 	// sendAssetTransfer({
 	itxn_begin
 	int axfer
 	itxn_field TypeEnum
 
-	// ./contracts/delegated_optin_app.algo.ts:69
+	// ./contracts/delegated_optin_app.algo.ts:32
 	// assetReceiver: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field AssetReceiver
 
-	// ./contracts/delegated_optin_app.algo.ts:70
+	// ./contracts/delegated_optin_app.algo.ts:33
 	// xferAsset: asset
 	frame_dig -1 // asset: asset
 	itxn_field XferAsset
 
-	// ./contracts/delegated_optin_app.algo.ts:71
+	// ./contracts/delegated_optin_app.algo.ts:34
 	// assetAmount: 0
 	int 0
 	itxn_field AssetAmount
 
-	// ./contracts/delegated_optin_app.algo.ts:72
+	// ./contracts/delegated_optin_app.algo.ts:35
 	// fee: 0
 	int 0
 	itxn_field Fee
 	itxn_submit
 
-	// ./contracts/delegated_optin_app.algo.ts:75
+	// ./contracts/delegated_optin_app.algo.ts:38
 	// mbrDelta = preMbr - this.app.address.minBalance
 	frame_dig -2 // preMbr: uint64
 	txna Applications 0
@@ -151,7 +97,7 @@ updateAssetMBR:
 	-
 	frame_bury -3 // mbrDelta: uint64
 
-	// ./contracts/delegated_optin_app.algo.ts:77
+	// ./contracts/delegated_optin_app.algo.ts:40
 	// assert(mbrDelta !== this.assetMBR.get())
 	frame_dig -3 // mbrDelta: uint64
 	byte "assetMBR"
@@ -159,41 +105,41 @@ updateAssetMBR:
 	!=
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:78
+	// ./contracts/delegated_optin_app.algo.ts:41
 	// this.assetMBR.set(mbrDelta)
 	byte "assetMBR"
 	frame_dig -3 // mbrDelta: uint64
 	app_global_put
 
-	// ./contracts/delegated_optin_app.algo.ts:80
+	// ./contracts/delegated_optin_app.algo.ts:43
 	// sendAssetTransfer({
 	itxn_begin
 	int axfer
 	itxn_field TypeEnum
 
-	// ./contracts/delegated_optin_app.algo.ts:81
+	// ./contracts/delegated_optin_app.algo.ts:44
 	// assetReceiver: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	itxn_field AssetReceiver
 
-	// ./contracts/delegated_optin_app.algo.ts:82
+	// ./contracts/delegated_optin_app.algo.ts:45
 	// xferAsset: asset
 	frame_dig -1 // asset: asset
 	itxn_field XferAsset
 
-	// ./contracts/delegated_optin_app.algo.ts:83
+	// ./contracts/delegated_optin_app.algo.ts:46
 	// assetAmount: 0
 	int 0
 	itxn_field AssetAmount
 
-	// ./contracts/delegated_optin_app.algo.ts:84
+	// ./contracts/delegated_optin_app.algo.ts:47
 	// fee: 0
 	int 0
 	itxn_field Fee
 
-	// ./contracts/delegated_optin_app.algo.ts:85
+	// ./contracts/delegated_optin_app.algo.ts:48
 	// assetCloseTo: this.app.address
 	txna Applications 0
 	app_params_get AppAddress
@@ -202,7 +148,7 @@ updateAssetMBR:
 	itxn_submit
 	retsub
 
-abi_route_setOpenOptInSignature:
+abi_route_setSignature:
 	txn OnCompletion
 	int NoOp
 	==
@@ -211,180 +157,84 @@ abi_route_setOpenOptInSignature:
 	!=
 	&&
 	assert
-
-	// no dupn needed
+	byte 0x; dup
 	txn GroupIndex
 	int 1
 	-
-	txna ApplicationArgs 2
 	txna ApplicationArgs 1
-	callsub setOpenOptInSignature
+	callsub setSignature
 	int 1
 	return
 
-setOpenOptInSignature:
-	proto 3 0
+setSignature:
+	proto 4 0
 
-	// ./contracts/delegated_optin_app.algo.ts:100
-	// assert(verifier.sender === this.sigVerificationAddress.get())
-	frame_dig -3 // verifier: txn
-	gtxns Sender
-	byte "sigVerificationAddress"
-	app_global_get
-	==
+	// Calculate the auth address for the sender
+	// ./contracts/delegated_optin_app.algo.ts:61
+	// authAddr = this.txn.sender.authAddr
+	txn Sender
+	acct_params_get AcctAuthAddr
 	assert
-
-	// ./contracts/delegated_optin_app.algo.ts:102
-	// this.openOptInSignatures.set(signer, sig)
-	frame_dig -2 // signer: address
-	frame_dig -1 // sig: byte[64]
-	box_put
-	retsub
-
-abi_route_openOptIn:
-	txn OnCompletion
-	int NoOp
-	==
-	txn ApplicationID
-	int 0
-	!=
-	&&
-	assert
-
-	// no dupn needed
-	txn GroupIndex
-	int 1
-	-
-	txn GroupIndex
-	int 2
-	-
-	callsub openOptIn
-	int 1
-	return
-
-openOptIn:
-	proto 2 0
-
-	// ./contracts/delegated_optin_app.algo.ts:114
-	// assert(optIn.assetReceiver === mbrPayment.receiver)
-	frame_dig -2 // optIn: axfer
-	gtxns AssetReceiver
-	frame_dig -1 // mbrPayment: pay
-	gtxns Receiver
-	==
-	assert
-
-	// ./contracts/delegated_optin_app.algo.ts:115
-	// assert(mbrPayment.amount >= this.assetMBR.get())
-	frame_dig -1 // mbrPayment: pay
-	gtxns Amount
-	byte "assetMBR"
-	app_global_get
-	>=
-	assert
+	frame_bury -3 // authAddr: address
 
 	// if0_condition
-	// ./contracts/delegated_optin_app.algo.ts:118
-	// this.openOptInEndTimes.exists(optIn.assetReceiver)
-	byte "e-"
-	frame_dig -2 // optIn: axfer
-	gtxns AssetReceiver
-	concat
-	box_len
-	swap
-	pop
+	// ./contracts/delegated_optin_app.algo.ts:62
+	// authAddr === globals.zeroAddress
+	frame_dig -3 // authAddr: address
+	global ZeroAddress
+	==
 	bz if0_end
 
 	// if0_consequent
-	// ./contracts/delegated_optin_app.algo.ts:119
-	// assert(this.openOptInEndTimes.get(optIn.assetReceiver) > globals.latestTimestamp)
-	byte "e-"
-	frame_dig -2 // optIn: axfer
-	gtxns AssetReceiver
-	concat
-	box_get
-	assert
-	btoi
-	global LatestTimestamp
-	>
-	assert
+	// ./contracts/delegated_optin_app.algo.ts:62
+	// authAddr = this.txn.sender
+	txn Sender
+	frame_bury -3 // authAddr: address
 
 if0_end:
-	retsub
-
-abi_route_setOpenOptInEndTime:
-	txn OnCompletion
-	int NoOp
-	==
-	txn ApplicationID
-	int 0
-	!=
-	&&
+	// Record MBR before box_put to later determine the MBR delta
+	// ./contracts/delegated_optin_app.algo.ts:65
+	// preMBR = this.app.address.minBalance
+	txna Applications 0
+	app_params_get AppAddress
 	assert
-
-	// no dupn needed
-	txna ApplicationArgs 1
-	btoi
-	callsub setOpenOptInEndTime
-	int 1
-	return
-
-setOpenOptInEndTime:
-	proto 1 0
-
-	// ./contracts/delegated_optin_app.algo.ts:130
-	// this.openOptInEndTimes.set(this.txn.sender, timestamp)
-	byte "e-"
-	txn Sender
-	concat
-	frame_dig -1 // timestamp: uint64
-	itob
-	box_put
-	retsub
-
-abi_route_setAddressOptInSignature:
-	txn OnCompletion
-	int NoOp
-	==
-	txn ApplicationID
-	int 0
-	!=
-	&&
+	acct_params_get AcctMinBalance
 	assert
+	frame_bury -4 // preMBR: uint64
 
-	// no dupn needed
-	txn GroupIndex
-	int 1
-	-
-	txna ApplicationArgs 3
-	txna ApplicationArgs 2
-	txna ApplicationArgs 1
-	callsub setAddressOptInSignature
-	int 1
-	return
-
-setAddressOptInSignature:
-	proto 4 0
-
-	// ./contracts/delegated_optin_app.algo.ts:148
-	// assert(verifier.sender === this.sigVerificationAddress.get())
-	frame_dig -4 // verifier: txn
-	gtxns Sender
-	byte "sigVerificationAddress"
-	app_global_get
-	==
-	assert
-
-	// ./contracts/delegated_optin_app.algo.ts:150
-	// this.addressOptInSignatures.set(
-	frame_dig -2 // signer: address
-	frame_dig -3 // allowedAddress: address
-	concat
+	// ./contracts/delegated_optin_app.algo.ts:66
+	// this.signatures.set(authAddr, sig)
+	frame_dig -3 // authAddr: address
 	frame_dig -1 // sig: byte[64]
 	box_put
+
+	// Verify box MBR payment
+	// ./contracts/delegated_optin_app.algo.ts:69
+	// assert(boxMBRPayment.receiver === this.app.address)
+	frame_dig -2 // boxMBRPayment: pay
+	gtxns Receiver
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	==
+	assert
+
+	// ./contracts/delegated_optin_app.algo.ts:70
+	// assert(boxMBRPayment.amount >= this.app.address.minBalance - preMBR)
+	frame_dig -2 // boxMBRPayment: pay
+	gtxns Amount
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	frame_dig -4 // preMBR: uint64
+	-
+	>=
+	assert
 	retsub
 
-abi_route_addressOptIn:
+abi_route_delegatedOptIn:
 	txn OnCompletion
 	int NoOp
 	==
@@ -393,21 +243,23 @@ abi_route_addressOptIn:
 	!=
 	&&
 	assert
-	byte 0x
+
+	// no dupn needed
 	txn GroupIndex
 	int 1
 	-
 	txn GroupIndex
 	int 2
 	-
-	callsub addressOptIn
+	callsub delegatedOptIn
 	int 1
 	return
 
-addressOptIn:
-	proto 3 0
+delegatedOptIn:
+	proto 2 0
 
-	// ./contracts/delegated_optin_app.algo.ts:165
+	// Verify asset mbr payment
+	// ./contracts/delegated_optin_app.algo.ts:82
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
@@ -416,7 +268,7 @@ addressOptIn:
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:166
+	// ./contracts/delegated_optin_app.algo.ts:83
 	// assert(mbrPayment.amount >= this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
@@ -425,43 +277,18 @@ addressOptIn:
 	>=
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:168
-	// hash = this.getSenderReceiverHash(this.txn.sender, optIn.assetReceiver)
-	// no dupn needed
+	// Verify that the signature is present
+	// ./contracts/delegated_optin_app.algo.ts:86
+	// assert(this.signatures.exists(optIn.sender))
 	frame_dig -2 // optIn: axfer
-	gtxns AssetReceiver
-	txn Sender
-	callsub getSenderReceiverHash
-	frame_bury -3 // hash: byte[32]
-
-	// if1_condition
-	// ./contracts/delegated_optin_app.algo.ts:171
-	// this.addressOptInEndTimes.exists(hash)
-	byte "e-"
-	frame_dig -3 // hash: byte[32]
-	concat
+	gtxns Sender
 	box_len
 	swap
 	pop
-	bz if1_end
-
-	// if1_consequent
-	// ./contracts/delegated_optin_app.algo.ts:172
-	// assert(this.addressOptInEndTimes.get(hash) > globals.latestTimestamp)
-	byte "e-"
-	frame_dig -3 // hash: byte[32]
-	concat
-	box_get
 	assert
-	btoi
-	global LatestTimestamp
-	>
-	assert
-
-if1_end:
 	retsub
 
-abi_route_setAddressOptInEndTime:
+abi_route_unsetSignature:
 	txn OnCompletion
 	int NoOp
 	==
@@ -470,33 +297,80 @@ abi_route_setAddressOptInEndTime:
 	!=
 	&&
 	assert
-	byte 0x
-	txna ApplicationArgs 2
-	txna ApplicationArgs 1
-	btoi
-	callsub setAddressOptInEndTime
+	byte 0x; dup
+	callsub unsetSignature
 	int 1
 	return
 
-setAddressOptInEndTime:
-	proto 3 0
+unsetSignature:
+	proto 2 0
 
-	// ./contracts/delegated_optin_app.algo.ts:184
-	// hash = this.getSenderReceiverHash(allowedAddress, this.txn.sender)
-	// no dupn needed
+	// Calculate the auth address for the sender
+	// ./contracts/delegated_optin_app.algo.ts:95
+	// authAddr = this.txn.sender.authAddr
 	txn Sender
-	frame_dig -2 // allowedAddress: address
-	callsub getSenderReceiverHash
-	frame_bury -3 // hash: byte[32]
+	acct_params_get AcctAuthAddr
+	assert
+	frame_bury -1 // authAddr: address
 
-	// ./contracts/delegated_optin_app.algo.ts:186
-	// this.addressOptInEndTimes.set(hash, timestamp)
-	byte "e-"
-	frame_dig -3 // hash: byte[32]
-	concat
-	frame_dig -1 // timestamp: uint64
-	itob
-	box_put
+	// if1_condition
+	// ./contracts/delegated_optin_app.algo.ts:96
+	// authAddr === globals.zeroAddress
+	frame_dig -1 // authAddr: address
+	global ZeroAddress
+	==
+	bz if1_end
+
+	// if1_consequent
+	// ./contracts/delegated_optin_app.algo.ts:96
+	// authAddr = this.txn.sender
+	txn Sender
+	frame_bury -1 // authAddr: address
+
+if1_end:
+	// Record MBR before box_del to later determine the MBR delta
+	// ./contracts/delegated_optin_app.algo.ts:99
+	// preMBR = this.app.address.minBalance
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	frame_bury -2 // preMBR: uint64
+
+	// ./contracts/delegated_optin_app.algo.ts:100
+	// this.signatures.delete(authAddr)
+	frame_dig -1 // authAddr: address
+	box_del
+
+	// Return the box MBR
+	// ./contracts/delegated_optin_app.algo.ts:103
+	// sendPayment({
+	itxn_begin
+	int pay
+	itxn_field TypeEnum
+
+	// ./contracts/delegated_optin_app.algo.ts:104
+	// fee: 0
+	int 0
+	itxn_field Fee
+
+	// ./contracts/delegated_optin_app.algo.ts:105
+	// amount: preMBR - this.app.address.minBalance
+	frame_dig -2 // preMBR: uint64
+	txna Applications 0
+	app_params_get AppAddress
+	assert
+	acct_params_get AcctMinBalance
+	assert
+	-
+	itxn_field Amount
+
+	// ./contracts/delegated_optin_app.algo.ts:106
+	// receiver: this.txn.sender
+	txn Sender
+	itxn_field Receiver
+	itxn_submit
 	retsub
 
 main:
@@ -508,14 +382,10 @@ main:
 	bnz bare_route_create
 
 route_abi:
-	method "setSigVerificationAddress(address)void"
 	method "updateAssetMBR(asset)void"
-	method "setOpenOptInSignature(byte[64],address,txn)void"
-	method "openOptIn(pay,axfer)void"
-	method "setOpenOptInEndTime(uint64)void"
-	method "setAddressOptInSignature(byte[64],address,address,txn)void"
-	method "addressOptIn(pay,axfer)void"
-	method "setAddressOptInEndTime(uint64,address)void"
+	method "setSignature(byte[64],pay)void"
+	method "delegatedOptIn(pay,axfer)void"
+	method "unsetSignature()void"
 	txna ApplicationArgs 0
-	match abi_route_setSigVerificationAddress abi_route_updateAssetMBR abi_route_setOpenOptInSignature abi_route_openOptIn abi_route_setOpenOptInEndTime abi_route_setAddressOptInSignature abi_route_addressOptIn abi_route_setAddressOptInEndTime
+	match abi_route_updateAssetMBR abi_route_setSignature abi_route_delegatedOptIn abi_route_unsetSignature
 	err
