@@ -22,10 +22,10 @@
     algosdk2-2 "npm:algosdk@2.2.0"
     buffer "^6.0.3"
 
-"@algorandfoundation/tealscript@^0.29.0":
-  version "0.29.0"
-  resolved "https://registry.yarnpkg.com/@algorandfoundation/tealscript/-/tealscript-0.29.0.tgz#131a248855ee061cba4868c60865d92c6344adcc"
-  integrity sha512-R2k3ObIg2FnV3Nch1zNRNkz9Q+O8VSZiRAmk4td5yxvWw5XlD3ApzU2FogC+SWzSTa7y8APRT+lGoMK5U4zztg==
+"@algorandfoundation/tealscript@^0.35.0":
+  version "0.35.0"
+  resolved "https://registry.yarnpkg.com/@algorandfoundation/tealscript/-/tealscript-0.35.0.tgz#f6ee09f552cea64eb8621d2456fe38fc3201adda"
+  integrity sha512-beTYqFq8w+edSEJgKBk1CVPHywEZAD4zc5oWne9a+euNiVPOmB8lsLN4/kN9KHD338EbfbcgytfIoGNqr8oRrw==
   dependencies:
     "@microsoft/tsdoc" "^0.14.2"
     dotenv "^16.3.1"

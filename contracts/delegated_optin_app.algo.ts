@@ -12,8 +12,7 @@ class DelegatedOptIn extends Contract {
   // Mapping of auth address to signed open opt-in lsig
   signatures = new BoxMap<Address, byte64>();
 
-  @handle.createApplication
-  create(): void {
+  createApplication(): void {
     /// TODO: Once we have global field for asset MBR, this can be removed
     this.assetMBR.set(100_000);
   }
