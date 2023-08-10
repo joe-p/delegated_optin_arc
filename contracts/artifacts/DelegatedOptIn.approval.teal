@@ -143,7 +143,7 @@ updateAssetMBR:
 	retsub
 
 abi_route_setSignature:
-	byte 0x; dup
+	byte 0x
 	txn GroupIndex
 	int 1
 	-
@@ -153,49 +153,26 @@ abi_route_setSignature:
 	return
 
 setSignature:
-	proto 4 0
+	proto 3 0
 
-	// Calculate the auth address for the sender
-	// ./contracts/delegated_optin_app.algo.ts:60
-	// authAddr = this.txn.sender.authAddr
-	txn Sender
-	acct_params_get AcctAuthAddr
-	assert
-	frame_bury -3 // authAddr: address
-
-	// if0_condition
-	// ./contracts/delegated_optin_app.algo.ts:61
-	// authAddr === globals.zeroAddress
-	frame_dig -3 // authAddr: address
-	global ZeroAddress
-	==
-	bz if0_end
-
-	// if0_consequent
-	// ./contracts/delegated_optin_app.algo.ts:61
-	// authAddr = this.txn.sender
-	txn Sender
-	frame_bury -3 // authAddr: address
-
-if0_end:
 	// Record MBR before box_put to later determine the MBR delta
-	// ./contracts/delegated_optin_app.algo.ts:64
+	// ./contracts/delegated_optin_app.algo.ts:60
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	acct_params_get AcctMinBalance
 	assert
-	frame_bury -4 // preMBR: uint64
+	frame_bury -3 // preMBR: uint64
 
-	// ./contracts/delegated_optin_app.algo.ts:65
-	// this.signatures.set(authAddr, sig)
-	frame_dig -3 // authAddr: address
+	// ./contracts/delegated_optin_app.algo.ts:61
+	// this.signatures.set(this.txn.sender, sig)
+	txn Sender
 	frame_dig -1 // sig: byte[64]
 	box_put
 
 	// Verify box MBR payment
-	// ./contracts/delegated_optin_app.algo.ts:68
+	// ./contracts/delegated_optin_app.algo.ts:64
 	// assert(boxMBRPayment.receiver === this.app.address)
 	frame_dig -2 // boxMBRPayment: pay
 	gtxns Receiver
@@ -205,7 +182,7 @@ if0_end:
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:69
+	// ./contracts/delegated_optin_app.algo.ts:65
 	// assert(boxMBRPayment.amount >= this.app.address.minBalance - preMBR)
 	frame_dig -2 // boxMBRPayment: pay
 	gtxns Amount
@@ -214,7 +191,7 @@ if0_end:
 	assert
 	acct_params_get AcctMinBalance
 	assert
-	frame_dig -4 // preMBR: uint64
+	frame_dig -3 // preMBR: uint64
 	-
 	>=
 	assert
@@ -236,7 +213,7 @@ delegatedOptIn:
 	proto 2 0
 
 	// Verify asset mbr payment
-	// ./contracts/delegated_optin_app.algo.ts:81
+	// ./contracts/delegated_optin_app.algo.ts:77
 	// assert(optIn.assetReceiver === mbrPayment.receiver)
 	frame_dig -2 // optIn: axfer
 	gtxns AssetReceiver
@@ -245,7 +222,7 @@ delegatedOptIn:
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:82
+	// ./contracts/delegated_optin_app.algo.ts:78
 	// assert(mbrPayment.amount >= this.assetMBR.get())
 	frame_dig -1 // mbrPayment: pay
 	gtxns Amount
@@ -255,7 +232,7 @@ delegatedOptIn:
 	assert
 
 	// Verify that the signature is present
-	// ./contracts/delegated_optin_app.algo.ts:85
+	// ./contracts/delegated_optin_app.algo.ts:81
 	// assert(this.signatures.exists(optIn.sender))
 	frame_dig -2 // optIn: axfer
 	gtxns Sender
@@ -266,67 +243,44 @@ delegatedOptIn:
 	retsub
 
 abi_route_unsetSignature:
-	byte 0x; dup
+	byte 0x
 	callsub unsetSignature
 	int 1
 	return
 
 unsetSignature:
-	proto 2 0
+	proto 1 0
 
-	// Calculate the auth address for the sender
-	// ./contracts/delegated_optin_app.algo.ts:94
-	// authAddr = this.txn.sender.authAddr
-	txn Sender
-	acct_params_get AcctAuthAddr
-	assert
-	frame_bury -1 // authAddr: address
-
-	// if1_condition
-	// ./contracts/delegated_optin_app.algo.ts:95
-	// authAddr === globals.zeroAddress
-	frame_dig -1 // authAddr: address
-	global ZeroAddress
-	==
-	bz if1_end
-
-	// if1_consequent
-	// ./contracts/delegated_optin_app.algo.ts:95
-	// authAddr = this.txn.sender
-	txn Sender
-	frame_bury -1 // authAddr: address
-
-if1_end:
 	// Record MBR before box_del to later determine the MBR delta
-	// ./contracts/delegated_optin_app.algo.ts:98
+	// ./contracts/delegated_optin_app.algo.ts:90
 	// preMBR = this.app.address.minBalance
 	txna Applications 0
 	app_params_get AppAddress
 	assert
 	acct_params_get AcctMinBalance
 	assert
-	frame_bury -2 // preMBR: uint64
+	frame_bury -1 // preMBR: uint64
 
-	// ./contracts/delegated_optin_app.algo.ts:99
-	// this.signatures.delete(authAddr)
-	frame_dig -1 // authAddr: address
+	// ./contracts/delegated_optin_app.algo.ts:91
+	// this.signatures.delete(this.txn.sender)
+	txn Sender
 	box_del
 
 	// Return the box MBR
-	// ./contracts/delegated_optin_app.algo.ts:102
+	// ./contracts/delegated_optin_app.algo.ts:94
 	// sendPayment({
 	itxn_begin
 	int pay
 	itxn_field TypeEnum
 
-	// ./contracts/delegated_optin_app.algo.ts:103
+	// ./contracts/delegated_optin_app.algo.ts:95
 	// fee: 0
 	int 0
 	itxn_field Fee
 
-	// ./contracts/delegated_optin_app.algo.ts:104
+	// ./contracts/delegated_optin_app.algo.ts:96
 	// amount: preMBR - this.app.address.minBalance
-	frame_dig -2 // preMBR: uint64
+	frame_dig -1 // preMBR: uint64
 	txna Applications 0
 	app_params_get AppAddress
 	assert
@@ -335,7 +289,7 @@ if1_end:
 	-
 	itxn_field Amount
 
-	// ./contracts/delegated_optin_app.algo.ts:105
+	// ./contracts/delegated_optin_app.algo.ts:97
 	// receiver: this.txn.sender
 	txn Sender
 	itxn_field Receiver

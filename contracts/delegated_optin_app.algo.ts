@@ -56,13 +56,9 @@ class DelegatedOptIn extends Contract {
    *
    */
   setSignature(sig: byte64, boxMBRPayment: PayTxn): void {
-    /// Calculate the auth address for the sender
-    let authAddr = this.txn.sender.authAddr;
-    if (authAddr === globals.zeroAddress) authAddr = this.txn.sender;
-
     /// Record MBR before box_put to later determine the MBR delta
     const preMBR = this.app.address.minBalance;
-    this.signatures.set(authAddr, sig);
+    this.signatures.set(this.txn.sender, sig);
 
     /// Verify box MBR payment
     assert(boxMBRPayment.receiver === this.app.address);
@@ -90,13 +86,9 @@ class DelegatedOptIn extends Contract {
    * This will disable delegated opt-ins and return the box MBR balance
    */
   unsetSignature(): void {
-    /// Calculate the auth address for the sender
-    let authAddr = this.txn.sender.authAddr;
-    if (authAddr === globals.zeroAddress) authAddr = this.txn.sender;
-
     /// Record MBR before box_del to later determine the MBR delta
     const preMBR = this.app.address.minBalance;
-    this.signatures.delete(authAddr);
+    this.signatures.delete(this.txn.sender);
 
     /// Return the box MBR
     sendPayment({
