@@ -22,8 +22,7 @@ For all methods, refer to the [ABI JSON description](./contracts/artifacts/Deleg
 
 | Type | Key | Description |
 | ---- | --- | ----------- |
-| Global | "assetMBR" | Stores the ASA MBR. TODO: To be replaced with global field once implemented |
-| Box | `auth-addr` | Mapping of signer to open in signature |
+| Box | `auth-addr` | Mapping of signer to lsig signature |
 
 ## Rationale
 Box storage is used to store signatures indefinitely and [the verifier lsig](./contracts/verifier_lsig.teal) ensures the signature is always correct.
@@ -41,14 +40,14 @@ Tests written with Jest and algokit for the contract and logic signatures can be
 ```
   Delegated Opt In App
     create
-      ✓ creates the app (884 ms)
+      ✓ creates the app (765 ms)
     setSignature
-      ✓ works with valid signature and lsig (785 ms)
+      ✓ works with valid signature and lsig (790 ms)
     delegatedOptIn
-      ✓ works with valid lsig and method call (1537 ms)
+      ✓ works with valid lsig and method call (1453 ms)
     unsetSignature
-      ✓ sends back MBR (813 ms)
-      ○ skipped TODO: doesn't allow opt-ins
+      ✓ sends back MBR (753 ms)
+      ✓ doesn't allow opt-ins (1186 ms)
 ```
 
 ## Reference Implementation

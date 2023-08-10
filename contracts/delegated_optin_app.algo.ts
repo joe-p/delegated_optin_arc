@@ -5,48 +5,8 @@ type byte64 = StaticArray<byte, 64>;
 
 // eslint-disable-next-line no-unused-vars
 class DelegatedOptIn extends Contract {
-  // The minimum balance requirement for ASAs
-  // TODO: Delete this once we have global field for asset MBR
-  assetMBR = new GlobalStateKey<uint64>();
-
   // Mapping of auth address to signed open opt-in lsig
   signatures = new BoxMap<Address, byte64>();
-
-  createApplication(): void {
-    /// TODO: Once we have global field for asset MBR, this can be removed
-    this.assetMBR.set(100_000);
-  }
-
-  /**
-   * Updates the asset MBR
-   *
-   * @param asset - The asset to opt into and opt out of to determine MBR
-   *
-   */
-  updateAssetMBR(asset: Asset): void {
-    /// TODO: Replace with global field for getting asset MBR
-    const preMbr = this.app.address.minBalance;
-
-    sendAssetTransfer({
-      assetReceiver: this.app.address,
-      xferAsset: asset,
-      assetAmount: 0,
-      fee: 0,
-    });
-
-    const mbrDelta = preMbr - this.app.address.minBalance;
-
-    assert(mbrDelta !== this.assetMBR.get());
-    this.assetMBR.set(mbrDelta);
-
-    sendAssetTransfer({
-      assetReceiver: this.app.address,
-      xferAsset: asset,
-      assetAmount: 0,
-      fee: 0,
-      assetCloseTo: this.app.address,
-    });
-  }
 
   /**
    * Set the signature of the lsig for the given account
@@ -73,10 +33,6 @@ class DelegatedOptIn extends Contract {
    *
    */
   delegatedOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
-    /// Verify asset mbr payment
-    assert(optIn.assetReceiver === mbrPayment.receiver);
-    assert(mbrPayment.amount >= this.assetMBR.get());
-
     /// Verify that the signature is present
     assert(this.signatures.exists(optIn.sender));
   }

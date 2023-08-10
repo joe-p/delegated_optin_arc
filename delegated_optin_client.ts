@@ -26,11 +26,6 @@ import { SendTransactionResult, TransactionToSign, SendTransactionFrom } from '@
 import { Algodv2, OnApplicationComplete, Transaction, TransactionWithSigner, AtomicTransactionComposer } from 'algosdk'
 export const APP_SPEC: AppSpec = {
   "hints": {
-    "updateAssetMBR(asset)void": {
-      "call_config": {
-        "no_op": "CALL"
-      }
-    },
     "setSignature(byte[64],pay)void": {
       "call_config": {
         "no_op": "CALL"
@@ -60,19 +55,14 @@ export const APP_SPEC: AppSpec = {
       "reserved": {}
     },
     "global": {
-      "declared": {
-        "assetMBR": {
-          "type": "uint64",
-          "key": "assetMBR"
-        }
-      },
+      "declared": {},
       "reserved": {}
     }
   },
   "state": {
     "global": {
       "num_byte_slices": 0,
-      "num_uints": 1
+      "num_uints": 0
     },
     "local": {
       "num_byte_slices": 0,
@@ -80,28 +70,13 @@ export const APP_SPEC: AppSpec = {
     }
   },
   "source": {
-    "approval": "I3ByYWdtYSB2ZXJzaW9uIDkKCnR4biBBcHBsaWNhdGlvbklECmludCAwCj4KaW50IDYKKgp0eG4gT25Db21wbGV0aW9uCisKc3dpdGNoIGNyZWF0ZV9Ob09wIE5PVF9JTVBMRU1FTlRFRCBOT1RfSU1QTEVNRU5URUQgTk9UX0lNUExFTUVOVEVEIE5PVF9JTVBMRU1FTlRFRCBOT1RfSU1QTEVNRU5URUQgY2FsbF9Ob09wCgpOT1RfSU1QTEVNRU5URUQ6CgllcnIKCmFiaV9yb3V0ZV9jcmVhdGVBcHBsaWNhdGlvbjoKCS8vIG5vIGR1cG4gbmVlZGVkCgljYWxsc3ViIGNyZWF0ZUFwcGxpY2F0aW9uCglpbnQgMQoJcmV0dXJuCgpjcmVhdGVBcHBsaWNhdGlvbjoKCXByb3RvIDAgMAoKCS8vIFRPRE86IE9uY2Ugd2UgaGF2ZSBnbG9iYWwgZmllbGQgZm9yIGFzc2V0IE1CUiwgdGhpcyBjYW4gYmUgcmVtb3ZlZAoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjE3CgkvLyB0aGlzLmFzc2V0TUJSLnNldCgxMDBfMDAwKQoJYnl0ZSAiYXNzZXRNQlIiCglpbnQgMTAwXzAwMAoJYXBwX2dsb2JhbF9wdXQKCXJldHN1YgoKYWJpX3JvdXRlX3VwZGF0ZUFzc2V0TUJSOgoJYnl0ZSAweDsgZHVwCgl0eG5hIEFwcGxpY2F0aW9uQXJncyAxCglidG9pCgl0eG5hcyBBc3NldHMKCWNhbGxzdWIgdXBkYXRlQXNzZXRNQlIKCWludCAxCglyZXR1cm4KCnVwZGF0ZUFzc2V0TUJSOgoJcHJvdG8gMyAwCgoJLy8gVE9ETzogUmVwbGFjZSB3aXRoIGdsb2JhbCBmaWVsZCBmb3IgZ2V0dGluZyBhc3NldCBNQlIKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoyOAoJLy8gcHJlTWJyID0gdGhpcy5hcHAuYWRkcmVzcy5taW5CYWxhbmNlCgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCWFjY3RfcGFyYW1zX2dldCBBY2N0TWluQmFsYW5jZQoJYXNzZXJ0CglmcmFtZV9idXJ5IC0yIC8vIHByZU1icjogdWludDY0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjMwCgkvLyBzZW5kQXNzZXRUcmFuc2Zlcih7CglpdHhuX2JlZ2luCglpbnQgYXhmZXIKCWl0eG5fZmllbGQgVHlwZUVudW0KCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MzEKCS8vIGFzc2V0UmVjZWl2ZXI6IHRoaXMuYXBwLmFkZHJlc3MKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJaXR4bl9maWVsZCBBc3NldFJlY2VpdmVyCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjMyCgkvLyB4ZmVyQXNzZXQ6IGFzc2V0CglmcmFtZV9kaWcgLTEgLy8gYXNzZXQ6IGFzc2V0CglpdHhuX2ZpZWxkIFhmZXJBc3NldAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czozMwoJLy8gYXNzZXRBbW91bnQ6IDAKCWludCAwCglpdHhuX2ZpZWxkIEFzc2V0QW1vdW50CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjM0CgkvLyBmZWU6IDAKCWludCAwCglpdHhuX2ZpZWxkIEZlZQoJaXR4bl9zdWJtaXQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MzcKCS8vIG1ickRlbHRhID0gcHJlTWJyIC0gdGhpcy5hcHAuYWRkcmVzcy5taW5CYWxhbmNlCglmcmFtZV9kaWcgLTIgLy8gcHJlTWJyOiB1aW50NjQKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RNaW5CYWxhbmNlCglhc3NlcnQKCS0KCWZyYW1lX2J1cnkgLTMgLy8gbWJyRGVsdGE6IHVpbnQ2NAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czozOQoJLy8gYXNzZXJ0KG1ickRlbHRhICE9PSB0aGlzLmFzc2V0TUJSLmdldCgpKQoJZnJhbWVfZGlnIC0zIC8vIG1ickRlbHRhOiB1aW50NjQKCWJ5dGUgImFzc2V0TUJSIgoJYXBwX2dsb2JhbF9nZXQKCSE9Cglhc3NlcnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NDAKCS8vIHRoaXMuYXNzZXRNQlIuc2V0KG1ickRlbHRhKQoJYnl0ZSAiYXNzZXRNQlIiCglmcmFtZV9kaWcgLTMgLy8gbWJyRGVsdGE6IHVpbnQ2NAoJYXBwX2dsb2JhbF9wdXQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NDIKCS8vIHNlbmRBc3NldFRyYW5zZmVyKHsKCWl0eG5fYmVnaW4KCWludCBheGZlcgoJaXR4bl9maWVsZCBUeXBlRW51bQoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo0MwoJLy8gYXNzZXRSZWNlaXZlcjogdGhpcy5hcHAuYWRkcmVzcwoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglpdHhuX2ZpZWxkIEFzc2V0UmVjZWl2ZXIKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NDQKCS8vIHhmZXJBc3NldDogYXNzZXQKCWZyYW1lX2RpZyAtMSAvLyBhc3NldDogYXNzZXQKCWl0eG5fZmllbGQgWGZlckFzc2V0CgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjQ1CgkvLyBhc3NldEFtb3VudDogMAoJaW50IDAKCWl0eG5fZmllbGQgQXNzZXRBbW91bnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NDYKCS8vIGZlZTogMAoJaW50IDAKCWl0eG5fZmllbGQgRmVlCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjQ3CgkvLyBhc3NldENsb3NlVG86IHRoaXMuYXBwLmFkZHJlc3MKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJaXR4bl9maWVsZCBBc3NldENsb3NlVG8KCWl0eG5fc3VibWl0CglyZXRzdWIKCmFiaV9yb3V0ZV9zZXRTaWduYXR1cmU6CglieXRlIDB4Cgl0eG4gR3JvdXBJbmRleAoJaW50IDEKCS0KCXR4bmEgQXBwbGljYXRpb25BcmdzIDEKCWNhbGxzdWIgc2V0U2lnbmF0dXJlCglpbnQgMQoJcmV0dXJuCgpzZXRTaWduYXR1cmU6Cglwcm90byAzIDAKCgkvLyBSZWNvcmQgTUJSIGJlZm9yZSBib3hfcHV0IHRvIGxhdGVyIGRldGVybWluZSB0aGUgTUJSIGRlbHRhCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NjAKCS8vIHByZU1CUiA9IHRoaXMuYXBwLmFkZHJlc3MubWluQmFsYW5jZQoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJZnJhbWVfYnVyeSAtMyAvLyBwcmVNQlI6IHVpbnQ2NAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo2MQoJLy8gdGhpcy5zaWduYXR1cmVzLnNldCh0aGlzLnR4bi5zZW5kZXIsIHNpZykKCXR4biBTZW5kZXIKCWZyYW1lX2RpZyAtMSAvLyBzaWc6IGJ5dGVbNjRdCglib3hfcHV0CgoJLy8gVmVyaWZ5IGJveCBNQlIgcGF5bWVudAoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjY0CgkvLyBhc3NlcnQoYm94TUJSUGF5bWVudC5yZWNlaXZlciA9PT0gdGhpcy5hcHAuYWRkcmVzcykKCWZyYW1lX2RpZyAtMiAvLyBib3hNQlJQYXltZW50OiBwYXkKCWd0eG5zIFJlY2VpdmVyCgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCT09Cglhc3NlcnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NjUKCS8vIGFzc2VydChib3hNQlJQYXltZW50LmFtb3VudCA+PSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UgLSBwcmVNQlIpCglmcmFtZV9kaWcgLTIgLy8gYm94TUJSUGF5bWVudDogcGF5CglndHhucyBBbW91bnQKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RNaW5CYWxhbmNlCglhc3NlcnQKCWZyYW1lX2RpZyAtMyAvLyBwcmVNQlI6IHVpbnQ2NAoJLQoJPj0KCWFzc2VydAoJcmV0c3ViCgphYmlfcm91dGVfZGVsZWdhdGVkT3B0SW46CgkvLyBubyBkdXBuIG5lZWRlZAoJdHhuIEdyb3VwSW5kZXgKCWludCAxCgktCgl0eG4gR3JvdXBJbmRleAoJaW50IDIKCS0KCWNhbGxzdWIgZGVsZWdhdGVkT3B0SW4KCWludCAxCglyZXR1cm4KCmRlbGVnYXRlZE9wdEluOgoJcHJvdG8gMiAwCgoJLy8gVmVyaWZ5IGFzc2V0IG1iciBwYXltZW50CgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NzcKCS8vIGFzc2VydChvcHRJbi5hc3NldFJlY2VpdmVyID09PSBtYnJQYXltZW50LnJlY2VpdmVyKQoJZnJhbWVfZGlnIC0yIC8vIG9wdEluOiBheGZlcgoJZ3R4bnMgQXNzZXRSZWNlaXZlcgoJZnJhbWVfZGlnIC0xIC8vIG1iclBheW1lbnQ6IHBheQoJZ3R4bnMgUmVjZWl2ZXIKCT09Cglhc3NlcnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NzgKCS8vIGFzc2VydChtYnJQYXltZW50LmFtb3VudCA+PSB0aGlzLmFzc2V0TUJSLmdldCgpKQoJZnJhbWVfZGlnIC0xIC8vIG1iclBheW1lbnQ6IHBheQoJZ3R4bnMgQW1vdW50CglieXRlICJhc3NldE1CUiIKCWFwcF9nbG9iYWxfZ2V0Cgk+PQoJYXNzZXJ0CgoJLy8gVmVyaWZ5IHRoYXQgdGhlIHNpZ25hdHVyZSBpcyBwcmVzZW50CgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6ODEKCS8vIGFzc2VydCh0aGlzLnNpZ25hdHVyZXMuZXhpc3RzKG9wdEluLnNlbmRlcikpCglmcmFtZV9kaWcgLTIgLy8gb3B0SW46IGF4ZmVyCglndHhucyBTZW5kZXIKCWJveF9sZW4KCXN3YXAKCXBvcAoJYXNzZXJ0CglyZXRzdWIKCmFiaV9yb3V0ZV91bnNldFNpZ25hdHVyZToKCWJ5dGUgMHgKCWNhbGxzdWIgdW5zZXRTaWduYXR1cmUKCWludCAxCglyZXR1cm4KCnVuc2V0U2lnbmF0dXJlOgoJcHJvdG8gMSAwCgoJLy8gUmVjb3JkIE1CUiBiZWZvcmUgYm94X2RlbCB0byBsYXRlciBkZXRlcm1pbmUgdGhlIE1CUiBkZWx0YQoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjkwCgkvLyBwcmVNQlIgPSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RNaW5CYWxhbmNlCglhc3NlcnQKCWZyYW1lX2J1cnkgLTEgLy8gcHJlTUJSOiB1aW50NjQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6OTEKCS8vIHRoaXMuc2lnbmF0dXJlcy5kZWxldGUodGhpcy50eG4uc2VuZGVyKQoJdHhuIFNlbmRlcgoJYm94X2RlbAoKCS8vIFJldHVybiB0aGUgYm94IE1CUgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjk0CgkvLyBzZW5kUGF5bWVudCh7CglpdHhuX2JlZ2luCglpbnQgcGF5CglpdHhuX2ZpZWxkIFR5cGVFbnVtCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjk1CgkvLyBmZWU6IDAKCWludCAwCglpdHhuX2ZpZWxkIEZlZQoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo5NgoJLy8gYW1vdW50OiBwcmVNQlIgLSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UKCWZyYW1lX2RpZyAtMSAvLyBwcmVNQlI6IHVpbnQ2NAoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJLQoJaXR4bl9maWVsZCBBbW91bnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6OTcKCS8vIHJlY2VpdmVyOiB0aGlzLnR4bi5zZW5kZXIKCXR4biBTZW5kZXIKCWl0eG5fZmllbGQgUmVjZWl2ZXIKCWl0eG5fc3VibWl0CglyZXRzdWIKCmNyZWF0ZV9Ob09wOgoJdHhuIE51bUFwcEFyZ3MKCXN3aXRjaCBhYmlfcm91dGVfY3JlYXRlQXBwbGljYXRpb24KCWVycgoKY2FsbF9Ob09wOgoJbWV0aG9kICJ1cGRhdGVBc3NldE1CUihhc3NldCl2b2lkIgoJbWV0aG9kICJzZXRTaWduYXR1cmUoYnl0ZVs2NF0scGF5KXZvaWQiCgltZXRob2QgImRlbGVnYXRlZE9wdEluKHBheSxheGZlcil2b2lkIgoJbWV0aG9kICJ1bnNldFNpZ25hdHVyZSgpdm9pZCIKCXR4bmEgQXBwbGljYXRpb25BcmdzIDAKCW1hdGNoIGFiaV9yb3V0ZV91cGRhdGVBc3NldE1CUiBhYmlfcm91dGVfc2V0U2lnbmF0dXJlIGFiaV9yb3V0ZV9kZWxlZ2F0ZWRPcHRJbiBhYmlfcm91dGVfdW5zZXRTaWduYXR1cmUKCWVycg==",
+    "approval": "I3ByYWdtYSB2ZXJzaW9uIDkKCnR4biBBcHBsaWNhdGlvbklECmludCAwCj4KaW50IDYKKgp0eG4gT25Db21wbGV0aW9uCisKc3dpdGNoIGNyZWF0ZV9Ob09wIE5PVF9JTVBMRU1FTlRFRCBOT1RfSU1QTEVNRU5URUQgTk9UX0lNUExFTUVOVEVEIE5PVF9JTVBMRU1FTlRFRCBOT1RfSU1QTEVNRU5URUQgY2FsbF9Ob09wCgpOT1RfSU1QTEVNRU5URUQ6CgllcnIKCmFiaV9yb3V0ZV9zZXRTaWduYXR1cmU6CglieXRlIDB4Cgl0eG4gR3JvdXBJbmRleAoJaW50IDEKCS0KCXR4bmEgQXBwbGljYXRpb25BcmdzIDEKCWNhbGxzdWIgc2V0U2lnbmF0dXJlCglpbnQgMQoJcmV0dXJuCgpzZXRTaWduYXR1cmU6Cglwcm90byAzIDAKCgkvLyBSZWNvcmQgTUJSIGJlZm9yZSBib3hfcHV0IHRvIGxhdGVyIGRldGVybWluZSB0aGUgTUJSIGRlbHRhCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MjIKCS8vIHByZU1CUiA9IHRoaXMuYXBwLmFkZHJlc3MubWluQmFsYW5jZQoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJZnJhbWVfYnVyeSAtMyAvLyBwcmVNQlI6IHVpbnQ2NAoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czoyMwoJLy8gdGhpcy5zaWduYXR1cmVzLnNldCh0aGlzLnR4bi5zZW5kZXIsIHNpZykKCXR4biBTZW5kZXIKCWZyYW1lX2RpZyAtMSAvLyBzaWc6IGJ5dGVbNjRdCglib3hfcHV0CgoJLy8gVmVyaWZ5IGJveCBNQlIgcGF5bWVudAoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjI2CgkvLyBhc3NlcnQoYm94TUJSUGF5bWVudC5yZWNlaXZlciA9PT0gdGhpcy5hcHAuYWRkcmVzcykKCWZyYW1lX2RpZyAtMiAvLyBib3hNQlJQYXltZW50OiBwYXkKCWd0eG5zIFJlY2VpdmVyCgl0eG5hIEFwcGxpY2F0aW9ucyAwCglhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCglhc3NlcnQKCT09Cglhc3NlcnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MjcKCS8vIGFzc2VydChib3hNQlJQYXltZW50LmFtb3VudCA+PSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UgLSBwcmVNQlIpCglmcmFtZV9kaWcgLTIgLy8gYm94TUJSUGF5bWVudDogcGF5CglndHhucyBBbW91bnQKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RNaW5CYWxhbmNlCglhc3NlcnQKCWZyYW1lX2RpZyAtMyAvLyBwcmVNQlI6IHVpbnQ2NAoJLQoJPj0KCWFzc2VydAoJcmV0c3ViCgphYmlfcm91dGVfZGVsZWdhdGVkT3B0SW46CgkvLyBubyBkdXBuIG5lZWRlZAoJdHhuIEdyb3VwSW5kZXgKCWludCAxCgktCgl0eG4gR3JvdXBJbmRleAoJaW50IDIKCS0KCWNhbGxzdWIgZGVsZWdhdGVkT3B0SW4KCWludCAxCglyZXR1cm4KCmRlbGVnYXRlZE9wdEluOgoJcHJvdG8gMiAwCgoJLy8gVmVyaWZ5IHRoYXQgdGhlIHNpZ25hdHVyZSBpcyBwcmVzZW50CgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6MzkKCS8vIGFzc2VydCh0aGlzLnNpZ25hdHVyZXMuZXhpc3RzKG9wdEluLnNlbmRlcikpCglmcmFtZV9kaWcgLTIgLy8gb3B0SW46IGF4ZmVyCglndHhucyBTZW5kZXIKCWJveF9sZW4KCXN3YXAKCXBvcAoJYXNzZXJ0CglyZXRzdWIKCmFiaV9yb3V0ZV91bnNldFNpZ25hdHVyZToKCWJ5dGUgMHgKCWNhbGxzdWIgdW5zZXRTaWduYXR1cmUKCWludCAxCglyZXR1cm4KCnVuc2V0U2lnbmF0dXJlOgoJcHJvdG8gMSAwCgoJLy8gUmVjb3JkIE1CUiBiZWZvcmUgYm94X2RlbCB0byBsYXRlciBkZXRlcm1pbmUgdGhlIE1CUiBkZWx0YQoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjQ4CgkvLyBwcmVNQlIgPSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UKCXR4bmEgQXBwbGljYXRpb25zIDAKCWFwcF9wYXJhbXNfZ2V0IEFwcEFkZHJlc3MKCWFzc2VydAoJYWNjdF9wYXJhbXNfZ2V0IEFjY3RNaW5CYWxhbmNlCglhc3NlcnQKCWZyYW1lX2J1cnkgLTEgLy8gcHJlTUJSOiB1aW50NjQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NDkKCS8vIHRoaXMuc2lnbmF0dXJlcy5kZWxldGUodGhpcy50eG4uc2VuZGVyKQoJdHhuIFNlbmRlcgoJYm94X2RlbAoKCS8vIFJldHVybiB0aGUgYm94IE1CUgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjUyCgkvLyBzZW5kUGF5bWVudCh7CglpdHhuX2JlZ2luCglpbnQgcGF5CglpdHhuX2ZpZWxkIFR5cGVFbnVtCgoJLy8gLi9jb250cmFjdHMvZGVsZWdhdGVkX29wdGluX2FwcC5hbGdvLnRzOjUzCgkvLyBmZWU6IDAKCWludCAwCglpdHhuX2ZpZWxkIEZlZQoKCS8vIC4vY29udHJhY3RzL2RlbGVnYXRlZF9vcHRpbl9hcHAuYWxnby50czo1NAoJLy8gYW1vdW50OiBwcmVNQlIgLSB0aGlzLmFwcC5hZGRyZXNzLm1pbkJhbGFuY2UKCWZyYW1lX2RpZyAtMSAvLyBwcmVNQlI6IHVpbnQ2NAoJdHhuYSBBcHBsaWNhdGlvbnMgMAoJYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwoJYXNzZXJ0CglhY2N0X3BhcmFtc19nZXQgQWNjdE1pbkJhbGFuY2UKCWFzc2VydAoJLQoJaXR4bl9maWVsZCBBbW91bnQKCgkvLyAuL2NvbnRyYWN0cy9kZWxlZ2F0ZWRfb3B0aW5fYXBwLmFsZ28udHM6NTUKCS8vIHJlY2VpdmVyOiB0aGlzLnR4bi5zZW5kZXIKCXR4biBTZW5kZXIKCWl0eG5fZmllbGQgUmVjZWl2ZXIKCWl0eG5fc3VibWl0CglyZXRzdWIKCmFiaV9yb3V0ZV9kZWZhdWx0VEVBTFNjcmlwdENyZWF0ZToKCWludCAxCglyZXR1cm4KCmNyZWF0ZV9Ob09wOgoJdHhuIE51bUFwcEFyZ3MKCXN3aXRjaCBhYmlfcm91dGVfZGVmYXVsdFRFQUxTY3JpcHRDcmVhdGUKCWVycgoKY2FsbF9Ob09wOgoJbWV0aG9kICJzZXRTaWduYXR1cmUoYnl0ZVs2NF0scGF5KXZvaWQiCgltZXRob2QgImRlbGVnYXRlZE9wdEluKHBheSxheGZlcil2b2lkIgoJbWV0aG9kICJ1bnNldFNpZ25hdHVyZSgpdm9pZCIKCXR4bmEgQXBwbGljYXRpb25BcmdzIDAKCW1hdGNoIGFiaV9yb3V0ZV9zZXRTaWduYXR1cmUgYWJpX3JvdXRlX2RlbGVnYXRlZE9wdEluIGFiaV9yb3V0ZV91bnNldFNpZ25hdHVyZQoJZXJy",
     "clear": "I3ByYWdtYSB2ZXJzaW9uIDkKaW50IDE="
   },
   "contract": {
     "name": "DelegatedOptIn",
     "desc": "",
     "methods": [
-      {
-        "name": "updateAssetMBR",
-        "args": [
-          {
-            "name": "asset",
-            "type": "asset",
-            "desc": "The asset to opt into and opt out of to determine MBR"
-          }
-        ],
-        "desc": "Updates the asset MBR",
-        "returns": {
-          "type": "void",
-          "desc": ""
-        }
-      },
       {
         "name": "setSignature",
         "args": [
@@ -210,16 +185,6 @@ export type DelegatedOptIn = {
    * Maps method signatures / names to their argument and return types.
    */
   methods:
-    & Record<'updateAssetMBR(asset)void' | 'updateAssetMBR', {
-      argsObj: {
-        /**
-         * The asset to opt into and opt out of to determine MBR
-         */
-        asset: number | bigint
-      }
-      argsTuple: [asset: number | bigint]
-      returns: void
-    }>
     & Record<'setSignature(byte[64],pay)void' | 'setSignature', {
       argsObj: {
         /**
@@ -254,14 +219,6 @@ export type DelegatedOptIn = {
       argsTuple: []
       returns: void
     }>
-  /**
-   * Defines the shape of the global and local state of the application.
-   */
-  state: {
-    global: {
-      'assetMBR'?: IntegerState
-    }
-  }
 }
 /**
  * Defines the possible abi call signatures
@@ -333,22 +290,6 @@ export abstract class DelegatedOptInCallFactory {
     }
   }
 
-  /**
-   * Constructs a no op call for the updateAssetMBR(asset)void ABI method
-   *
-   * Updates the asset MBR
-   *
-   * @param args Any args for the contract call
-   * @param params Any additional parameters for the call
-   * @returns A TypedCallParams object for the call
-   */
-  static updateAssetMbr(args: MethodArgs<'updateAssetMBR(asset)void'>, params: AppClientCallCoreParams & CoreAppCallArgs) {
-    return {
-      method: 'updateAssetMBR(asset)void' as const,
-      methodArgs: Array.isArray(args) ? args : [args.asset],
-      ...params,
-    }
-  }
   /**
    * Constructs a no op call for the setSignature(byte[64],pay)void ABI method
    *
@@ -496,19 +437,6 @@ export class DelegatedOptInClient {
   }
 
   /**
-   * Calls the updateAssetMBR(asset)void ABI method.
-   *
-   * Updates the asset MBR
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The result of the call
-   */
-  public updateAssetMbr(args: MethodArgs<'updateAssetMBR(asset)void'>, params: AppClientCallCoreParams & CoreAppCallArgs = {}) {
-    return this.call(DelegatedOptInCallFactory.updateAssetMbr(args, params))
-  }
-
-  /**
    * Calls the setSignature(byte[64],pay)void ABI method.
    *
    * Set the signature of the lsig for the given account
@@ -547,73 +475,12 @@ export class DelegatedOptInClient {
     return this.call(DelegatedOptInCallFactory.unsetSignature(args, params))
   }
 
-  /**
-   * Extracts a binary state value out of an AppState dictionary
-   *
-   * @param state The state dictionary containing the state value
-   * @param key The key of the state value
-   * @returns A BinaryState instance containing the state value, or undefined if the key was not found
-   */
-  private static getBinaryState(state: AppState, key: string): BinaryState | undefined {
-    const value = state[key]
-    if (!value) return undefined
-    if (!('valueRaw' in value))
-      throw new Error(`Failed to parse state value for ${key}; received an int when expected a byte array`)
-    return {
-      asString(): string {
-        return value.value
-      },
-      asByteArray(): Uint8Array {
-        return value.valueRaw
-      }
-    }
-  }
-
-  /**
-   * Extracts a integer state value out of an AppState dictionary
-   *
-   * @param state The state dictionary containing the state value
-   * @param key The key of the state value
-   * @returns An IntegerState instance containing the state value, or undefined if the key was not found
-   */
-  private static getIntegerState(state: AppState, key: string): IntegerState | undefined {
-    const value = state[key]
-    if (!value) return undefined
-    if ('valueRaw' in value)
-      throw new Error(`Failed to parse state value for ${key}; received a byte array when expected a number`)
-    return {
-      asBigInt() {
-        return typeof value.value === 'bigint' ? value.value : BigInt(value.value)
-      },
-      asNumber(): number {
-        return typeof value.value === 'bigint' ? Number(value.value) : value.value
-      },
-    }
-  }
-
-  /**
-   * Returns the smart contract's global state wrapped in a strongly typed accessor with options to format the stored value
-   */
-  public async getGlobalState(): Promise<DelegatedOptIn['state']['global']> {
-    const state = await this.appClient.getGlobalState()
-    return {
-      get assetMBR() {
-        return DelegatedOptInClient.getIntegerState(state, 'assetMBR')
-      },
-    }
-  }
-
   public compose(): DelegatedOptInComposer {
     const client = this
     const atc = new AtomicTransactionComposer()
     let promiseChain:Promise<unknown> = Promise.resolve()
     const resultMappers: Array<undefined | ((x: any) => any)> = []
     return {
-      updateAssetMbr(args: MethodArgs<'updateAssetMBR(asset)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
-        promiseChain = promiseChain.then(() => client.updateAssetMbr(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
-        resultMappers.push(undefined)
-        return this
-      },
       setSignature(args: MethodArgs<'setSignature(byte[64],pay)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs) {
         promiseChain = promiseChain.then(() => client.setSignature(args, {...params, sendParams: {...params?.sendParams, skipSending: true, atc}}))
         resultMappers.push(undefined)
@@ -654,17 +521,6 @@ export class DelegatedOptInClient {
   }
 }
 export type DelegatedOptInComposer<TReturns extends [...any[]] = []> = {
-  /**
-   * Calls the updateAssetMBR(asset)void ABI method.
-   *
-   * Updates the asset MBR
-   *
-   * @param args The arguments for the contract call
-   * @param params Any additional parameters for the call
-   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
-   */
-  updateAssetMbr(args: MethodArgs<'updateAssetMBR(asset)void'>, params?: AppClientCallCoreParams & CoreAppCallArgs): DelegatedOptInComposer<[...TReturns, MethodReturn<'updateAssetMBR(asset)void'>]>
-
   /**
    * Calls the setSignature(byte[64],pay)void ABI method.
    *

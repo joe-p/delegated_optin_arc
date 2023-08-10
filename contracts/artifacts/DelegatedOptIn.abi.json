@@ -3,21 +3,6 @@
   "desc": "",
   "methods": [
     {
-      "name": "updateAssetMBR",
-      "args": [
-        {
-          "name": "asset",
-          "type": "asset",
-          "desc": "The asset to opt into and opt out of to determine MBR"
-        }
-      ],
-      "desc": "Updates the asset MBR",
-      "returns": {
-        "type": "void",
-        "desc": ""
-      }
-    },
-    {
       "name": "setSignature",
       "args": [
         {
