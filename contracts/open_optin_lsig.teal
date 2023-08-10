@@ -90,4 +90,4 @@ assert
 MBRPayment
 gtxns Amount
 int 100_000 // TODO: Replace with future global field for asset MBR
-==
+>=
