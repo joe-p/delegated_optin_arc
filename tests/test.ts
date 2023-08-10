@@ -238,11 +238,43 @@ describe('Delegated Opt In App', () => {
         sendParams: { fee: algokit.microAlgos(2_000) },
       });
 
+      expect(app.appClient.getBoxValue(boxRef)).rejects.toThrowError('box not found');
+
       const postBalance = (await algod.accountInformation(testAccount.addr).do()).amount;
 
       expect(postBalance - preBalance).toBe(BOX_MBR - 2_000);
     });
 
-    it.skip("TODO: doesn't allow opt-ins", () => {});
+    it("doesn't allow opt-ins", async () => {
+      const { testAccount, algod, kmd } = fixture.context;
+
+      const sender = algosdk.generateAccount();
+
+      await algokit.ensureFunded({
+        accountToFund: sender.addr,
+        minSpendingBalance: algokit.microAlgos(304_000),
+        suppressLog: true,
+      }, algod, kmd);
+
+      const asa = await createASA(algod, sender);
+
+      await expect(algod.accountAssetInformation(testAccount.addr, asa).do())
+        .rejects.toThrowError('account asset info not found');
+
+      const lsig = await generateOptInLsig(algod, appId);
+      lsig.sign(testAccount.sk);
+
+      expect(delegatedOptIn({
+        senderAddr: sender.addr,
+        senderSigner: algosdk.makeBasicAccountTransactionSigner(sender),
+        asa,
+        algod,
+        type: 'open',
+        receiverAddr: testAccount.addr,
+        app,
+        lsig,
+        appID: appId,
+      })).rejects.toThrow('assert failed pc=291. Details: pc=291, opcodes=swap; pop; assert');
+    });
   });
 });
