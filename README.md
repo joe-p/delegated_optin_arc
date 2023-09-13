@@ -2,7 +2,7 @@
 This ARC contains is an implementation of [ARCX](https://github.com/algorandfoundation/ARCs/pull/229). The goal is to provide users a way to delegate asset opt-ins while having a high degree of control compared to a standalone logic signature without an application. The expectation is that a single instance of this ARC will be deployed on Algorand networks. 
 
 ## Motivation
-[ARCX](https://github.com/algorandfoundation/ARCs/pull/229) provides a standard for delegated asset opt-ins, but there are some UX problems that need to be addressed. First, there needs to be a way to control whether the lsig is still functionality or not. Without an application to control this, signing the logic signature program would be irreversible without rekeying. There also needs to be a standardized way to store and read signatures for a given account so dApps and other users can take advantaged of delegated opt-ins.
+[ARCX](https://github.com/algorandfoundation/ARCs/pull/229) provides a standard for delegated asset opt-ins, but there are some UX problems that need to be addressed. First, there needs to be a way to control whether the lsig is still functional or not. Without an application to control this, signing the logic signature program would be irreversible without rekeying. There also needs to be a standardized way to store and read signatures for a given account so dApps and other users can take advantaged of delegated opt-ins.
 
 ## Specification
 This is an implementation of [ARCX](https://github.com/algorandfoundation/ARCs/pull/229). There is additional functionality provided by the application in this ARC in the methods of the application.
