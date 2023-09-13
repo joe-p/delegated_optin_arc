@@ -45,7 +45,7 @@
     {
       "name": "revokeSignature",
       "args": [],
-      "desc": "Delete the signature from box storage.This will disable delegated opt-ins and return the box MBR balance",
+      "desc": "Delete the signature from box storage. This will disable delegated opt-ins andreturn the box MBR balance. This app should include an extra 0.001 ALGO to coverthe inner transaction fee for the payment.",
       "returns": {
         "type": "void",
         "desc": ""

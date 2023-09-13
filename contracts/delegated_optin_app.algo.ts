@@ -38,8 +38,9 @@ class DelegatedOptIn extends Contract {
   }
 
   /**
-   * Delete the signature from box storage.
-   * This will disable delegated opt-ins and return the box MBR balance
+   * Delete the signature from box storage. This will disable delegated opt-ins and
+   * return the box MBR balance. This app should include an extra 0.001 ALGO to cover
+   * the inner transaction fee for the payment.
    */
   revokeSignature(): void {
     /// Record MBR before box_del to later determine the MBR delta
