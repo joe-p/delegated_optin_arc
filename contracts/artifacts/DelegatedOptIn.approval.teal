@@ -87,13 +87,13 @@ delegatedOptIn:
 	assert
 	retsub
 
-abi_route_unsetSignature:
+abi_route_revokeSignature:
 	byte 0x
-	callsub unsetSignature
+	callsub revokeSignature
 	int 1
 	return
 
-unsetSignature:
+revokeSignature:
 	proto 1 0
 
 	// Record MBR before box_del to later determine the MBR delta
@@ -149,7 +149,7 @@ create_NoOp:
 call_NoOp:
 	method "setSignature(byte[64],pay)void"
 	method "delegatedOptIn(pay,axfer)void"
-	method "unsetSignature()void"
+	method "revokeSignature()void"
 	txna ApplicationArgs 0
-	match abi_route_setSignature abi_route_delegatedOptIn abi_route_unsetSignature
+	match abi_route_setSignature abi_route_delegatedOptIn abi_route_revokeSignature
 	err

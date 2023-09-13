@@ -218,7 +218,7 @@ describe('Delegated Opt In App', () => {
     });
   });
 
-  describe('unsetSignature', () => {
+  describe('revokeSignature', () => {
     it('sends back MBR', async () => {
       const { algod, testAccount } = fixture.context;
 
@@ -231,7 +231,7 @@ describe('Delegated Opt In App', () => {
       await setSignature(algod, appId, testAccount, app, optInLsig);
       const preBalance = (await algod.accountInformation(testAccount.addr).do()).amount;
 
-      await app.unsetSignature({ }, {
+      await app.revokeSignature({ }, {
         ...SUPPRESS_LOG,
         sender: testAccount,
         boxes: [boxRef],

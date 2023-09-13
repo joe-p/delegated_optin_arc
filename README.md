@@ -41,7 +41,7 @@ Tests written with Jest and algokit for the contract and logic signatures can be
       ✓ works with valid signature and lsig (790 ms)
     delegatedOptIn
       ✓ works with valid lsig and method call (1453 ms)
-    unsetSignature
+    revokeSignature
       ✓ sends back MBR (753 ms)
       ✓ doesn't allow opt-ins (1186 ms)
 ```

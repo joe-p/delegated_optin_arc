@@ -41,7 +41,7 @@ class DelegatedOptIn extends Contract {
    * Delete the signature from box storage.
    * This will disable delegated opt-ins and return the box MBR balance
    */
-  unsetSignature(): void {
+  revokeSignature(): void {
     /// Record MBR before box_del to later determine the MBR delta
     const preMBR = globals.currentApplicationAddress.minBalance;
     this.signatures.delete(this.txn.sender);
