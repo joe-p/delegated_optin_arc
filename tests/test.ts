@@ -274,7 +274,7 @@ describe('Delegated Opt In App', () => {
         app,
         lsig,
         appID: appId,
-      })).rejects.toThrow('Details: pc=122, opcodes=swap; pop; assert');
+      })).rejects.toThrow('Details: pc=110, opcodes=swap; pop; assert');
     });
   });
 });

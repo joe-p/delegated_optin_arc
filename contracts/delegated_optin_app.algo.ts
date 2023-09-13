@@ -17,12 +17,12 @@ class DelegatedOptIn extends Contract {
    */
   setSignature(sig: byte64, boxMBRPayment: PayTxn): void {
     /// Record MBR before box_put to later determine the MBR delta
-    const preMBR = this.app.address.minBalance;
+    const preMBR = globals.currentApplicationAddress.minBalance;
     this.signatures.set(this.txn.sender, sig);
 
     /// Verify box MBR payment
-    assert(boxMBRPayment.receiver === this.app.address);
-    assert(boxMBRPayment.amount >= this.app.address.minBalance - preMBR);
+    assert(boxMBRPayment.receiver === globals.currentApplicationAddress);
+    assert(boxMBRPayment.amount >= globals.currentApplicationAddress.minBalance - preMBR);
   }
 
   /**
@@ -43,13 +43,13 @@ class DelegatedOptIn extends Contract {
    */
   unsetSignature(): void {
     /// Record MBR before box_del to later determine the MBR delta
-    const preMBR = this.app.address.minBalance;
+    const preMBR = globals.currentApplicationAddress.minBalance;
     this.signatures.delete(this.txn.sender);
 
     /// Return the box MBR
     sendPayment({
       fee: 0,
-      amount: preMBR - this.app.address.minBalance,
+      amount: preMBR - globals.currentApplicationAddress.minBalance,
       receiver: this.txn.sender,
     });
   }
