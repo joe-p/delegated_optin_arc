@@ -11,10 +11,10 @@ For all methods, refer to the [ABI JSON description](./contracts/artifacts/Deleg
 
 ### Signature Storage
 
-`setSignature(byte[64],address,txn)void` is a method that allows a user to upload their signature to box storage
+`setSignature(byte[64],pay)void` is a method that allows a user to upload their signature to box storage
 
 
-### Opt-Ins
+### Opt-In
 
 `delegatedOptIn(pay,axfer)void` is an implementation of the [ARCX](https://github.com/algorandfoundation/ARCs/pull/229) interfaces. It verifies the MBR payment is sent to the account opting in and that it covers the ASA minimum balance requirement.
 
@@ -25,11 +25,7 @@ For all methods, refer to the [ABI JSON description](./contracts/artifacts/Deleg
 | Box | `auth-addr` | Mapping of signer to lsig signature |
 
 ## Rationale
-Box storage is used to store signatures indefinitely and [the verifier lsig](./contracts/verifier_lsig.teal) ensures the signature is always correct.
-
-End time functionality is provided to allow users to revert the effects of signing the logic signature programs without having to rekey. It also lets users open their account for opt-in delegations for a short amount of time without having to remember to manually undo it.
-
-Asset MBR is stored in global storage in case the MBR for asset were to ever change.
+Box storage is used to store signatures to make them easily accessible for any user or app wishing to use them and act as a way to signify if delegated opt-ins should be allowed.
 
 ## Backwards Compatibility
 N/A
