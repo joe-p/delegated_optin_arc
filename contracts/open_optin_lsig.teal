@@ -54,6 +54,12 @@ global ZeroAddress
 ==
 assert
 
+// Verify assetSender is not set
+txn AssetSender
+global ZeroAddress
+==
+assert
+
 // ********** Verify app call ********** 
 
 // Verify called atomically with master app

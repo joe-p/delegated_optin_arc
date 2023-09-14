@@ -35,6 +35,21 @@ class DelegatedOptIn extends Contract {
   delegatedOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     /// Verify that the signature is present
     assert(this.signatures(optIn.sender).exists);
+
+    verifyTxn(optIn, {
+      rekeyTo: globals.zeroAddress,
+      assetAmount: 0,
+      assetReceiver: optIn.sender,
+      fee: 0,
+      assetCloseTo: globals.zeroAddress,
+      assetSender: globals.zeroAddress,
+    });
+
+    /// TODO: Replace 100_000 with ASA MBR global
+    verifyTxn(mbrPayment, {
+      receiver: optIn.assetReceiver,
+      amount: { greaterThanEqualTo: 100_000 },
+    });
   }
 
   /**
