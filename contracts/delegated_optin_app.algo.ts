@@ -6,7 +6,7 @@ type byte64 = StaticArray<byte, 64>;
 // eslint-disable-next-line no-unused-vars
 class DelegatedOptIn extends Contract {
   // Mapping of auth address to signed open opt-in lsig
-  signatures = new BoxMap<Address, byte64>();
+  signatures = BoxMap<Address, byte64>();
 
   /**
    * Set the signature of the lsig for the given account
@@ -18,7 +18,7 @@ class DelegatedOptIn extends Contract {
   setSignature(sig: byte64, boxMBRPayment: PayTxn): void {
     /// Record MBR before box_put to later determine the MBR delta
     const preMBR = globals.currentApplicationAddress.minBalance;
-    this.signatures.set(this.txn.sender, sig);
+    this.signatures(this.txn.sender).value = sig;
 
     /// Verify box MBR payment
     assert(boxMBRPayment.receiver === globals.currentApplicationAddress);
@@ -34,7 +34,7 @@ class DelegatedOptIn extends Contract {
    */
   delegatedOptIn(mbrPayment: PayTxn, optIn: AssetTransferTxn): void {
     /// Verify that the signature is present
-    assert(this.signatures.exists(optIn.sender));
+    assert(this.signatures(optIn.sender).exists);
   }
 
   /**
@@ -45,7 +45,7 @@ class DelegatedOptIn extends Contract {
   revokeSignature(): void {
     /// Record MBR before box_del to later determine the MBR delta
     const preMBR = globals.currentApplicationAddress.minBalance;
-    this.signatures.delete(this.txn.sender);
+    this.signatures(this.txn.sender).delete();
 
     /// Return the box MBR
     sendPayment({
