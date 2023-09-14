@@ -66,15 +66,18 @@ setSignature:
 
 	// Verify box MBR payment
 	// ./contracts/delegated_optin_app.algo.ts:24
-	// assert(boxMBRPayment.receiver === globals.currentApplicationAddress)
+	// verifyTxn(boxMBRPayment, {
+	//       receiver: globals.currentApplicationAddress,
+	//       amount: { greaterThanEqualTo: globals.currentApplicationAddress.minBalance - preMBR },
+	//     })
+	// verify receiver
 	frame_dig -2 // boxMBRPayment: pay
 	gtxns Receiver
 	global CurrentApplicationAddress
 	==
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:25
-	// assert(boxMBRPayment.amount >= globals.currentApplicationAddress.minBalance - preMBR)
+	// verify amount
 	frame_dig -2 // boxMBRPayment: pay
 	gtxns Amount
 	global CurrentApplicationAddress
@@ -122,7 +125,7 @@ delegatedOptIn:
 	proto 2 0
 
 	// Verify that the signature is present
-	// ./contracts/delegated_optin_app.algo.ts:37
+	// ./contracts/delegated_optin_app.algo.ts:39
 	// assert(this.signatures(optIn.sender).exists)
 	frame_dig -2 // optIn: axfer
 	gtxns Sender
@@ -131,7 +134,7 @@ delegatedOptIn:
 	pop
 	assert
 
-	// ./contracts/delegated_optin_app.algo.ts:39
+	// ./contracts/delegated_optin_app.algo.ts:41
 	// verifyTxn(optIn, {
 	//       rekeyTo: globals.zeroAddress,
 	//       assetAmount: 0,
@@ -184,7 +187,7 @@ delegatedOptIn:
 	assert
 
 	// TODO: Replace 100_000 with ASA MBR global
-	// ./contracts/delegated_optin_app.algo.ts:49
+	// ./contracts/delegated_optin_app.algo.ts:51
 	// verifyTxn(mbrPayment, {
 	//       receiver: optIn.assetReceiver,
 	//       amount: { greaterThanEqualTo: 100_000 },
@@ -208,7 +211,7 @@ delegatedOptIn:
 // revokeSignature()void
 //
 // Delete the signature from box storage. This will disable delegated opt-ins and
-// return the box MBR balance. This app should include an extra 0.001 ALGO to cover
+// return the box MBR balance. This app call should include an extra 0.001 ALGO to cover
 // the inner transaction fee for the payment.
 abi_route_revokeSignature:
 	byte 0x // push empty bytes to fill the stack frame for this subroutine's local variables
@@ -222,20 +225,20 @@ revokeSignature:
 	proto 1 0
 
 	// Record MBR before box_del to later determine the MBR delta
-	// ./contracts/delegated_optin_app.algo.ts:62
+	// ./contracts/delegated_optin_app.algo.ts:64
 	// preMBR = globals.currentApplicationAddress.minBalance
 	global CurrentApplicationAddress
 	acct_params_get AcctMinBalance
 	assert
 	frame_bury -1 // preMBR: uint64
 
-	// ./contracts/delegated_optin_app.algo.ts:63
+	// ./contracts/delegated_optin_app.algo.ts:65
 	// this.signatures(this.txn.sender).delete()
 	txn Sender
 	box_del
 
 	// Return the box MBR
-	// ./contracts/delegated_optin_app.algo.ts:66
+	// ./contracts/delegated_optin_app.algo.ts:68
 	// sendPayment({
 	//       fee: 0,
 	//       amount: preMBR - globals.currentApplicationAddress.minBalance,
@@ -245,12 +248,12 @@ revokeSignature:
 	int pay
 	itxn_field TypeEnum
 
-	// ./contracts/delegated_optin_app.algo.ts:67
+	// ./contracts/delegated_optin_app.algo.ts:69
 	// fee: 0
 	int 0
 	itxn_field Fee
 
-	// ./contracts/delegated_optin_app.algo.ts:68
+	// ./contracts/delegated_optin_app.algo.ts:70
 	// amount: preMBR - globals.currentApplicationAddress.minBalance
 	frame_dig -1 // preMBR: uint64
 	global CurrentApplicationAddress
@@ -259,7 +262,7 @@ revokeSignature:
 	-
 	itxn_field Amount
 
-	// ./contracts/delegated_optin_app.algo.ts:69
+	// ./contracts/delegated_optin_app.algo.ts:71
 	// receiver: this.txn.sender
 	txn Sender
 	itxn_field Receiver

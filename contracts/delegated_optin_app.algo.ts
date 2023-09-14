@@ -21,8 +21,10 @@ class DelegatedOptIn extends Contract {
     this.signatures(this.txn.sender).value = sig;
 
     /// Verify box MBR payment
-    assert(boxMBRPayment.receiver === globals.currentApplicationAddress);
-    assert(boxMBRPayment.amount >= globals.currentApplicationAddress.minBalance - preMBR);
+    verifyTxn(boxMBRPayment, {
+      receiver: globals.currentApplicationAddress,
+      amount: { greaterThanEqualTo: globals.currentApplicationAddress.minBalance - preMBR },
+    });
   }
 
   /**
