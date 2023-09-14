@@ -16,6 +16,22 @@ int 1
 -
 store 1
 
+// ********** Verify app call ********** 
+
+// Verify called atomically with master app
+AppCall
+gtxns ApplicationID
+int TMPL_DELEGATED_OPTIN_APP_ID
+==
+assert
+
+// Verify the correct method is being called
+AppCall
+gtxnsa ApplicationArgs 0
+method "delegatedOptIn(pay,axfer)void"
+==
+assert
+
 // ********** Verify this opt-in txn ********** 
 
 // Verify not rekeyed
@@ -57,22 +73,6 @@ assert
 // Verify assetSender is not set
 txn AssetSender
 global ZeroAddress
-==
-assert
-
-// ********** Verify app call ********** 
-
-// Verify called atomically with master app
-AppCall
-gtxns ApplicationID
-int TMPL_DELEGATED_OPTIN_APP_ID
-==
-assert
-
-// Verify the correct method is being called
-AppCall
-gtxnsa ApplicationArgs 0
-method "delegatedOptIn(pay,axfer)void"
 ==
 assert
 
