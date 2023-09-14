@@ -22,7 +22,7 @@ For all methods, refer to the [ABI JSON description](./contracts/artifacts/Deleg
 
 | Type | Key | Description |
 | ---- | --- | ----------- |
-| Box | `auth-addr` | Mapping of signer to lsig signature |
+| Box | `auth-addr \|\| address` | Mapping of signer to lsig signature |
 
 ## Rationale
 Box storage is used to store signatures to make them easily accessible for any user or app wishing to use them and act as a way to signify if delegated opt-ins should be allowed.
@@ -55,7 +55,7 @@ Tests written with Jest and algokit for the contract and logic signatures can be
 
 The test cases test proper functionality of all methods, but there has been no extended effort in attempt to break the contract. Most of the functionality in the app and logic signatures is relatively simple, so the chances of unexpected bugs is relatively low.
 
-It should be made clear that signatures are stored mapped to the signer (`auth-addr`) and end times are mapped to the public Algorand address. This means when a signature is made known, every account with the signing account as the `auth-addr` can now be opted-in to assets via the delegated logic signature. Every account must set the end times to their desire, because without an end time set the signature will work regardless of the latest timestamp.
+It should be made clear that signatures are stored mapped to the signer (`auth-addr || address`). This means when a signature is made known, every account with the signing account as the `auth-addr` can now be opted-in to assets via the delegated logic signature.
 
 ## Copyright
 Copyright and related rights waived via <a href="https://creativecommons.org/publicdomain/zero/1.0/">CCO</a>.
