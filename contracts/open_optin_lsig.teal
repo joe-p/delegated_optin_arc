@@ -1,0 +1,99 @@
+#pragma version 8
+#define AppCall load 0
+#define MBRPayment load 1
+
+// ********** Store gtxn indexes ********** 
+
+// Save AppCall
+txn GroupIndex
+int 1
++
+store 0
+
+// Save MBR payment index
+txn GroupIndex
+int 1
+-
+store 1
+
+// ********** Verify app call ********** 
+
+// Verify called atomically with master app
+AppCall
+gtxns ApplicationID
+int TMPL_DELEGATED_OPTIN_APP_ID
+==
+assert
+
+// Verify the correct method is being called
+AppCall
+gtxnsa ApplicationArgs 0
+method "delegatedOptIn(pay,axfer)void"
+==
+assert
+
+// ********** Verify this opt-in txn ********** 
+
+// Verify not rekeyed
+txn RekeyTo
+global ZeroAddress
+==
+assert
+
+// Assert this is an axfer
+txn TypeEnum
+int axfer
+==
+assert
+
+// Verify amount is 0
+txn AssetAmount
+int 0
+==
+assert
+
+// Verify sender == receiver
+txn AssetReceiver
+txn Sender
+==
+assert
+
+// Verify fee is 0 (covered by sender)
+txn Fee
+int 0
+==
+assert
+
+// Verify assetCloseTo is not set
+txn AssetCloseTo
+global ZeroAddress
+==
+assert
+
+// Verify assetSender is not set
+txn AssetSender
+global ZeroAddress
+==
+assert
+
+// ********** Verify MBR payment ********** 
+
+// Verify it's a pay txn
+MBRPayment
+gtxns TypeEnum
+int pay
+==
+assert
+
+// Verify it's to the receiver
+MBRPayment
+gtxns Receiver
+txn AssetReceiver
+==
+assert
+
+// Verify it's the correct amount
+MBRPayment
+gtxns Amount
+int 100_000 // TODO: Replace with future global field for asset MBR
+>=

@@ -1,0 +1,55 @@
+{
+  "name": "DelegatedOptIn",
+  "desc": "",
+  "methods": [
+    {
+      "name": "setSignature",
+      "args": [
+        {
+          "name": "sig",
+          "type": "byte[64]",
+          "desc": "The signature of the lsig"
+        },
+        {
+          "name": "boxMBRPayment",
+          "type": "pay",
+          "desc": "Payment to cover the contract MBR for box creation"
+        }
+      ],
+      "desc": "Set the signature of the lsig for the given account",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "delegatedOptIn",
+      "args": [
+        {
+          "name": "mbrPayment",
+          "type": "pay",
+          "desc": "Payment to the receiver that covers the ASA MBR"
+        },
+        {
+          "name": "optIn",
+          "type": "axfer",
+          "desc": "The opt in transaction, presumably from the open opt-in lsig"
+        }
+      ],
+      "desc": "Verifies that the opt in is allowed",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    },
+    {
+      "name": "revokeSignature",
+      "args": [],
+      "desc": "Delete the signature from box storage. This will disable delegated opt-ins andreturn the box MBR balance. This app call should include an extra 0.001 ALGO to coverthe inner transaction fee for the payment.",
+      "returns": {
+        "type": "void",
+        "desc": ""
+      }
+    }
+  ]
+}
